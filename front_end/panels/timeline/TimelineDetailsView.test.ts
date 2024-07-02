@@ -13,8 +13,9 @@ class MockViewDelegate implements Timeline.TimelinePanel.TimelineModeViewDelegat
   }
   selectEntryAtTime(_events: TraceEngine.Types.TraceEvents.TraceEventData[]|null, _time: number): void {
   }
-  highlightEvent(_event: TraceEngine.Legacy.CompatibleTraceEvent|null): void {
+  highlightEvent(_event: TraceEngine.Types.TraceEvents.TraceEventData|null): void {
   }
+  element = document.createElement('div');
 }
 
 function getRowDataForDetailsElement(details: HTMLElement) {
@@ -28,10 +29,10 @@ function getRowDataForDetailsElement(details: HTMLElement) {
 describeWithEnvironment('TimelineDetailsView', function() {
   const mockViewDelegate = new MockViewDelegate();
   it('displays the details of a network request event correctly', async function() {
-    const data = await TraceLoader.allModels(this, 'lcp-web-font.json.gz');
+    const traceParsedData = await TraceLoader.traceEngine(this, 'lcp-web-font.json.gz');
     const detailsView = new Timeline.TimelineDetailsView.TimelineDetailsView(mockViewDelegate);
 
-    const networkRequests = data.traceParsedData.NetworkRequests.byTime;
+    const networkRequests = traceParsedData.NetworkRequests.byTime;
     const cssRequest = networkRequests.find(request => {
       return request.args.data.url === 'https://chromedevtools.github.io/performance-stories/lcp-web-font/app.css';
     });
@@ -40,7 +41,7 @@ describeWithEnvironment('TimelineDetailsView', function() {
     }
     const selection = Timeline.TimelineSelection.TimelineSelection.fromTraceEvent(cssRequest);
 
-    await detailsView.setModel(data.performanceModel, data.traceParsedData, null);
+    await detailsView.setModel(traceParsedData, null);
     await detailsView.setSelection(selection);
 
     const detailsContentElement = detailsView.getDetailsContentElementForTest();
@@ -51,7 +52,7 @@ describeWithEnvironment('TimelineDetailsView', function() {
         rowData,
         [
           {title: 'URL', value: 'chromedevtools.github.io/performance-stories/lcp-web-font/app.css'},
-          {title: 'Duration', value: '12.582ms (8.291ms load from cache + 4.291ms resource loading)'},
+          {title: 'Duration', value: '12.58\xA0ms (8.29\xA0ms load from cache + 4.29\xA0ms resource loading)'},
           {title: 'Request Method', value: 'GET'},
           {title: 'Initial Priority', value: 'Highest'},
           {title: 'Priority', value: 'Highest'},

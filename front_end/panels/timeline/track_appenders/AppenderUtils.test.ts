@@ -16,7 +16,7 @@ describeWithEnvironment('AppenderUtils', () => {
     // This color is same as --sys-color-on-surface in themeColors.css
     color: 'rgb(31 31 31 / 100%)',
     // This color is same as --sys-color-cdt-base-container in themeColors.css
-    backgroundColor: 'rgb(250 249 248 / 100%)',
+    backgroundColor: 'rgb(253 252 251 / 100%)',
     nestingLevel: 0,
     shareHeaderLine: true,
   };
@@ -44,10 +44,12 @@ describeWithEnvironment('AppenderUtils', () => {
       selectable: true,
       expanded: true,
       showStackContextMenu: true,
+      jslogContext: 'animations',
     } as PerfUI.FlameChart.Group;
 
     it('builds a track header correctly', () => {
       const builtHeader = Timeline.AppenderUtils.buildTrackHeader(
+          Timeline.CompatibilityTracksAppender.VisualLoggingTrackName.ANIMATIONS,
           /* startLevel= */ 0, 'Header Name', Timeline.AppenderUtils.buildGroupStyle(), /* selectable= */ true,
           /* expanded= */ true, /* showStackContextMenu= */ true);
       assert.deepEqual(builtHeader, trackHeader);

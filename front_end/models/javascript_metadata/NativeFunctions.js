@@ -651,6 +651,11 @@ export const NativeFunctions = [
     receivers: ["CSSStyleValue"]
   },
   {
+    name: "parse",
+    signatures: [["url","?base"]],
+    receivers: ["URL"]
+  },
+  {
     name: "UTC",
     signatures: [["year","?monthIndex","?date","?hours","?minutes","?seconds","?ms"]]
   },
@@ -688,11 +693,23 @@ export const NativeFunctions = [
   },
   {
     name: "every",
-    signatures: [["predicate","?thisArg"]]
+    signatures: [["predicate","?thisArg"]],
+    receivers: ["ReadonlyArray","Array","Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
+  },
+  {
+    name: "every",
+    signatures: [["predicate","?options"]],
+    receivers: ["Observable"]
   },
   {
     name: "some",
-    signatures: [["predicate","?thisArg"]]
+    signatures: [["predicate","?thisArg"]],
+    receivers: ["ReadonlyArray","Array","Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
+  },
+  {
+    name: "some",
+    signatures: [["predicate","?options"]],
+    receivers: ["Observable"]
   },
   {
     name: "forEach",
@@ -852,6 +869,11 @@ export const NativeFunctions = [
     name: "find",
     signatures: [["predicate","?thisArg"]],
     receivers: ["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","Array","ReadonlyArray","BigInt64Array","BigUint64Array"]
+  },
+  {
+    name: "find",
+    signatures: [["predicate","?options"]],
+    receivers: ["Observable"]
   },
   {
     name: "find",
@@ -1019,6 +1041,11 @@ export const NativeFunctions = [
     name: "start",
     signatures: [["?options"]],
     receivers: ["IdleDetector"]
+  },
+  {
+    name: "start",
+    signatures: [["?track"]],
+    receivers: ["SpeechRecognition"]
   },
   {
     name: "close",
@@ -3132,11 +3159,6 @@ export const NativeFunctions = [
     receivers: ["RTCPeerConnection"]
   },
   {
-    name: "clone",
-    signatures: [["?options"]],
-    receivers: ["DocumentPartRoot","ChildNodePart"]
-  },
-  {
     name: "getTrackById",
     signatures: [["trackId"]],
     receivers: ["MediaStream"]
@@ -3401,11 +3423,6 @@ export const NativeFunctions = [
     receivers: ["PaymentResponse"]
   },
   {
-    name: "complete",
-    signatures: [["merchantSessionPromise"]],
-    receivers: ["MerchantValidationEvent"]
-  },
-  {
     name: "retry",
     signatures: [["?errorFields"]]
   },
@@ -3660,6 +3677,11 @@ export const NativeFunctions = [
     name: "prompt",
     signatures: [["?message","?_default"],["?message","?defaultValue"]],
     receivers: ["Window"]
+  },
+  {
+    name: "prompt",
+    signatures: [["input"]],
+    receivers: ["AITextSession"]
   },
   {
     name: "watchAvailability",
@@ -6333,7 +6355,7 @@ export const NativeFunctions = [
   },
   {
     name: "AttributePart",
-    signatures: [["root","element","localName","automatic","?init"]]
+    signatures: [["root","element","localName","?init"]]
   },
   {
     name: "ChildNodePart",
@@ -6349,11 +6371,7 @@ export const NativeFunctions = [
   },
   {
     name: "caretPositionFromPoint",
-    signatures: [["x","y"]]
-  },
-  {
-    name: "requestStorageAccessFor",
-    signatures: [["requestedOrigin"]]
+    signatures: [["x","y","?options"]]
   },
   {
     name: "hasPrivateToken",
@@ -6446,10 +6464,6 @@ export const NativeFunctions = [
   {
     name: "last",
     signatures: [["?options"]]
-  },
-  {
-    name: "getPartNode",
-    signatures: [["index"]]
   },
   {
     name: "expand",
@@ -6768,6 +6782,10 @@ export const NativeFunctions = [
     signatures: [["sw","sh","?settings"],["data","sw","?sh","?settings"]]
   },
   {
+    name: "getSelectionRects",
+    signatures: [["start","end"]]
+  },
+  {
     name: "CloseWatcher",
     signatures: [["?options"]]
   },
@@ -6810,10 +6828,6 @@ export const NativeFunctions = [
   {
     name: "VTTCue",
     signatures: [["startTime","endTime","text"]]
-  },
-  {
-    name: "DeviceProperties",
-    signatures: [["?devicePropertiesInitDict"]]
   },
   {
     name: "InputDeviceCapabilities",
@@ -6949,7 +6963,7 @@ export const NativeFunctions = [
   },
   {
     name: "setMenuListOptionsBoundsInAXTree",
-    signatures: [["options_bounds"]]
+    signatures: [["options_bounds","children_updated"]]
   },
   {
     name: "allowsFeature",
@@ -7096,6 +7110,26 @@ export const NativeFunctions = [
     signatures: [["feature"]]
   },
   {
+    name: "execute",
+    signatures: [["input"]]
+  },
+  {
+    name: "promptStreaming",
+    signatures: [["input"]]
+  },
+  {
+    name: "executeStreaming",
+    signatures: [["input"]]
+  },
+  {
+    name: "createTextSession",
+    signatures: [["?options"]]
+  },
+  {
+    name: "createGenericSession",
+    signatures: [["?options"]]
+  },
+  {
     name: "registerAnimator",
     signatures: [["name","animatorCtor"]]
   },
@@ -7231,6 +7265,10 @@ export const NativeFunctions = [
     signatures: [["expires"]]
   },
   {
+    name: "transferToGPUTexture",
+    signatures: [["options"]]
+  },
+  {
     name: "CanvasFilter",
     signatures: [["init"]]
   },
@@ -7261,10 +7299,6 @@ export const NativeFunctions = [
   {
     name: "drawMesh",
     signatures: [["vertex_buffer","uv_buffer","index_buffer","image"]]
-  },
-  {
-    name: "beginWebGPUAccess",
-    signatures: [["options"]]
   },
   {
     name: "Path2D",
@@ -7308,6 +7342,10 @@ export const NativeFunctions = [
   },
   {
     name: "parseCreationOptionsFromJSON",
+    signatures: [["options"]]
+  },
+  {
+    name: "parseRequestOptionsFromJSON",
     signatures: [["options"]]
   },
   {
@@ -7635,6 +7673,10 @@ export const NativeFunctions = [
     receivers: ["GPUQueue"]
   },
   {
+    name: "dispatch",
+    signatures: [["graph","inputs","outputs"]]
+  },
+  {
     name: "MLModelLoader",
     signatures: [["context"]]
   },
@@ -7668,7 +7710,7 @@ export const NativeFunctions = [
   },
   {
     name: "clamp",
-    signatures: [["?options"],["input","?options"]]
+    signatures: [["input","?options"]]
   },
   {
     name: "conv2d",
@@ -7860,7 +7902,7 @@ export const NativeFunctions = [
   },
   {
     name: "softmax",
-    signatures: [["?input"]]
+    signatures: [["input","?axis"]]
   },
   {
     name: "softplus",
@@ -7885,18 +7927,6 @@ export const NativeFunctions = [
   {
     name: "build",
     signatures: [["outputs"]]
-  },
-  {
-    name: "execute",
-    signatures: [["input"]]
-  },
-  {
-    name: "executeStreaming",
-    signatures: [["input"]]
-  },
-  {
-    name: "createGenericSession",
-    signatures: [["?options"]]
   },
   {
     name: "getFileSystemAccessTransferToken",
@@ -7965,10 +7995,6 @@ export const NativeFunctions = [
   {
     name: "getDigitalGoodsService",
     signatures: [["paymentMethod"]]
-  },
-  {
-    name: "MerchantValidationEvent",
-    signatures: [["type","?eventInitDict"]]
   },
   {
     name: "enableDelegations",
@@ -8063,8 +8089,20 @@ export const NativeFunctions = [
     signatures: [["track"]]
   },
   {
+    name: "sendRtp",
+    signatures: [["packet","options"]]
+  },
+  {
     name: "setHeaderExtensionsToNegotiate",
     signatures: [["extensions"]]
+  },
+  {
+    name: "readReceivedAcks",
+    signatures: [["maxCount"]]
+  },
+  {
+    name: "readSentRtp",
+    signatures: [["maxCount"]]
   },
   {
     name: "RTCSessionDescription",
@@ -8301,6 +8339,10 @@ export const NativeFunctions = [
   {
     name: "SpeechSynthesisUtterance",
     signatures: [["?text"]]
+  },
+  {
+    name: "requestStorageAccessFor",
+    signatures: [["requestedOrigin"]]
   },
   {
     name: "StorageEvent",

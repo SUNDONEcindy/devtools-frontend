@@ -7,7 +7,12 @@ import * as PerfUI from '../../ui/legacy/components/perf_ui/perf_ui.js';
 import * as ThemeSupport from '../../ui/legacy/theme_support/theme_support.js';
 
 import {buildGroupStyle, buildTrackHeader, getEventLevel, getFormattedTime} from './AppenderUtils.js';
-import {type HighlightedEntryInfo, type TrackAppender, type TrackAppenderName} from './CompatibilityTracksAppender.js';
+import {
+  type HighlightedEntryInfo,
+  type TrackAppender,
+  type TrackAppenderName,
+  VisualLoggingTrackName,
+} from './CompatibilityTracksAppender.js';
 import {InstantEventVisibleDurationMs} from './TimelineFlameChartDataProvider.js';
 import {TimelineUIUtils} from './TimelineUIUtils.js';
 
@@ -86,12 +91,12 @@ export class NetworkTrackAppender implements TrackAppender {
    */
   #appendTrackHeaderAtLevel(currentLevel: number, expanded?: boolean): void {
     const style = buildGroupStyle({
-      font: this.#flameChartData,
       shareHeaderLine: false,
       useFirstLineForOverview: false,
       useDecoratorsForOverview: true,
     });
-    this.#group = buildTrackHeader(0, i18nString(UIStrings.network), style, /* selectable= */ true, expanded);
+    this.#group = buildTrackHeader(
+        VisualLoggingTrackName.NETWORK, 0, i18nString(UIStrings.network), style, /* selectable= */ true, expanded);
     this.#flameChartData.groups.push(this.#group);
   }
 

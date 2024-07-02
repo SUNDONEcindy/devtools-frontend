@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 import * as Root from '../../../core/root/root.js';
-import type * as TimelineModel from '../../../models/timeline_model/timeline_model.js';
 import * as TraceModel from '../../../models/trace/trace.js';
 import {describeWithEnvironment} from '../../../testing/EnvironmentHelpers.js';
 import {TraceLoader} from '../../../testing/TraceLoader.js';
@@ -12,12 +11,13 @@ import * as ThemeSupport from '../../../ui/legacy/theme_support/theme_support.js
 import * as Timeline from '../timeline.js';
 
 function initTrackAppender(
-    flameChartData: PerfUI.FlameChart.FlameChartTimelineData, traceParsedData: TraceModel.Handlers.Types.TraceParseData,
+    flameChartData: PerfUI.FlameChart.FlameChartTimelineData,
+    traceParsedData: TraceModel.Handlers.Types.TraceParseData,
     entryData: Timeline.TimelineFlameChartDataProvider.TimelineFlameChartEntry[],
     entryTypeByLevel: Timeline.TimelineFlameChartDataProvider.EntryType[],
-    timelineModel: TimelineModel.TimelineModel.TimelineModelImpl): Timeline.TimingsTrackAppender.TimingsTrackAppender {
+    ): Timeline.TimingsTrackAppender.TimingsTrackAppender {
   const compatibilityTracksAppender = new Timeline.CompatibilityTracksAppender.CompatibilityTracksAppender(
-      flameChartData, traceParsedData, entryData, entryTypeByLevel, timelineModel);
+      flameChartData, traceParsedData, entryData, entryTypeByLevel);
   return compatibilityTracksAppender.timingsTrackAppender();
 }
 
@@ -28,10 +28,8 @@ describeWithEnvironment('TimingTrackAppender', function() {
   let flameChartData = PerfUI.FlameChart.FlameChartTimelineData.createEmpty();
   let entryTypeByLevel: Timeline.TimelineFlameChartDataProvider.EntryType[] = [];
   beforeEach(async function() {
-    const data = await TraceLoader.allModels(this, 'timings-track.json.gz');
-    traceParsedData = data.traceParsedData;
-    timingsTrackAppender =
-        initTrackAppender(flameChartData, traceParsedData, entryData, entryTypeByLevel, data.timelineModel);
+    traceParsedData = await TraceLoader.traceEngine(this, 'timings-track.json.gz');
+    timingsTrackAppender = initTrackAppender(flameChartData, traceParsedData, entryData, entryTypeByLevel);
     timingsTrackAppender.appendTrackAtLevel(0);
   });
   afterEach(() => {
@@ -260,10 +258,8 @@ describeWithEnvironment('TimingTrackAppender', function() {
     beforeEach(async function() {
       Root.Runtime.experiments.enableForTest('timeline-extensions');
 
-      const data = await TraceLoader.allModels(this, 'extension-tracks-and-marks.json.gz');
-      traceParsedData = data.traceParsedData;
-      timingsTrackAppender =
-          initTrackAppender(flameChartData, traceParsedData, entryData, entryTypeByLevel, data.timelineModel);
+      traceParsedData = await TraceLoader.traceEngine(this, 'extension-tracks-and-marks.json.gz');
+      timingsTrackAppender = initTrackAppender(flameChartData, traceParsedData, entryData, entryTypeByLevel);
       timingsTrackAppender.appendTrackAtLevel(0);
       // Rather than use the real colours here and burden the test with having to
       // inject loads of CSS, we fake out the colours. this is fine for our tests as
@@ -274,6 +270,7 @@ describeWithEnvironment('TimingTrackAppender', function() {
       styleElement.id = 'fake-perf-panel-colors';
       styleElement.textContent = `
         :root {
+          --ref-palette-primary60: rgb(4 4 4);
           --ref-palette-error40: rgb(10 10 10);
         }
       `;
@@ -306,23 +303,43 @@ describeWithEnvironment('TimingTrackAppender', function() {
       const extensionMarkers = traceParsedData.ExtensionTraceData.extensionMarkers;
       for (const event of extensionMarkers) {
         assert.strictEqual(timingsTrackAppender.titleForEvent(event), event.name);
-        // "error" color category is mapped to --ref-palette-error40
-        // which is faked out to 10, 10, 10
-        assert.strictEqual(timingsTrackAppender.colorForEvent(event), 'rgb(10 10 10)');
+        if (event.args.color === 'error') {
+          // "error" color category is mapped to --ref-palette-error40
+          // which is faked out to 10, 10, 10
+          assert.strictEqual(timingsTrackAppender.colorForEvent(event), 'rgb(10 10 10)');
+        } else {
+          // Unknown colors are mapped to "primary" by default, and
+          // "primary" color category is mapped to --ref-palette-primary60
+          // which is faked out to 4, 4, 4
+          assert.strictEqual(timingsTrackAppender.colorForEvent(event), 'rgb(4 4 4)');
+        }
       }
     });
-    it('returns the correct color and title for extension markers', function() {
-      const extensionMarkers = traceParsedData.ExtensionTraceData.extensionMarkers;
-      for (const event of extensionMarkers) {
-        assert.strictEqual(timingsTrackAppender.titleForEvent(event), event.name);
-        // "error" color category is mapped to --ref-palette-error40
-        // which is faked out to 10, 10, 10
-        assert.strictEqual(timingsTrackAppender.colorForEvent(event), 'rgb(10 10 10)');
-      }
+    it('sets a default value when a color is not set or is set an unknown value', function() {
+      const mockExtensionEntryNoColor = {
+        args: {
+          metadata: {dataType: 'marker', extensionName: 'Extension'},
+        },
+        cat: 'devtools.extension',
+      } as unknown as TraceModel.Types.TraceEvents.TraceEventData;
+
+      const mockExtensionEntryUnknownColor = {
+        args: {
+          metadata: {dataType: 'marker', extensionName: 'Extension'},
+          color: 'anUnknownColor',
+        },
+        cat: 'devtools.extension',
+      } as unknown as TraceModel.Types.TraceEvents.TraceEventData;
+      // "primary" color category is mapped to --ref-palette-primary60
+      // which is faked out to 4, 4, 4
+      assert.strictEqual(timingsTrackAppender.colorForEvent(mockExtensionEntryNoColor), 'rgb(4 4 4)');
+      assert.strictEqual(timingsTrackAppender.colorForEvent(mockExtensionEntryUnknownColor), 'rgb(4 4 4)');
     });
     it('returns the tool tip info for an entry correctly', function() {
-      const extensionMarkers = traceParsedData.ExtensionTraceData.extensionMarkers;
-      const highlightedEntryInfo = timingsTrackAppender.highlightedEntryInfo(extensionMarkers[0]);
+      const extensionMarker = traceParsedData.ExtensionTraceData.extensionMarkers.at(0);
+      assert.isOk(extensionMarker, 'did not find any extension markers');
+
+      const highlightedEntryInfo = timingsTrackAppender.highlightedEntryInfo(extensionMarker);
       assert.strictEqual(highlightedEntryInfo.title, 'A mark');
     });
   });

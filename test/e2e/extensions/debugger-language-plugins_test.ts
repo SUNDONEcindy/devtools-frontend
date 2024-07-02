@@ -16,6 +16,7 @@ import {
   getDevToolsFrontendHostname,
   getResourcesPath,
   getTestServerPort,
+  getTextContent,
   goToResource,
   installEventListener,
   pasteText,
@@ -375,8 +376,7 @@ describe('The Debugger Language Plugins', () => {
 
     // Call stack shows inline function names and source locations.
     const funcNames = await getCallFrameNames();
-    assert.deepEqual(
-        funcNames, ['inner_inline_func', 'outer_inline_func', 'Main', 'go', 'await in go (async)', '(anonymous)']);
+    assert.deepEqual(funcNames, ['inner_inline_func', 'outer_inline_func', 'Main', 'go', 'await in go', '(anonymous)']);
     const sourceLocations = await getCallFrameLocations();
     assert.deepEqual(
         sourceLocations,
@@ -468,7 +468,7 @@ describe('The Debugger Language Plugins', () => {
 
     // Call stack shows inline function names and source locations.
     const funcNames = await getCallFrameNames();
-    assert.deepEqual(funcNames, ['$Main', 'go', 'await in go (async)', '(anonymous)']);
+    assert.deepEqual(funcNames, ['$Main', 'go', 'await in go', '(anonymous)']);
     const sourceLocations = await getCallFrameLocations();
     assert.deepEqual(sourceLocations, ['unreachable.ll:6', 'unreachable.html:27', 'unreachable.html:30']);
   });
@@ -612,16 +612,12 @@ describe('The Debugger Language Plugins', () => {
     const incompleteMessage = 'The debug information for function $Main is incomplete';
     const infoBar = await waitFor(`.infobar-error[aria-label="${incompleteMessage}"`);
 
-    const showMoreButton = await waitFor('button', infoBar);
-    const showMoreText = await showMoreButton.evaluate(e => e.textContent);
-    assert.deepEqual(showMoreText, 'Show more');
-    await click('button', {root: infoBar});
+    assert.deepEqual(await getTextContent('devtools-button', infoBar), 'Show more');
+    await click('devtools-button', {root: infoBar});
 
     const detailsRowMessage = await waitFor('.infobar-row-message');
-    const showRequestButton = await waitFor('button', detailsRowMessage);
-    const expectedShowRequestText = 'Show request';
-    assert.deepEqual(await showRequestButton.evaluate(e => e.textContent), expectedShowRequestText);
-    await click('button', {root: detailsRowMessage});
+    assert.deepEqual(await getTextContent('devtools-button', detailsRowMessage), 'Show request');
+    await click('devtools-button', {root: detailsRowMessage});
 
     await checkIfTabExistsInDrawer(DEVELOPER_RESOURCES_TAB_SELECTOR);
 

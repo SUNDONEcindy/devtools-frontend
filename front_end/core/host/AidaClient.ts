@@ -2,13 +2,47 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import * as Common from '../common/common.js';
 import * as Platform from '../platform/platform.js';
-import * as Root from '../root/root.js';
+
 import {InspectorFrontendHostInstance} from './InspectorFrontendHost.js';
+import {type SyncInformation} from './InspectorFrontendHostAPI.js';
 import {bindOutputStream} from './ResourceLoader.js';
+
+export enum Entity {
+  UNKNOWN = 0,
+  USER = 1,
+  SYSTEM = 2,
+}
+
+export interface Chunk {
+  text: string;
+  entity: Entity;
+}
+
+export enum FunctionalityType {
+  // Unspecified functionality type.
+  FUNCTIONALITY_TYPE_UNSPECIFIED = 0,
+  // The generic AI chatbot functionality.
+  CHAT = 1,
+  // The explain error functionality.
+  EXPLAIN_ERROR = 2,
+}
+
+export enum ClientFeature {
+  // Unspecified client feature.
+  CLIENT_FEATURE_UNSPECIFIED = 0,
+  // Chrome console insights feature.
+  CHROME_CONSOLE_INSIGHTS = 1,
+  // Chrome freestyler.
+  CHROME_FREESTYLER = 2,
+}
 
 export interface AidaRequest {
   input: string;
+  preamble?: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  chat_history?: Chunk[];
   client: string;
   options?: {
     temperature?: Number,
@@ -19,6 +53,10 @@ export interface AidaRequest {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     disable_user_content_logging: boolean,
   };
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  functionality_type?: FunctionalityType;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  client_feature?: ClientFeature;
 }
 
 export interface AidaResponse {
@@ -28,23 +66,42 @@ export interface AidaResponse {
   };
 }
 
+export enum AidaAvailability {
+  AVAILABLE = 'available',
+  NO_ACCOUNT_EMAIL = 'no-account-email',
+  NO_ACTIVE_SYNC = 'no-active-sync',
+  NO_INTERNET = 'no-internet',
+}
+
+export const CLIENT_NAME = 'CHROME_DEVTOOLS';
+
 export class AidaClient {
-  static buildApiRequest(input: string): AidaRequest {
+  static buildConsoleInsightsRequest(input: string): AidaRequest {
     const request: AidaRequest = {
       input,
-      client: 'CHROME_DEVTOOLS',
+      client: CLIENT_NAME,
+      functionality_type: FunctionalityType.EXPLAIN_ERROR,
+      client_feature: ClientFeature.CHROME_CONSOLE_INSIGHTS,
     };
-    const temperature = parseFloat(Root.Runtime.Runtime.queryParam('aidaTemperature') || '');
+    const config = Common.Settings.Settings.instance().getHostConfig();
+    let temperature = NaN;
+    let modelId = null;
+    let disallowLogging = false;
+    if (config?.devToolsConsoleInsights.enabled) {
+      temperature = config.devToolsConsoleInsights.aidaTemperature;
+      modelId = config.devToolsConsoleInsights.aidaModelId;
+      disallowLogging = config.devToolsConsoleInsights.disallowLogging;
+    }
+
     if (!isNaN(temperature)) {
       request.options ??= {};
       request.options.temperature = temperature;
     }
-    const modelId = Root.Runtime.Runtime.queryParam('aidaModelId');
     if (modelId) {
       request.options ??= {};
       request.options.model_id = modelId;
     }
-    if (Root.Runtime.Runtime.queryParam('ci_disallowLogging') === 'true') {
+    if (disallowLogging) {
       request.metadata = {
         disable_user_content_logging: true,
       };
@@ -52,7 +109,25 @@ export class AidaClient {
     return request;
   }
 
-  async * fetch(input: string): AsyncGenerator<AidaResponse, void, void> {
+  static async getAidaClientAvailability(): Promise<AidaAvailability> {
+    if (!navigator.onLine) {
+      return AidaAvailability.NO_INTERNET;
+    }
+
+    const syncInfo = await new Promise<SyncInformation>(
+        resolve => InspectorFrontendHostInstance.getSyncInformation(syncInfo => resolve(syncInfo)));
+    if (!syncInfo.accountEmail) {
+      return AidaAvailability.NO_ACCOUNT_EMAIL;
+    }
+
+    if (!syncInfo.isSyncActive) {
+      return AidaAvailability.NO_ACTIVE_SYNC;
+    }
+
+    return AidaAvailability.AVAILABLE;
+  }
+
+  async * fetch(request: AidaRequest): AsyncGenerator<AidaResponse, void, void> {
     if (!InspectorFrontendHostInstance.doAidaConversation) {
       throw new Error('doAidaConversation is not available');
     }
@@ -73,18 +148,17 @@ export class AidaClient {
       };
     })();
     const streamId = bindOutputStream(stream);
-    InspectorFrontendHostInstance.doAidaConversation(
-        JSON.stringify(AidaClient.buildApiRequest(input)), streamId, result => {
-          if (result.statusCode === 403) {
-            stream.fail(new Error('Server responded: permission denied'));
-          } else if (result.error) {
-            stream.fail(new Error(`Cannot send request: ${result.error} ${result.detail || ''}`));
-          } else if (result.statusCode !== 200) {
-            stream.fail(new Error(`Request failed: ${JSON.stringify(result)}`));
-          } else {
-            void stream.close();
-          }
-        });
+    InspectorFrontendHostInstance.doAidaConversation(JSON.stringify(request), streamId, result => {
+      if (result.statusCode === 403) {
+        stream.fail(new Error('Server responded: permission denied'));
+      } else if (result.error) {
+        stream.fail(new Error(`Cannot send request: ${result.error} ${result.detail || ''}`));
+      } else if (result.statusCode !== 200) {
+        stream.fail(new Error(`Request failed: ${JSON.stringify(result)}`));
+      } else {
+        void stream.close();
+      }
+    });
     let chunk;
     const text = [];
     let inCodeChunk = false;

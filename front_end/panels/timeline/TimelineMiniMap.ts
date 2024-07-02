@@ -4,7 +4,7 @@
 
 import * as Common from '../../core/common/common.js';
 import * as TraceEngine from '../../models/trace/trace.js';
-import * as AnnotationsManager from '../../services/annotations_manager/annotations_manager.js';
+import * as ModificationsManager from '../../services/modifications_manager/modifications_manager.js';
 import * as TraceBounds from '../../services/trace_bounds/trace_bounds.js';
 import * as PerfUI from '../../ui/legacy/components/perf_ui/perf_ui.js';
 import * as UI from '../../ui/legacy/legacy.js';
@@ -137,13 +137,14 @@ export class TimelineMiniMap extends
 
     if (this.breadcrumbs === null) {
       this.breadcrumbs =
-          AnnotationsManager.AnnotationsManager.AnnotationsManager.maybeInstance()?.getTimelineBreadcrumbs() ?? null;
+          ModificationsManager.ModificationsManager.ModificationsManager.activeManager()?.getTimelineBreadcrumbs() ??
+          null;
     } else {
       this.breadcrumbs.add(newVisibleTraceWindow);
     }
 
     if (!this.breadcrumbs) {
-      console.warn('AnnotationsManager has not been created, therefore Breadcrumbs can not be added');
+      console.warn('ModificationsManager has not been created, therefore Breadcrumbs can not be added');
       return;
     }
 
@@ -185,13 +186,13 @@ export class TimelineMiniMap extends
     const minTimeInMilliseconds = TraceEngine.Helpers.Timing.microSecondsToMilliseconds(Meta.traceBounds.min);
 
     for (const event of navStartEvents) {
-      const {startTime} = TraceEngine.Legacy.timesForEventInMilliseconds(event);
+      const {startTime} = TraceEngine.Helpers.Timing.eventTimingsMilliSeconds(event);
       markers.set(startTime, TimelineUIUtils.createEventDivider(event, minTimeInMilliseconds));
     }
 
     // Now add markers for the page load events
     for (const event of PageLoadMetrics.allMarkerEvents) {
-      const {startTime} = TraceEngine.Legacy.timesForEventInMilliseconds(event);
+      const {startTime} = TraceEngine.Helpers.Timing.eventTimingsMilliSeconds(event);
       markers.set(startTime, TimelineUIUtils.createEventDivider(event, minTimeInMilliseconds));
     }
 

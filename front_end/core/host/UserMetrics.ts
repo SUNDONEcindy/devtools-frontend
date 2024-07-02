@@ -41,15 +41,6 @@ export class UserMetrics {
     this.#launchPanelName = '';
   }
 
-  breakpointEditDialogRevealedFrom(breakpointEditDialogRevealedFrom: BreakpointEditDialogRevealedFrom): void {
-    if (breakpointEditDialogRevealedFrom >= BreakpointEditDialogRevealedFrom.MaxValue) {
-      return;
-    }
-    InspectorFrontendHostInstance.recordEnumeratedHistogram(
-        EnumeratedHistogram.BreakpointEditDialogRevealedFrom, breakpointEditDialogRevealedFrom,
-        BreakpointEditDialogRevealedFrom.MaxValue);
-  }
-
   panelShown(panelName: string, isLaunching?: boolean): void {
     const code = PanelCodes[panelName as keyof typeof PanelCodes] || 0;
     InspectorFrontendHostInstance.recordEnumeratedHistogram(EnumeratedHistogram.PanelShown, code, PanelCodes.MaxValue);
@@ -58,16 +49,6 @@ export class UserMetrics {
     if (!isLaunching) {
       this.#panelChangedSinceLaunch = true;
     }
-  }
-
-  /**
-   * Fired when a panel is closed (regardless if it exists in the main panel or the drawer)
-   */
-  panelClosed(panelName: string): void {
-    const code = PanelCodes[panelName as keyof typeof PanelCodes] || 0;
-    InspectorFrontendHostInstance.recordEnumeratedHistogram(EnumeratedHistogram.PanelClosed, code, PanelCodes.MaxValue);
-    // Store that the user has changed the panel so we know launch histograms should not be fired.
-    this.#panelChangedSinceLaunch = true;
   }
 
   panelShownInLocation(panelName: string, location: 'main'|'drawer'): void {
@@ -581,7 +562,9 @@ export enum Action {
   AnimationGroupSelected = 142,
   ScrollDrivenAnimationGroupSelected = 143,
   ScrollDrivenAnimationGroupScrubbed = 144,
-  MaxValue = 145,
+  FreestylerOpenedFromElementsPanel = 145,
+  FreestylerOpenedFromStylesTab = 146,
+  MaxValue = 147,
 }
 
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -868,7 +851,6 @@ export enum KeybindSetSettings {
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
-/* eslint-disable @typescript-eslint/naming-convention */
 export enum KeyboardShortcutAction {
   OtherShortcut = 0,
   'quick-open.show-command-menu' = 1,
@@ -1020,7 +1002,6 @@ export enum DevtoolsExperiments {
   'apca' = 39,
   'font-editor' = 41,
   'full-accessibility-tree' = 42,
-  'ignore-list-js-frames-on-timeline' = 43,
   'contrast-issues' = 44,
   'experimental-cookie-features' = 45,
   'styles-pane-css-changes' = 55,
@@ -1031,33 +1012,25 @@ export enum DevtoolsExperiments {
   'preloading-status-panel' = 68,
   'outermost-target-selector' = 71,
   'highlight-errors-elements-panel' = 73,
-  'set-all-breakpoints-eagerly' = 74,
   'use-source-map-scopes' = 76,
-  'storage-buckets-tree' = 77,
   'network-panel-filter-bar-redesign' = 79,
   'autofill-view' = 82,
   'sources-frame-indentation-markers-temporarily-disable' = 83,
   'heap-snapshot-treat-backing-store-as-containing-object' = 84,
   'css-type-component-length-deprecate' = 85,
   'timeline-show-postmessage-events' = 86,
-  'save-and-load-trace-with-annotations' = 87,
   'timeline-extensions' = 89,
+  'timeline-enhanced-traces' = 90,
+  'timeline-compiled-sources' = 91,
+  'timeline-debug-mode' = 93,
+  'perf-panel-annotations' = 94,
+  'timeline-rpp-sidebar' = 95,
+  'timeline-observations' = 96,
 
   // Increment this when new experiments are added.
-  'MaxValue' = 90,
+  'MaxValue' = 97,
 }
 /* eslint-enable @typescript-eslint/naming-convention */
-
-export const enum BreakpointEditDialogRevealedFrom {
-  BreakpointSidebarContextMenu = 0,
-  BreakpointSidebarEditButton = 1,
-  BreakpointMarkerContextMenu = 2,
-  LineGutterContextMenu = 3,
-  KeyboardShortcut = 4,
-  Linkifier = 5,
-  MouseClick = 6,
-  MaxValue = 7,
-}
 
 export const enum ColorConvertedFrom {
   ColorSwatch = 0,
@@ -1222,15 +1195,15 @@ export enum ResourceType {
   /* eslint-disable @typescript-eslint/naming-convention */
   all = 0,
   /* eslint-enable @typescript-eslint/naming-convention */
-  Documents = 1,
-  Scripts = 2,
+  Document = 1,
+  JavaScript = 2,
   'Fetch and XHR' = 3,
-  Stylesheets = 4,
-  Fonts = 5,
-  Images = 6,
+  CSS = 4,
+  Font = 5,
+  Image = 6,
   Media = 7,
   Manifest = 8,
-  WebSockets = 9,
+  WebSocket = 9,
   WebAssembly = 10,
   Other = 11,
   MaxValue = 12,

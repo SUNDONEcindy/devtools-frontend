@@ -20,6 +20,7 @@ import {
   clearStorageItemsFilter,
   doubleClickSourceTreeItem,
   filterStorageItems,
+  getDataGridData,
   getStorageItemsData,
   navigateToApplicationTab,
   selectCookieByName,
@@ -75,7 +76,10 @@ describe('The Application Tab', () => {
     });
   });
 
-  it('shows cookie partition key', async () => {
+  // This test will fail until the puppeteer API is updated to
+  // reflect the change from the partitionKey column to the partition key site and
+  // cross-site columns.
+  it.skip('[crbug.com/345285378]shows cookie partition key site and has cross site ancestor', async () => {
     const {target} = getBrowserAndPages();
     // This sets a new cookie foo=bar
     await navigateToApplicationTab(target, 'cookies');
@@ -83,19 +87,35 @@ describe('The Application Tab', () => {
     await doubleClickSourceTreeItem(COOKIES_SELECTOR);
     await doubleClickSourceTreeItem(DOMAIN_SELECTOR);
 
-    const dataGridRowValues1 = await getStorageItemsData(['partition-key'], 4);
+    const dataGridRowValues1 = await getStorageItemsData(['partition-key-site'], 4);
     assert.deepEqual(dataGridRowValues1, [
       {
-        'partition-key': 'https://localhost',
+        'partition-key-site': 'https://localhost',
       },
       {
-        'partition-key': '',
+        'partition-key-site': '',
       },
       {
-        'partition-key': '',
+        'partition-key-site': '',
       },
       {
-        'partition-key': '',
+        'partition-key-site': '',
+      },
+    ]);
+
+    const dataGridRowValues2 = await getStorageItemsData(['has-cross-site-ancestor'], 4);
+    assert.deepEqual(dataGridRowValues2, [
+      {
+        'has-cross-site-ancestor': 'true',
+      },
+      {
+        'has-cross-site-ancestor': '',
+      },
+      {
+        'has-cross-site-ancestor': '',
+      },
+      {
+        'has-cross-site-ancestor': '',
       },
     ]);
   });
@@ -181,10 +201,18 @@ describe('The Application Tab', () => {
     ]);
 
     await filterStorageItems('foo2');
+    await waitForFunction(async () => {
+      const values = await getDataGridData('.storage-view table', ['name']);
+      return values.length === 1;
+    });
     await clearStorageItems();
     await clearStorageItemsFilter();
 
-    const dataGridRowValues2 = await getStorageItemsData(['name'], 3);
+    const dataGridRowValues2 = await waitForFunction(async () => {
+      const values = await getDataGridData('.storage-view table', ['name']);
+      return values.length === 3 ? values : undefined;
+    });
+
     assert.deepEqual(dataGridRowValues2, [
       {
         name: '__Host-foo3',

@@ -31,7 +31,7 @@ describe('ExtensionTraceDataHandler', function() {
     });
     it('parses track data correctly', async () => {
       assert.strictEqual(extensionData.extensionTrackData[0].extensionName, 'Some Extension');
-      assert.lengthOf(extensionData.extensionTrackData[0].flameChartEntries, 24);
+      assert.lengthOf(extensionData.extensionTrackData[0].flameChartEntries, 25);
       assert.strictEqual(extensionData.extensionTrackData[0].name, 'An Extension Track');
 
       assert.strictEqual(extensionData.extensionTrackData[1].extensionName, 'Another Extension');
@@ -75,22 +75,35 @@ describe('ExtensionTraceDataHandler', function() {
       assert.lengthOf(validTrackEntries, allTrackEntries.length);
     });
 
-    it('discards track data without a valid color value', async () => {
-      // The test example contains a track entry with an invalid color value.
-      // Ensure it is discarded.
-      const allTrackEntries = extensionData.extensionTrackData.flatMap(track => track.flameChartEntries);
-      const validTrackEntries =
-          allTrackEntries.filter(entry => TraceModel.Types.Extensions.colorIsValid(entry.args.color));
-      assert.lengthOf(validTrackEntries, allTrackEntries.length);
-    });
   });
+
   describe('Timeline markers from user timings that use the extension API', function() {
     it('parses marker data correctly', async () => {
-      assert.lengthOf(extensionData.extensionMarkers, 3);
+      assert.lengthOf(extensionData.extensionMarkers, 4);
       assert.strictEqual(extensionData.extensionMarkers[0].name, 'Custom mark');
       const {hintText, detailsPairs} = extensionData.extensionMarkers[0].args;
       assert.strictEqual(hintText, 'A mark');
       assert.strictEqual(JSON.stringify(detailsPairs), '[["Description","This marks the start of a task"]]');
+    });
+
+    it('discards markers whose details are not valid stringified JSON', async () => {
+      const performanceMarkEvent: TraceModel.Types.TraceEvents.TraceEventPerformanceMark = {
+        args: {
+          data: {
+            detail: 'this-is-not-json',
+          },
+        },
+        name: 'test-perf-mark',
+        cat: 'blink.user_timing',
+        ph: TraceModel.Types.TraceEvents.Phase.INSTANT,
+        pid: TraceModel.Types.TraceEvents.ProcessID(1),
+        tid: TraceModel.Types.TraceEvents.ThreadID(1),
+        ts: TraceModel.Types.Timing.MicroSeconds(100),
+      };
+
+      assert.isNull(
+          TraceModel.Handlers.ModelHandlers.ExtensionTraceData.extensionDataInTiming(performanceMarkEvent),
+      );
     });
 
     it('discards markers without a valid dataType metadata field', async () => {
@@ -109,14 +122,6 @@ describe('ExtensionTraceDataHandler', function() {
       // Ensure it is discarded.
       const allMarkers = extensionData.extensionMarkers;
       const validTrackEntries = allMarkers.filter(marker => marker.args.metadata.extensionName);
-      assert.lengthOf(validTrackEntries, allMarkers.length);
-    });
-
-    it('discards track data without a valid color value', async () => {
-      // The test example contains a track entry with an invalid color value.
-      // Ensure it is discarded.
-      const allMarkers = extensionData.extensionMarkers;
-      const validTrackEntries = allMarkers.filter(entry => TraceModel.Types.Extensions.colorIsValid(entry.args.color));
       assert.lengthOf(validTrackEntries, allMarkers.length);
     });
   });

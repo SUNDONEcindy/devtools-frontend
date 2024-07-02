@@ -30,6 +30,7 @@ ts_library("testing") {
     "PersistenceHelpers.ts",
     "PropertyParser.ts",
     "RealConnection.ts",
+    "ResourceTreeHelpers.ts",
     "SourceMapEncoder.test.ts",
     "SourceMapEncoder.ts",
     "SourceMapHelpers.ts",
@@ -79,5 +80,6 @@ ts_library("testing") {
     "../ui/legacy/components/perf_ui:bundle",
     "../ui/legacy/theme_support:bundle",
     "../ui/lit-html:bundle",
+    "../ui/visual_logging:testing",
   ]
 }

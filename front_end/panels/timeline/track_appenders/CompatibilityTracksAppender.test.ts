@@ -4,6 +4,7 @@
 
 import * as TraceModel from '../../../models/trace/trace.js';
 import {describeWithEnvironment} from '../../../testing/EnvironmentHelpers.js';
+import {setupIgnoreListManagerEnvironment} from '../../../testing/TraceHelpers.js';
 import {TraceLoader} from '../../../testing/TraceLoader.js';
 import * as PerfUI from '../../../ui/legacy/components/perf_ui/perf_ui.js';
 import * as Timeline from '../timeline.js';
@@ -20,10 +21,9 @@ describeWithEnvironment('CompatibilityTracksAppender', function() {
     entryData = [];
     flameChartData = PerfUI.FlameChart.FlameChartTimelineData.createEmpty();
     entryTypeByLevel = [];
-    const data = await TraceLoader.allModels(context, fixture);
-    traceParsedData = data.traceParsedData;
+    traceParsedData = await TraceLoader.traceEngine(context, fixture);
     tracksAppender = new Timeline.CompatibilityTracksAppender.CompatibilityTracksAppender(
-        flameChartData, traceParsedData, entryData, entryTypeByLevel, data.timelineModel);
+        flameChartData, traceParsedData, entryData, entryTypeByLevel);
     const timingsTrack = tracksAppender.timingsTrackAppender();
     const gpuTrack = tracksAppender.gpuTrackAppender();
     const threadAppenders = tracksAppender.threadAppenders();
@@ -35,6 +35,7 @@ describeWithEnvironment('CompatibilityTracksAppender', function() {
   }
 
   beforeEach(async () => {
+    setupIgnoreListManagerEnvironment();
     await initTrackAppender(this);
   });
 
@@ -63,7 +64,7 @@ describeWithEnvironment('CompatibilityTracksAppender', function() {
       it('returns only sync events if using async events means a tree cannot be built', () => {
         const timingsTrack = tracksAppender.timingsTrackAppender();
         const timingsEvents = tracksAppender.eventsInTrack(timingsTrack);
-        assert.isFalse(tracksAppender.canBuildTreesFromEvents(timingsEvents));
+        assert.isFalse(TraceModel.Helpers.TreeHelpers.canBuildTreesFromEvents(timingsEvents));
         const treeEvents = tracksAppender.eventsForTreeView(timingsTrack);
         const allEventsAreSync = treeEvents.every(event => !TraceModel.Types.TraceEvents.isAsyncPhase(event.ph));
         assert.isTrue(allEventsAreSync);
@@ -73,7 +74,7 @@ describeWithEnvironment('CompatibilityTracksAppender', function() {
         await initTrackAppender(this, 'sync-like-timings.json.gz');
         const timingsTrack = tracksAppender.timingsTrackAppender();
         const timingsEvents = tracksAppender.eventsInTrack(timingsTrack);
-        assert.isTrue(tracksAppender.canBuildTreesFromEvents(timingsEvents));
+        assert.isTrue(TraceModel.Helpers.TreeHelpers.canBuildTreesFromEvents(timingsEvents));
         const treeEvents = tracksAppender.eventsForTreeView(timingsTrack);
         assert.deepEqual(treeEvents, timingsEvents);
       });
@@ -88,13 +89,13 @@ describeWithEnvironment('CompatibilityTracksAppender', function() {
 
         const raster1Events = tracksAppender.eventsInTrack(rasterTracks[0]);
         assert.strictEqual(raster1Events.length, 6);
-        assert.isTrue(tracksAppender.canBuildTreesFromEvents(raster1Events));
+        assert.isTrue(TraceModel.Helpers.TreeHelpers.canBuildTreesFromEvents(raster1Events));
         const raster1TreeEvents = tracksAppender.eventsForTreeView(rasterTracks[0]);
         assert.deepEqual(raster1TreeEvents, raster1Events);
 
         const raster2Events = tracksAppender.eventsInTrack(rasterTracks[1]);
         assert.strictEqual(raster2Events.length, 1);
-        assert.isTrue(tracksAppender.canBuildTreesFromEvents(raster2Events));
+        assert.isTrue(TraceModel.Helpers.TreeHelpers.canBuildTreesFromEvents(raster2Events));
         const raster2TreeEvents = tracksAppender.eventsForTreeView(rasterTracks[1]);
         assert.deepEqual(raster2TreeEvents, raster2Events);
       });
@@ -106,7 +107,6 @@ describeWithEnvironment('CompatibilityTracksAppender', function() {
         const timingsGroupEvents = tracksAppender.groupEventsForTreeView(flameChartData.groups[0]);
         if (!timingsGroupEvents) {
           assert.fail('Could not find events for group');
-          return;
         }
         const allTimingEvents = [
           ...traceParsedData.UserTimings.consoleTimings,
@@ -122,7 +122,6 @@ describeWithEnvironment('CompatibilityTracksAppender', function() {
             readonly TraceModel.Types.TraceEvents.TraceEventData[];
         if (!gpuGroupEvents) {
           assert.fail('Could not find events for group');
-          return;
         }
         assert.deepEqual(gpuGroupEvents, traceParsedData.GPU.mainGPUThreadTasks);
       });

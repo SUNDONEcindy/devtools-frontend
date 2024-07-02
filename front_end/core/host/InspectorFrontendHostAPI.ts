@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import type * as Platform from '../../core/platform/platform.js';
+import type * as Root from '../root/root.js';
 
 export enum Events {
   AppendedToURL = 'appendedToURL',
@@ -264,7 +265,7 @@ export interface InspectorFrontendHostAPI {
 
   requestFileSystems(): void;
 
-  save(url: Platform.DevToolsPath.UrlString, content: string, forceSaveAs: boolean): void;
+  save(url: Platform.DevToolsPath.UrlString, content: string, forceSaveAs: boolean, isBase64: boolean): void;
 
   append(url: Platform.DevToolsPath.UrlString, content: string): void;
 
@@ -302,6 +303,8 @@ export interface InspectorFrontendHostAPI {
   clearPreferences(): void;
 
   getSyncInformation(callback: (arg0: SyncInformation) => void): void;
+
+  getHostConfig(callback: (arg0: Root.Runtime.HostConfig) => void): void;
 
   upgradeDraggedFileSystemPermissions(fileSystem: FileSystem): void;
 
@@ -378,6 +381,7 @@ export interface ContextMenuDescriptor {
   enabled?: boolean;
   checked?: boolean;
   subItems?: ContextMenuDescriptor[];
+  shortcut?: string;
   jslogContext?: string;
 }
 export interface LoadNetworkResourceResult {
@@ -427,8 +431,6 @@ export interface SyncInformation {
  */
 export const enum EnumeratedHistogram {
   ActionTaken = 'DevTools.ActionTaken',
-  BreakpointEditDialogRevealedFrom = 'DevTools.BreakpointEditDialogRevealedFrom',
-  PanelClosed = 'DevTools.PanelClosed',
   PanelShown = 'DevTools.PanelShown',
   PanelShownInLocation = 'DevTools.PanelShownInLocation',
   SidebarPaneShown = 'DevTools.SidebarPaneShown',

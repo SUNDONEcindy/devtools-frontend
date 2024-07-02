@@ -18,7 +18,7 @@ import * as Initiators from './Initiators.js';
 import * as InteractionsTrackAppender from './InteractionsTrackAppender.js';
 import * as LayoutShiftsTrackAppender from './LayoutShiftsTrackAppender.js';
 import * as NetworkTrackAppender from './NetworkTrackAppender.js';
-import * as PerformanceModel from './PerformanceModel.js';
+import * as Overlays from './Overlays.js';
 import * as SaveFileFormatter from './SaveFileFormatter.js';
 import * as SourceMapsResolver from './SourceMapsResolver.js';
 import * as ThreadAppender from './ThreadAppender.js';
@@ -59,7 +59,7 @@ export {
   InteractionsTrackAppender,
   LayoutShiftsTrackAppender,
   NetworkTrackAppender,
-  PerformanceModel,
+  Overlays,
   SaveFileFormatter,
   SourceMapsResolver,
   ThreadAppender,

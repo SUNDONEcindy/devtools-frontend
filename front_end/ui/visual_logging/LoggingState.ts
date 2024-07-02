@@ -13,12 +13,13 @@ export interface LoggingState {
   processedForDebugging?: boolean;
   size: DOMRect;
   selectOpen?: boolean;
+  lastInputEventType?: string;
 }
 
 const state = new WeakMap<Loggable, LoggingState>();
 
 function nextVeId(): number {
-  const result = new Uint32Array(1);
+  const result = new Int32Array(1);
   crypto.getRandomValues(result);
   return result[0];
 }

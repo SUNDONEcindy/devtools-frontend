@@ -6,7 +6,6 @@ import * as Common from '../../../core/common/common.js';
 import * as Host from '../../../core/host/host.js';
 import * as i18n from '../../../core/i18n/i18n.js';
 import type * as Platform from '../../../core/platform/platform.js';
-import * as Root from '../../../core/root/root.js';
 import * as SDK from '../../../core/sdk/sdk.js';
 import * as Marked from '../../../third_party/marked/marked.js';
 import * as Buttons from '../../../ui/components/buttons/buttons.js';
@@ -181,9 +180,6 @@ function localizeType(sourceType: SourceType): string {
 }
 
 const TERMS_OF_SERVICE_URL = 'https://policies.google.com/terms';
-// Note: concatenation avoids presubmit rules.
-const GEN_AI_TERMS_OF_SERVICE_URL = 'https://policies.google.com/terms/gener' +
-    'ative-ai';
 const PRIVACY_POLICY_URL = 'https://policies.google.com/privacy';
 const CODE_SNIPPET_WARNING_URL = 'https://support.google.com/legal/answer/13505487';
 const LEARNMORE_URL = 'https://goo.gle/devtools-console-messages-ai' as Platform.DevToolsPath.UrlString;
@@ -237,13 +233,8 @@ type StateData = {
 
 export class ConsoleInsight extends HTMLElement {
   static async create(promptBuilder: PublicPromptBuilder, aidaClient: PublicAidaClient): Promise<ConsoleInsight> {
-    const syncData = await new Promise<Host.InspectorFrontendHostAPI.SyncInformation>(resolve => {
-      Host.InspectorFrontendHost.InspectorFrontendHostInstance.getSyncInformation(syncInfo => {
-        resolve(syncInfo);
-      });
-    });
-
-    return new ConsoleInsight(promptBuilder, aidaClient, syncData);
+    const aidaAvailability = await Host.AidaClient.AidaClient.getAidaClientAvailability();
+    return new ConsoleInsight(promptBuilder, aidaClient, aidaAvailability);
   }
 
   static readonly litTagName = LitHtml.literal`devtools-console-insight`;
@@ -251,7 +242,7 @@ export class ConsoleInsight extends HTMLElement {
 
   #promptBuilder: PublicPromptBuilder;
   #aidaClient: PublicAidaClient;
-  #renderer = new MarkdownRenderer();
+  #renderer = new MarkdownView.MarkdownView.MarkdownInsightRenderer();
 
   // Main state.
   #state: StateData;
@@ -261,33 +252,35 @@ export class ConsoleInsight extends HTMLElement {
 
   constructor(
       promptBuilder: PublicPromptBuilder, aidaClient: PublicAidaClient,
-      syncInfo?: Host.InspectorFrontendHostAPI.SyncInformation) {
+      aidaAvailability: Host.AidaClient.AidaAvailability) {
     super();
     this.#promptBuilder = promptBuilder;
     this.#aidaClient = aidaClient;
-    this.#state = {
-      type: State.NOT_LOGGED_IN,
-    };
-    if (syncInfo?.accountEmail && syncInfo.isSyncActive) {
-      this.#state = {
-        type: State.LOADING,
-        consentReminderConfirmed: false,
-        consentOnboardingFinished: this.#getOnboardingCompletedSetting().get(),
-      };
-    } else if (!syncInfo?.accountEmail) {
-      this.#state = {
-        type: State.NOT_LOGGED_IN,
-      };
-    } else if (!syncInfo?.isSyncActive) {
-      this.#state = {
-        type: State.SYNC_IS_OFF,
-      };
+    switch (aidaAvailability) {
+      case Host.AidaClient.AidaAvailability.AVAILABLE:
+        this.#state = {
+          type: State.LOADING,
+          consentReminderConfirmed: false,
+          consentOnboardingFinished: this.#getOnboardingCompletedSetting().get(),
+        };
+        break;
+      case Host.AidaClient.AidaAvailability.NO_ACCOUNT_EMAIL:
+        this.#state = {
+          type: State.NOT_LOGGED_IN,
+        };
+        break;
+      case Host.AidaClient.AidaAvailability.NO_ACTIVE_SYNC:
+        this.#state = {
+          type: State.SYNC_IS_OFF,
+        };
+        break;
+      case Host.AidaClient.AidaAvailability.NO_INTERNET:
+        this.#state = {
+          type: State.OFFLINE,
+        };
+        break;
     }
-    if (!navigator.onLine) {
-      this.#state = {
-        type: State.OFFLINE,
-      };
-    }
+
     this.#render();
     // Stop keyboard event propagation to avoid Console acting on the events
     // inside the insight component.
@@ -376,7 +369,7 @@ export class ConsoleInsight extends HTMLElement {
       Host.userMetrics.actionTaken(Host.UserMetrics.Action.InsightRatedNegative);
     }
     Host.InspectorFrontendHost.InspectorFrontendHostInstance.registerAidaClientEvent(JSON.stringify({
-      client: 'CHROME_DEVTOOLS',
+      client: Host.AidaClient.CLIENT_NAME,
       event_time: new Date().toISOString(),
       corresponding_aida_rpc_global_id: this.#state.metadata?.rpcGlobalId,
       do_conversation_client_event: {
@@ -447,7 +440,8 @@ export class ConsoleInsight extends HTMLElement {
           {sources: Source[], isPageReloadRecommended: boolean}&Host.AidaClient.AidaResponse, void, void> {
     const {prompt, sources, isPageReloadRecommended} = await this.#promptBuilder.buildPrompt();
     try {
-      for await (const response of this.#aidaClient.fetch(prompt)) {
+      for await (
+          const response of this.#aidaClient.fetch(Host.AidaClient.AidaClient.buildConsoleInsightsRequest(prompt))) {
         yield {sources, isPageReloadRecommended, ...response};
       }
     } catch (err) {
@@ -646,10 +640,13 @@ export class ConsoleInsight extends HTMLElement {
   }
 
   #renderMain(): LitHtml.TemplateResult {
+    const jslog = `${VisualLogging.section(this.#state.type).track({resize: true})}`;
+    const disallowLogging =
+        Common.Settings.Settings.instance().getHostConfig()?.devToolsConsoleInsights.disallowLogging === true;
     // clang-format off
     switch (this.#state.type) {
       case State.LOADING:
-        return html`<main>
+        return html`<main jslog=${jslog}>
             <div role="presentation" class="loader" style="clip-path: url('#clipPath');">
               <svg width="100%" height="64">
                 <clipPath id="clipPath">
@@ -662,13 +659,13 @@ export class ConsoleInsight extends HTMLElement {
           </main>`;
       case State.INSIGHT:
         return html`
-        <main>
+        <main jslog=${jslog}>
           ${
             this.#state.validMarkdown ? html`<${MarkdownView.MarkdownView.MarkdownView.litTagName}
               .data=${{tokens: this.#state.tokens, renderer: this.#renderer} as MarkdownView.MarkdownView.MarkdownViewData}>
             </${MarkdownView.MarkdownView.MarkdownView.litTagName}>`: this.#state.explanation
           }
-          <details style="--list-height: ${(this.#state.sources.length + (this.#state.isPageReloadRecommended ? 1 : 0)) * 20}px;">
+          <details style="--list-height: ${(this.#state.sources.length + (this.#state.isPageReloadRecommended ? 1 : 0)) * 20}px;" jslog=${VisualLogging.expand('sources').track({click: true})}>
             <summary>${i18nString(UIStrings.inputData)}</summary>
             <${ConsoleInsightSourcesList.litTagName} .sources=${this.#state.sources} .isPageReloadRecommended=${this.#state.isPageReloadRecommended}>
             </${ConsoleInsightSourcesList.litTagName}>
@@ -679,16 +676,15 @@ export class ConsoleInsight extends HTMLElement {
         </main>`;
       case State.ERROR:
         return html`
-        <main>
+        <main jslog=${jslog}>
           <div class="error">${i18nString(UIStrings.errorBody)}</div>
         </main>`;
       case State.CONSENT_REMINDER:
         return html`
-          <main>
+          <main jslog=${jslog}>
             <p>The following data will be sent to Google to understand the context for the console message.
-            Human reviewers may process this information for quality purposes.
-            Don’t submit sensitive information. Read Google’s <x-link href=${TERMS_OF_SERVICE_URL} class="link" jslog=${VisualLogging.link('terms-of-service').track({click: true})}>Terms of Service</x-link> and
-            the <x-link href=${GEN_AI_TERMS_OF_SERVICE_URL} class="link" jslog=${VisualLogging.link('gener' + 'ative-ai-terms-of-service').track({click: true})}>${'Gener' + 'ative'} AI Additional Terms of Service</x-link>.</p>
+            ${disallowLogging ? '' : 'Human reviewers may process this information for quality purposes. Don’t submit sensitive information.'}
+            Read Google’s <x-link href=${TERMS_OF_SERVICE_URL} class="link" jslog=${VisualLogging.link('terms-of-service').track({click: true})}>Terms of Service</x-link>.</p>
             <${ConsoleInsightSourcesList.litTagName} .sources=${this.#state.sources} .isPageReloadRecommended=${this.#state.isPageReloadRecommended}>
             </${ConsoleInsightSourcesList.litTagName}>
           </main>
@@ -696,15 +692,15 @@ export class ConsoleInsight extends HTMLElement {
       case State.CONSENT_ONBOARDING:
         switch (this.#state.page) {
           case ConsentOnboardingPage.PAGE1:
-            return html`<main>
+            return html`<main jslog=${jslog}>
               <p>This notice and our <x-link href=${PRIVACY_POLICY_URL} class="link" jslog=${VisualLogging.link('privacy-notice').track({click: true})}>privacy notice</x-link> describe how Chrome DevTools handles your data. Please read them carefully.</p>
 
               <p>Chrome DevTools uses the console message, associated stack trace, related source code, and the associated network headers as input data. When you use "Understand this message", Google collects this input data, generated output, related feature usage information, and your feedback. Google uses this data to provide, improve, and develop Google products and services and machine learning technologies, including Google's enterprise products such as Google Cloud.</p>
 
-              <p>To help with quality and improve our products, human reviewers may read, annotate, and process the above-mentioned input data, generated output, related feature usage information, and your feedback. <strong>Please do not include sensitive (e.g., confidential) or personal information that can be used to identify you or others in your prompts or feedback.</strong> Your data will be stored in a way where Google cannot tell who provided it and can no longer fulfill any deletion requests and will be retained for up to 18 months.</p>
+              <p>To help with quality and improve our products, human reviewers may read, annotate, and process the above-mentioned input data, generated output, related feature usage information, and your feedback. <strong>Please do not include sensitive (e.g., confidential) or personal information that can be used to identify you or others in your prompts or feedback.</strong> Your data will be stored in a way where Google cannot tell who provided it and can no longer fulfill any deletion requests and will be retained for up to 18 months. We may refrain from collecting data to improve our product if your Google account is managed by an organization and depending on your region.</p>
             </main>`;
           case ConsentOnboardingPage.PAGE2:
-            return html`<main>
+            return html`<main jslog=${jslog}>
             <p>As you try "Understand this message", here are key things to know:
 
             <ul>
@@ -718,24 +714,24 @@ export class ConsoleInsight extends HTMLElement {
             <p>
             <label>
               <input class="terms" @change=${this.#onTermsChange} type="checkbox" jslog=${VisualLogging.toggle('terms-of-service-accepted')}>
-              <span>I accept my use of "Understand this message" is subject to the <x-link href=${GEN_AI_TERMS_OF_SERVICE_URL} class="link" jslog=${VisualLogging.link('terms-of-service').track({click: true})}>Google Terms of Service</x-link> and the <x-link href=${GEN_AI_TERMS_OF_SERVICE_URL} class="link" jslog=${VisualLogging.link('gener' + 'ative-ai-terms-of-service').track({click: true})}>${'Gener' + 'ative'} AI Additional Terms of Service</x-link>.</span>
+              <span>I accept my use of "Understand this message" is subject to the <x-link href=${TERMS_OF_SERVICE_URL} class="link" jslog=${VisualLogging.link('terms-of-service').track({click: true})}>Google Terms of Service</x-link>.</span>
             </label>
             </p>
             </main>`;
         }
       case State.NOT_LOGGED_IN:
         return html`
-          <main>
+          <main jslog=${jslog}>
             <div class="error">${i18nString(UIStrings.notLoggedIn)}</div>
           </main>`;
       case State.SYNC_IS_OFF:
         return html`
-          <main>
+          <main jslog=${jslog}>
             <div class="error">${i18nString(UIStrings.syncIsOff)}</div>
           </main>`;
       case State.OFFLINE:
         return html`
-          <main>
+          <main jslog=${jslog}>
             <div class="error">${i18nString(UIStrings.offline)}</div>
           </main>`;
     }
@@ -743,7 +739,8 @@ export class ConsoleInsight extends HTMLElement {
   }
 
   #renderFooter(): LitHtml.LitTemplate {
-    const showThumbsUpDownButtons = Root.Runtime.Runtime.queryParam('ci_disallowLogging') !== 'true';
+    const showThumbsUpDownButtons =
+        Common.Settings.Settings.instance().getHostConfig()?.devToolsConsoleInsights.disallowLogging !== true;
     // clang-format off
     const disclaimer = LitHtml.html`<span>
               This feature may display inaccurate or offensive information that doesn't represent Google's views.
@@ -755,14 +752,14 @@ export class ConsoleInsight extends HTMLElement {
         return LitHtml.nothing;
       case State.ERROR:
       case State.OFFLINE:
-        return html`<footer>
+        return html`<footer jslog=${VisualLogging.section('footer')}>
           <div class="disclaimer">
             ${disclaimer}
           </div>
         </footer>`;
       case State.NOT_LOGGED_IN:
       case State.SYNC_IS_OFF:
-        return html`<footer>
+        return html`<footer jslog=${VisualLogging.section('footer')}>
         <div class="filler"></div>
         <div>
           <${Buttons.Button.Button.litTagName}
@@ -779,7 +776,7 @@ export class ConsoleInsight extends HTMLElement {
         </div>
       </footer>`;
       case State.CONSENT_REMINDER:
-        return html`<footer>
+        return html`<footer jslog=${VisualLogging.section('footer')}>
           <div class="disclaimer">
             ${disclaimer}
           </div>
@@ -792,7 +789,7 @@ export class ConsoleInsight extends HTMLElement {
       case State.CONSENT_ONBOARDING:
         switch (this.#state.page) {
           case ConsentOnboardingPage.PAGE1:
-            return html`<footer>
+            return html`<footer jslog=${VisualLogging.section('footer')}>
                 <div class="disclaimer">
                   ${this.#renderLearnMoreAboutInsights()}
                 </div>
@@ -804,7 +801,7 @@ export class ConsoleInsight extends HTMLElement {
                   </div>
               </footer>`;
           case ConsentOnboardingPage.PAGE2:
-            return html`<footer>
+            return html`<footer jslog=${VisualLogging.section('footer')}>
             <div class="disclaimer">
               ${this.#renderLearnMoreAboutInsights()}
             </div>
@@ -817,7 +814,7 @@ export class ConsoleInsight extends HTMLElement {
           </footer>`;
         }
       case State.INSIGHT:
-        return html`<footer>
+        return html`<footer jslog=${VisualLogging.section('footer')}>
         <div class="disclaimer">
           ${disclaimer}
         </div>
@@ -982,32 +979,5 @@ declare global {
   interface HTMLElementTagNameMap {
     'devtools-console-insight': ConsoleInsight;
     'devtools-console-insight-sources-list': ConsoleInsightSourcesList;
-  }
-}
-
-export class MarkdownRenderer extends MarkdownView.MarkdownView.MarkdownLitRenderer {
-  override renderToken(token: Marked.Marked.Token): LitHtml.TemplateResult {
-    const template = this.templateForToken(token);
-    if (template === null) {
-      return LitHtml.html`${token.raw}`;
-    }
-    return template;
-  }
-
-  override templateForToken(token: Marked.Marked.Token): LitHtml.TemplateResult|null {
-    switch (token.type) {
-      case 'heading':
-        return html`<strong>${this.renderText(token)}</strong>`;
-      case 'link':
-      case 'image':
-        return LitHtml.html`${UI.XLink.XLink.create(token.href, token.text, undefined, undefined, 'token')}`;
-      case 'code':
-        return LitHtml.html`<${MarkdownView.CodeBlock.CodeBlock.litTagName}
-          .code=${this.unescape(token.text)}
-          .codeLang=${token.lang}
-          .displayNotice=${true}>
-        </${MarkdownView.CodeBlock.CodeBlock.litTagName}>`;
-    }
-    return super.templateForToken(token);
   }
 }

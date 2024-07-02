@@ -300,6 +300,13 @@ export const generatedProperties = [
   "name": "anchor-name"
  },
  {
+  "keywords": [
+   "none",
+   "all"
+  ],
+  "name": "anchor-scope"
+ },
+ {
   "longhands": [
    "animation-duration",
    "animation-timing-function",
@@ -980,6 +987,13 @@ export const generatedProperties = [
  },
  {
   "keywords": [
+   "slice",
+   "clone"
+  ],
+  "name": "box-decoration-break"
+ },
+ {
+  "keywords": [
    "none"
   ],
   "name": "box-shadow"
@@ -1616,6 +1630,7 @@ export const generatedProperties = [
    "cap-height",
    "ch-width",
    "ic-width",
+   "ic-height",
    "from-font"
   ],
   "name": "font-size-adjust"
@@ -2084,7 +2099,8 @@ export const generatedProperties = [
  },
  {
   "keywords": [
-   "none"
+   "none",
+   "auto"
   ],
   "name": "line-clamp"
  },
@@ -2736,7 +2752,7 @@ export const generatedProperties = [
  },
  {
   "keywords": [
-   "implicit"
+   "auto"
   ],
   "name": "position-anchor"
  },
@@ -2800,7 +2816,7 @@ export const generatedProperties = [
    "grid-columns",
    "grid-order"
   ],
-  "name": "reading-order-items"
+  "name": "reading-flow"
  },
  {
   "keywords": [
@@ -2827,6 +2843,16 @@ export const generatedProperties = [
    "normal"
   ],
   "name": "row-gap"
+ },
+ {
+  "inherited": true,
+  "keywords": [
+   "space-around",
+   "start",
+   "center",
+   "space-between"
+  ],
+  "name": "ruby-align"
  },
  {
   "inherited": true,
@@ -2904,6 +2930,14 @@ export const generatedProperties = [
  },
  {
   "name": "scroll-margin-top"
+ },
+ {
+  "keywords": [
+   "none",
+   "after",
+   "before"
+  ],
+  "name": "scroll-markers"
  },
  {
   "longhands": [
@@ -3013,29 +3047,9 @@ export const generatedProperties = [
   "name": "scroll-start"
  },
  {
-  "keywords": [
-   "auto",
-   "start",
-   "end",
-   "center",
-   "top",
-   "bottom",
-   "left",
-   "right"
-  ],
   "name": "scroll-start-block"
  },
  {
-  "keywords": [
-   "auto",
-   "start",
-   "end",
-   "center",
-   "top",
-   "bottom",
-   "left",
-   "right"
-  ],
   "name": "scroll-start-inline"
  },
  {
@@ -3046,17 +3060,9 @@ export const generatedProperties = [
   "name": "scroll-start-target"
  },
  {
-  "keywords": [
-   "none",
-   "auto"
-  ],
   "name": "scroll-start-target-block"
  },
  {
-  "keywords": [
-   "none",
-   "auto"
-  ],
   "name": "scroll-start-target-inline"
  },
  {
@@ -3289,6 +3295,7 @@ export const generatedProperties = [
   "name": "text-autospace"
  },
  {
+  "inherited": true,
   "name": "text-box-edge"
  },
  {
@@ -3547,6 +3554,10 @@ export const generatedProperties = [
   "name": "transition"
  },
  {
+  "keywords": [
+   "normal",
+   "allow-discrete"
+  ],
   "name": "transition-behavior"
  },
  {
@@ -3724,7 +3735,9 @@ export const generatedProperties = [
   "keywords": [
    "horizontal-tb",
    "vertical-rl",
-   "vertical-lr"
+   "vertical-lr",
+   "sideways-rl",
+   "sideways-lr"
   ],
   "name": "writing-mode"
  },
@@ -3849,6 +3862,12 @@ export const generatedPropertyValues = {
  "anchor-name": {
   "values": [
    "none"
+  ]
+ },
+ "anchor-scope": {
+  "values": [
+   "none",
+   "all"
   ]
  },
  "animation-composition": {
@@ -4149,6 +4168,12 @@ export const generatedPropertyValues = {
  "bottom": {
   "values": [
    "auto"
+  ]
+ },
+ "box-decoration-break": {
+  "values": [
+   "slice",
+   "clone"
   ]
  },
  "box-shadow": {
@@ -4600,6 +4625,7 @@ export const generatedPropertyValues = {
    "cap-height",
    "ch-width",
    "ic-width",
+   "ic-height",
    "from-font"
   ]
  },
@@ -4880,7 +4906,8 @@ export const generatedPropertyValues = {
  },
  "line-clamp": {
   "values": [
-   "none"
+   "none",
+   "auto"
   ]
  },
  "line-height": {
@@ -5197,7 +5224,7 @@ export const generatedPropertyValues = {
  },
  "position-anchor": {
   "values": [
-   "implicit"
+   "auto"
   ]
  },
  "position-try-options": {
@@ -5230,7 +5257,7 @@ export const generatedPropertyValues = {
    "none"
   ]
  },
- "reading-order-items": {
+ "reading-flow": {
   "values": [
    "normal",
    "flex-visual",
@@ -5260,6 +5287,14 @@ export const generatedPropertyValues = {
    "normal"
   ]
  },
+ "ruby-align": {
+  "values": [
+   "space-around",
+   "start",
+   "center",
+   "space-between"
+  ]
+ },
  "ruby-position": {
   "values": [
    "over",
@@ -5280,6 +5315,13 @@ export const generatedPropertyValues = {
   "values": [
    "auto",
    "smooth"
+  ]
+ },
+ "scroll-markers": {
+  "values": [
+   "none",
+   "after",
+   "before"
   ]
  },
  "scroll-padding-block-end": {
@@ -5346,42 +5388,6 @@ export const generatedPropertyValues = {
    "both",
    "mandatory",
    "proximity"
-  ]
- },
- "scroll-start-block": {
-  "values": [
-   "auto",
-   "start",
-   "end",
-   "center",
-   "top",
-   "bottom",
-   "left",
-   "right"
-  ]
- },
- "scroll-start-inline": {
-  "values": [
-   "auto",
-   "start",
-   "end",
-   "center",
-   "top",
-   "bottom",
-   "left",
-   "right"
-  ]
- },
- "scroll-start-target-block": {
-  "values": [
-   "none",
-   "auto"
-  ]
- },
- "scroll-start-target-inline": {
-  "values": [
-   "none",
-   "auto"
   ]
  },
  "scroll-start-target-x": {
@@ -5676,6 +5682,12 @@ export const generatedPropertyValues = {
    "preserve-3d"
   ]
  },
+ "transition-behavior": {
+  "values": [
+   "normal",
+   "allow-discrete"
+  ]
+ },
  "transition-property": {
   "values": [
    "none"
@@ -5787,7 +5799,9 @@ export const generatedPropertyValues = {
   "values": [
    "horizontal-tb",
    "vertical-rl",
-   "vertical-lr"
+   "vertical-lr",
+   "sideways-rl",
+   "sideways-lr"
   ]
  },
  "z-index": {

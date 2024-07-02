@@ -5,11 +5,12 @@
 import * as Common from '../../core/common/common.js';
 import * as i18n from '../../core/i18n/i18n.js';
 import * as Platform from '../../core/platform/platform.js';
-import * as Protocol from '../../generated/protocol.js';
+import type * as Protocol from '../../generated/protocol.js';
 import * as TraceEngine from '../../models/trace/trace.js';
 import * as PerfUI from '../../ui/legacy/components/perf_ui/perf_ui.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import * as ThemeSupport from '../../ui/legacy/theme_support/theme_support.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 
 import {NetworkTrackAppender} from './NetworkTrackAppender.js';
 import timelineFlamechartPopoverStyles from './timelineFlamechartPopover.css.js';
@@ -25,8 +26,10 @@ export class TimelineFlameChartNetworkDataProvider implements PerfUI.FlameChart.
 
   #timelineDataInternal?: PerfUI.FlameChart.FlameChartTimelineData|null;
   #lastSelection?: Selection;
-  #priorityToValue?: Map<string, number>;
   #traceEngineData: TraceEngine.Handlers.Types.TraceParseData|null;
+  #eventIndexByEvent: Map<TraceEngine.Types.TraceEvents.SyntheticNetworkRequest, number|null> = new Map();
+  #visualElementsParent: VisualLogging.Loggable|null = null;
+
   constructor() {
     this.#minimumBoundaryInternal = 0;
     this.#timeSpan = 0;
@@ -41,10 +44,15 @@ export class TimelineFlameChartNetworkDataProvider implements PerfUI.FlameChart.
     this.#timelineDataInternal = null;
     this.#traceEngineData = traceEngineData;
     this.#events = traceEngineData?.NetworkRequests.byTime || [];
+    this.#eventIndexByEvent.clear();
 
     if (this.#traceEngineData) {
       this.#setTimingBoundsData(this.#traceEngineData);
     }
+  }
+
+  setVisualElementLoggingParent(parent: VisualLogging.Loggable|null): void {
+    this.#visualElementsParent = parent;
   }
 
   isEmpty(): boolean {
@@ -54,6 +62,10 @@ export class TimelineFlameChartNetworkDataProvider implements PerfUI.FlameChart.
 
   maxStackDepth(): number {
     return this.#maxLevel;
+  }
+
+  hasTrackConfigurationMode(): boolean {
+    return false;
   }
 
   timelineData(): PerfUI.FlameChart.FlameChartTimelineData {
@@ -70,6 +82,13 @@ export class TimelineFlameChartNetworkDataProvider implements PerfUI.FlameChart.
     this.#events = this.#traceEngineData.NetworkRequests.byTime;
     this.#networkTrackAppender = new NetworkTrackAppender(this.#traceEngineData, this.#timelineDataInternal);
     this.#maxLevel = this.#networkTrackAppender.appendTrackAtLevel(0);
+
+    for (const group of this.#timelineDataInternal.groups) {
+      if (group.jslogContext) {
+        VisualLogging.registerLoggable(
+            group, `${VisualLogging.section().context(group.jslogContext)}`, this.#visualElementsParent);
+      }
+    }
     return this.#timelineDataInternal;
   }
 
@@ -92,6 +111,30 @@ export class TimelineFlameChartNetworkDataProvider implements PerfUI.FlameChart.
     const event = this.#events[index];
     this.#lastSelection = new Selection(TimelineSelection.fromTraceEvent(event), index);
     return this.#lastSelection.timelineSelection;
+  }
+
+  indexForEvent(event: TraceEngine.Types.TraceEvents.TraceEventData|
+                TraceEngine.Handlers.ModelHandlers.Frames.TimelineFrame): number|null {
+    // In the NetworkDataProvider we will never be dealing with frames, but we need to satisfy the interface for a DataProvider.
+    if (event instanceof TraceEngine.Handlers.ModelHandlers.Frames.TimelineFrame) {
+      return null;
+    }
+    if (!TraceEngine.Types.TraceEvents.isSyntheticNetworkRequestDetailsEvent(event)) {
+      return null;
+    }
+    const fromCache = this.#eventIndexByEvent.get(event);
+    // Cached value might be null, which is OK.
+    if (fromCache !== undefined) {
+      return fromCache;
+    }
+    const index = this.#events.indexOf(event);
+    const result = index > -1 ? index : null;
+    this.#eventIndexByEvent.set(event, result);
+    return result;
+  }
+
+  eventByIndex(entryIndex: number): TraceEngine.Types.TraceEvents.SyntheticNetworkRequest|null {
+    return this.#events.at(entryIndex) ?? null;
   }
 
   entryIndexForSelection(selection: TimelineSelection|null): number {
@@ -277,24 +320,14 @@ export class TimelineFlameChartNetworkDataProvider implements PerfUI.FlameChart.
           i18n.TimeUtilities.millisToString(duration, true);
     }
     const div = (contents.createChild('span') as HTMLElement);
-    div.textContent = PerfUI.NetworkPriorities.uiLabelForNetworkPriority(
-        (event.args.data.priority as Protocol.Network.ResourcePriority));
+    div.textContent = PerfUI.NetworkPriorities.uiLabelForNetworkPriority((event.args.data.priority));
     div.style.color = this.#colorForPriority(event.args.data.priority) || 'black';
     contents.createChild('span').textContent = Platform.StringUtilities.trimMiddle(event.args.data.url, maxURLChars);
     return element;
   }
 
-  #colorForPriority(priority: string): string|null {
-    if (!this.#priorityToValue) {
-      this.#priorityToValue = new Map([
-        [Protocol.Network.ResourcePriority.VeryLow, 1],
-        [Protocol.Network.ResourcePriority.Low, 2],
-        [Protocol.Network.ResourcePriority.Medium, 3],
-        [Protocol.Network.ResourcePriority.High, 4],
-        [Protocol.Network.ResourcePriority.VeryHigh, 5],
-      ]);
-    }
-    const value = this.#priorityToValue.get(priority);
+  #colorForPriority(priority: Protocol.Network.ResourcePriority): string|null {
+    const value = PerfUI.NetworkPriorities.networkPriorityWeight(priority);
     return value ? `hsla(214, 80%, 50%, ${value / 5})` : null;
   }
 

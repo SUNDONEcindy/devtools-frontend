@@ -132,7 +132,7 @@ export async function setSearchFilter(text: string) {
 
 export async function waitForSearchResultNumber(results: number) {
   const findMatch = async () => {
-    const currentMatch = await waitFor('label[for=\'search-input-field\']');
+    const currentMatch = await waitFor('.search-results-matches');
     const currentTextContent = currentMatch && await currentMatch.evaluate(el => el.textContent);
     if (currentTextContent && currentTextContent.endsWith(` ${results}`)) {
       return currentMatch;
@@ -145,7 +145,7 @@ export async function waitForSearchResultNumber(results: number) {
 export async function findSearchResult(searchResult: string, pollIntrerval: number = 500) {
   const {frontend} = getBrowserAndPages();
   const match = await waitFor('#profile-views table.data');
-  const matches = await waitFor('label.search-results-matches');
+  const matches = await waitFor(' .search-results-matches');
   const matchesText = await matches.evaluate(async element => {
     return element.textContent;
   });
@@ -154,7 +154,7 @@ export async function findSearchResult(searchResult: string, pollIntrerval: numb
   } else {
     await waitForFunction(async () => {
       const selectedBefore = await waitFor(SELECTED_RESULT);
-      await click('[aria-label="Search next"]');
+      await click('[aria-label="Show next result"]');
       // Wait until the click has taken effect by checking that the selected
       // result has changed. This is done to prevent the assertion afterwards
       // from happening before the next result is fully loaded.
@@ -191,6 +191,18 @@ const normalizRetainerName = (retainerName: string) => {
     }
     return 'InternalNode';
   }
+
+  // Blink is changing its representation of HTML elements from WebIDL names
+  // like 'HTMLDivElement' to start tags like '<div id="something">'. The
+  // following is a temporary workaround to make tests pass with or without the
+  // upcoming change.
+  // TODO (343341610): Remove this.
+  if (retainerName === 'Detached HTMLDivElement') {
+    retainerName = 'Detached <div>';
+  } else if (retainerName === 'HTMLBodyElement') {
+    retainerName = '<body>';
+  }
+
   return retainerName;
 };
 
@@ -314,8 +326,9 @@ export async function getSizesFromSelectedRow() {
   return await getSizesFromRow(row);
 }
 
-async function getCategoryRow(text: string) {
-  return await waitFor(`//td[text()="${text}"]/ancestor::tr`, undefined, undefined, 'xpath');
+export async function getCategoryRow(text: string, wait: boolean = true) {
+  const selector = `//td[text()="${text}"]/ancestor::tr`;
+  return await (wait ? waitFor(selector, undefined, undefined, 'xpath') : $(selector, undefined, 'xpath'));
 }
 
 export async function getSizesFromCategoryRow(text: string) {
@@ -329,6 +342,12 @@ export async function getDistanceFromCategoryRow(text: string) {
   return await numericColumns[0].evaluate(e => parseInt(e.textContent as string, 10));
 }
 
+export async function getCountFromCategoryRow(text: string) {
+  const row = await getCategoryRow(text);
+  const countSpan = await waitFor('.objects-count', row);
+  return await countSpan.evaluate(e => parseInt((e.textContent ?? '').substring(1), 10));
+}
+
 export async function clickOnContextMenuForRetainer(retainerName: string, menuItem: string) {
   const retainersPane = await waitFor('.retaining-paths-view');
   const element = await waitFor(`//span[text()="${retainerName}"]`, retainersPane, undefined, 'xpath');
@@ -340,4 +359,9 @@ export async function clickOnContextMenuForRetainer(retainerName: string, menuIt
 export async function restoreIgnoredRetainers() {
   const element = await waitFor('button[aria-label="Restore ignored retainers"]');
   await clickElement(element);
+}
+
+export async function setFilterDropdown(filter: string) {
+  const select = await waitFor('select.toolbar-item[aria-label="Filter"]');
+  await select.select(filter);
 }

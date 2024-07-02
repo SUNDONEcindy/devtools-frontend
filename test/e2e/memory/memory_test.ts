@@ -29,6 +29,8 @@ import {
   expandFocusedRow,
   findSearchResult,
   focusTableRow,
+  getCategoryRow,
+  getCountFromCategoryRow,
   getDataGridRows,
   getDistanceFromCategoryRow,
   getSizesFromCategoryRow,
@@ -36,6 +38,7 @@ import {
   navigateToMemoryTab,
   restoreIgnoredRetainers,
   setClassFilter,
+  setFilterDropdown,
   setSearchFilter,
   takeAllocationProfile,
   takeAllocationTimelineProfile,
@@ -59,7 +62,8 @@ describe('The Memory Panel', function() {
     await navigateToMemoryTab();
   });
 
-  it('Can take several heap snapshots ', async () => {
+  // This test logs assertions to the console.
+  it.skip('[crbug.com/347709947] Can take several heap snapshots ', async () => {
     await goToResource('memory/default.html');
     await navigateToMemoryTab();
     await takeHeapSnapshot();
@@ -83,7 +87,7 @@ describe('The Memory Panel', function() {
       'Detached EventListener',
       'Detached InternalNode',
       'Detached InternalNode',
-      'Detached HTMLDivElement',
+      'Detached <div>',
       'Retainer',
       'Window',
     ]);
@@ -112,7 +116,7 @@ describe('The Memory Panel', function() {
             'EventListener',
             'InternalNode',
             'InternalNode',
-            'HTMLBodyElement',
+            '<body>',
           ]);
         });
       });
@@ -160,22 +164,24 @@ describe('The Memory Panel', function() {
     });
   });
 
-  it('Shows the correct number of divs for a detached DOM tree correctly', async () => {
+  // TODO (343341610) Reinstate this test after change in Blink
+  it.skip('[crbug.com/343341610]: Shows the correct number of divs for a detached DOM tree correctly', async () => {
     await goToResource('memory/detached-dom-tree.html');
     await navigateToMemoryTab();
     await takeHeapSnapshot();
     await waitForNonEmptyHeapSnapshotData();
-    await setSearchFilter('Detached HTMLDivElement');
+    await setSearchFilter('Detached <div>');
     await waitForSearchResultNumber(3);
   });
 
-  it('Shows the correct output for an attached iframe', async () => {
+  // TODO (343341610) Reinstate this test after change in Blink
+  it.skip('[crbug.com/343341610]: Shows the correct output for an attached iframe', async () => {
     await goToResource('memory/attached-iframe.html');
     await navigateToMemoryTab();
     await takeHeapSnapshot();
     await waitForNonEmptyHeapSnapshotData();
     await setSearchFilter('Retainer');
-    await waitForSearchResultNumber(8);
+    await waitForSearchResultNumber(9);
     await findSearchResult('Retainer');
     // The following line checks two things: That the property 'aUniqueName'
     // in the iframe is retaining the Retainer class object, and that the
@@ -265,12 +271,13 @@ describe('The Memory Panel', function() {
         retainerChain => retainerChain.some(({retainerClassName}) => retainerClassName === 'Detached Window'));
   });
 
-  it('Shows the a tooltip', async () => {
+  // TODO (343341610) Reinstate this test after change in Blink
+  it.skip('[crbug.com/343341610]: Shows the a tooltip', async () => {
     await goToResource('memory/detached-dom-tree.html');
     await navigateToMemoryTab();
     await takeHeapSnapshot();
     await waitForNonEmptyHeapSnapshotData();
-    await setSearchFilter('Detached HTMLDivElement');
+    await setSearchFilter('Detached <div>');
     await waitForSearchResultNumber(3);
     await waitUntilRetainerChainSatisfies(retainerChain => {
       return retainerChain.length > 0 && retainerChain[0].propertyName === 'retaining_wrapper';
@@ -497,5 +504,34 @@ describe('The Memory Panel', function() {
     await waitForRetainerChain(['(Internalized strings)', '(GC roots)']);
     await restoreIgnoredRetainers();
     await waitForRetainerChain(['Object', 'KeyType', 'Window']);
+  });
+
+  it('Can filter the summary view', async () => {
+    await goToResource('memory/filtering.html');
+    await navigateToMemoryTab();
+    await takeHeapSnapshot();
+    await waitForNonEmptyHeapSnapshotData();
+    await setFilterDropdown('Duplicated strings');
+    await setSearchFilter('"duplicatedKey":"duplicatedValue"');
+    await waitForSearchResultNumber(2);
+    await setFilterDropdown('Objects retained by detached DOM nodes');
+    await getCategoryRow('ObjectRetainedByDetachedDom');
+    assert.isTrue(!(await getCategoryRow('ObjectRetainedByBothDetachedDomAndConsole', false)));
+    await setFilterDropdown('Objects retained by the DevTools console');
+    await getCategoryRow('ObjectRetainedByConsole');
+    assert.isTrue(!(await getCategoryRow('ObjectRetainedByBothDetachedDomAndConsole', false)));
+  });
+
+  // TODO (343341610) Enable this test after change in Blink
+  it.skip('[crbug.com/343341610]: Groups HTML elements by tag name', async () => {
+    await goToResource('memory/dom-details.html');
+    await navigateToMemoryTab();
+    await takeHeapSnapshot();
+    await waitForNonEmptyHeapSnapshotData();
+    await setClassFilter('<div>');
+    assert.strictEqual(3, await getCountFromCategoryRow('<div>'));
+    assert.strictEqual(3, await getCountFromCategoryRow('Detached <div>'));
+    await setSearchFilter('Detached <div data-x="p" data-y="q">');
+    await waitForSearchResultNumber(1);
   });
 });
