@@ -279,9 +279,9 @@ const UIStrings = {
    */
   showSidebar: 'Show sidebar',
   /**
-   * @description Tooltip for the the sole sidebar toggle in the Performance panel. Command to close the sidebar.
+   * @description Tooltip for the the sidebar toggle in the Performance panel. Command to close the sidebar.
    */
-  hideSidebar: 'Hide sole sidebar',
+  hideSidebar: 'Hide sidebar',
   /**
    * @description Screen reader announcement when the sidebar is shown in the Performance panel.
    */
@@ -603,6 +603,11 @@ export class TimelinePanel extends UI.Panel.Panel implements Client, TimelineMod
       } else {
         this.#minimapComponent.clearBoundsHighlight();
       }
+    });
+
+    this.#sideBar.element.addEventListener(TimelineInsights.SidebarInsight.InsightSetZoom.eventName, event => {
+      TraceBounds.TraceBounds.BoundsManager.instance().setTimelineVisibleWindow(
+          event.bounds, {ignoreMiniMapBounds: true, shouldAnimate: true});
     });
 
     this.onModeChanged();
@@ -1831,6 +1836,10 @@ export class TimelinePanel extends UI.Panel.Panel implements Client, TimelineMod
    * We also check that the experiments are enabled, else we reveal an entirely empty sidebar.
    */
   #showSidebarIfRequired(): void {
+    if (Root.Runtime.Runtime.queryParam('disable-auto-performance-sidebar-reveal') !== null) {
+      // Used in interaction tests & screenshot tests.
+      return;
+    }
     const needToRestore = this.#restoreSidebarVisibilityOnTraceLoad;
     const userHasSeenSidebar = this.#sideBar.userHasOpenedSidebarOnce();
     const experimentsEnabled = this.#panelSidebarEnabled();
