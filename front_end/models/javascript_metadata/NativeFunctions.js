@@ -7261,7 +7261,7 @@ export const NativeFunctions = [
     signatures: [["length"]]
   },
   {
-    name: "supportsInputLanguage",
+    name: "languageAvailable",
     signatures: [["languageTag"]]
   },
   {
@@ -7434,6 +7434,10 @@ export const NativeFunctions = [
   {
     name: "beginLayer",
     signatures: [["?options"]]
+  },
+  {
+    name: "fillTextCluster",
+    signatures: [["textCluster","?x","?y"]]
   },
   {
     name: "placeElement",
