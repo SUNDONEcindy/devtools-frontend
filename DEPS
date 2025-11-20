@@ -12,7 +12,7 @@ vars = {
   'build_with_chromium': False,
 
   'build_url': 'https://chromium.googlesource.com/chromium/src/build.git',
-  'build_revision': 'ec4972c8c286d0aa001795f3d2b6be3a38d97dcb',
+  'build_revision': '74851a78edba42e17f0c8ffb2705d727ebe14175',
 
   'buildtools_url': 'https://chromium.googlesource.com/chromium/src/buildtools.git',
   'buildtools_revision': 'd33e4e3371ae9f4f671c94959d10d643b2d1a507',
@@ -24,7 +24,7 @@ vars = {
   'inspector_protocol_revision': '679b33a98ae546ff521eee2ea28d8d5bf28872ba',
 
   # Keeping track of the last time we rolled the browser protocol files.
-  'chromium_browser_protocol_revision' : '9964dcba17c15a0ec11126abaa933c551bae04d5',
+  'chromium_browser_protocol_revision' : '42031498c092b4c71c62b982254e76f1bac3b694',
 
   'clang_format_url': 'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/clang/tools/clang-format.git',
   'clang_format_revision': 'c2725e0622e1a86d55f14514f2177a39efea4a0e',
@@ -338,8 +338,6 @@ hooks = [
       'vpython3',
       'third_party/node/node.py',
       '--output',
-      # Silence the "Importing JSON modules" warning
-      '--no-warnings=ExperimentalWarning',
       'scripts/deps/sync-vscode-settings.mjs'
     ]
   },
