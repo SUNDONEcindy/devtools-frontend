@@ -45,16 +45,6 @@ async function installLCPListener(session: puppeteer.CDPSession): Promise<() => 
   return () => lcpPromise;
 }
 
-async function setCruxRawResponse(path: string, devToolsPage: DevToolsPage, inspectedPage: InspectedPage) {
-  await devToolsPage.evaluate(`(async () => {
-    const CrUXManager = await import('./models/crux-manager/crux-manager.js');
-    const cruxManager = CrUXManager.CrUXManager.instance();
-    cruxManager.setEndpointForTesting(
-      '${inspectedPage.getResourcesPath()}/${path}'
-    )
-  })()`);
-}
-
 describe('The Performance panel landing page', function() {
   setup({dockingMode: 'undocked', panel: 'timeline'});
   increaseTimeoutForPerfPanel(this);
@@ -283,8 +273,7 @@ describe('The Performance panel landing page', function() {
   it('gets field data automatically', async ({devToolsPage, inspectedPage}) => {
     await prepare(devToolsPage, inspectedPage);
 
-    await setCruxRawResponse('performance/crux-none.rawresponse', devToolsPage, inspectedPage);
-    await inspectedPage.goToResource('performance/fake-website.html');
+    await inspectedPage.goToResourceWithCustomHost('crux-none.test', 'performance/fake-website.html');
 
     const fieldSetupButton = await devToolsPage.waitFor<HTMLElement>(SETUP_FIELD_BUTTON_SELECTOR);
     await fieldSetupButton.click();
@@ -303,8 +292,7 @@ describe('The Performance panel landing page', function() {
     }
 
     // Switch the fake CrUX endpoint data to simulate new data for a new origin
-    await setCruxRawResponse('performance/crux-valid.rawresponse', devToolsPage, inspectedPage);
-    await inspectedPage.goToResourceWithCustomHost('devtools.oopif.test', 'performance/fake-website.html');
+    await inspectedPage.goToResourceWithCustomHost('crux-valid.test', 'performance/fake-website.html');
 
     const [lcpFieldValue, clsFieldValue, inpFieldValue] =
         await devToolsPage.waitForMany(READY_FIELD_METRIC_SELECTOR, 3);
@@ -340,8 +328,7 @@ describe('The Performance panel landing page', function() {
   it('uses URL override for field data', async ({devToolsPage, inspectedPage}) => {
     await prepare(devToolsPage, inspectedPage);
 
-    await setCruxRawResponse('performance/crux-valid.rawresponse', devToolsPage, inspectedPage);
-    await inspectedPage.goToResource('performance/fake-website.html');
+    await inspectedPage.goToResourceWithCustomHost('crux-valid.test', 'performance/fake-website.html');
 
     const fieldSetupButton = await devToolsPage.waitFor(SETUP_FIELD_BUTTON_SELECTOR);
     await fieldSetupButton.click();
@@ -367,8 +354,7 @@ describe('The Performance panel landing page', function() {
     }
 
     // Switch the fake CrUX endpoint data to simulate new data for a new origin
-    await setCruxRawResponse('performance/crux-none.rawresponse', devToolsPage, inspectedPage);
-    await inspectedPage.goToResourceWithCustomHost('devtools.oopif.test', 'performance/fake-website.html');
+    await inspectedPage.goToResourceWithCustomHost('crux-none.test', 'performance/fake-website.html');
 
     // Even though the URL and field data should change, the displayed data remains teh same
     {
