@@ -1916,17 +1916,19 @@ export class ResourcesSection implements SDK.TargetManager.Observer {
     frameManager.addEventListener(
         SDK.FrameManager.Events.RESOURCE_ADDED, event => this.resourceAdded(event.data.resource), this);
 
-    SDK.TargetManager.TargetManager.instance().addModelListener(
-        SDK.ChildTargetManager.ChildTargetManager, SDK.ChildTargetManager.Events.TARGET_CREATED, this.windowOpened,
-        this, {scoped: true});
-    SDK.TargetManager.TargetManager.instance().addModelListener(
-        SDK.ChildTargetManager.ChildTargetManager, SDK.ChildTargetManager.Events.TARGET_INFO_CHANGED,
-        this.windowChanged, this, {scoped: true});
-    SDK.TargetManager.TargetManager.instance().addModelListener(
-        SDK.ChildTargetManager.ChildTargetManager, SDK.ChildTargetManager.Events.TARGET_DESTROYED, this.windowDestroyed,
-        this, {scoped: true});
+    if (this.panel.mode !== 'node') {
+      SDK.TargetManager.TargetManager.instance().addModelListener(
+          SDK.ChildTargetManager.ChildTargetManager, SDK.ChildTargetManager.Events.TARGET_CREATED, this.windowOpened,
+          this, {scoped: true});
+      SDK.TargetManager.TargetManager.instance().addModelListener(
+          SDK.ChildTargetManager.ChildTargetManager, SDK.ChildTargetManager.Events.TARGET_INFO_CHANGED,
+          this.windowChanged, this, {scoped: true});
+      SDK.TargetManager.TargetManager.instance().addModelListener(
+          SDK.ChildTargetManager.ChildTargetManager, SDK.ChildTargetManager.Events.TARGET_DESTROYED,
+          this.windowDestroyed, this, {scoped: true});
 
-    SDK.TargetManager.TargetManager.instance().observeTargets(this, {scoped: true});
+      SDK.TargetManager.TargetManager.instance().observeTargets(this, {scoped: true});
+    }
   }
 
   private initialize(): void {

@@ -49,7 +49,7 @@ export class Target extends ProtocolClient.InspectorBackend.TargetBase {
         this.#capabilitiesMask = Capability.BROWSER | Capability.STORAGE | Capability.DOM | Capability.JS |
             Capability.LOG | Capability.NETWORK | Capability.TARGET | Capability.TRACING | Capability.EMULATION |
             Capability.INPUT | Capability.INSPECTOR | Capability.AUDITS | Capability.WEB_AUTHN | Capability.IO |
-            Capability.MEDIA | Capability.EVENT_BREAKPOINTS;
+            Capability.MEDIA | Capability.EVENT_BREAKPOINTS | Capability.DOM_STORAGE;
         if (parentTarget?.type() !== Type.FRAME) {
           // This matches backend exposing certain capabilities only for the main frame.
           this.#capabilitiesMask |=
@@ -92,7 +92,8 @@ export class Target extends ProtocolClient.InspectorBackend.TargetBase {
         this.#capabilitiesMask = Capability.JS | Capability.LOG | Capability.EVENT_BREAKPOINTS | Capability.NETWORK;
         break;
       case Type.NODE:
-        this.#capabilitiesMask = Capability.JS | Capability.NETWORK | Capability.TARGET | Capability.IO;
+        this.#capabilitiesMask =
+            Capability.JS | Capability.NETWORK | Capability.TARGET | Capability.IO | Capability.DOM_STORAGE;
         break;
       case Type.AUCTION_WORKLET:
         this.#capabilitiesMask = Capability.JS | Capability.EVENT_BREAKPOINTS;
@@ -318,5 +319,6 @@ export const enum Capability {
   IO = 1 << 17,
   MEDIA = 1 << 18,
   EVENT_BREAKPOINTS = 1 << 19,
+  DOM_STORAGE = 1 << 20,
   NONE = 0,
 }
