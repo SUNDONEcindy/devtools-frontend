@@ -55,6 +55,14 @@ const UIStrings = {
    */
   reloadDevtools: 'Reload DevTools',
   /**
+   * @description Title of an action that restarts Chrome
+   */
+  restartChrome: 'Restart Chrome',
+  /**
+   * @description Confirmation dialog text for restarting Chrome
+   */
+  areYouSureYouWantToRestartChrome: 'Are you sure you want to restart Chrome?',
+  /**
    * @description Text for context menu action to move a tab to the main tab bar
    */
   moveToMainTabBar: 'Move to main tab bar',
@@ -155,6 +163,7 @@ export class InspectorView extends VBox implements ViewLocationResolver {
   private focusRestorer?: WidgetFocusRestorer|null;
   private ownerSplitWidget?: SplitWidget;
   private reloadRequiredInfobar?: Infobar;
+  #chromeRestartRequiredInfobar?: Infobar;
   #debuggedTabReloadRequiredInfobar?: Infobar;
   #selectOverrideFolderInfobar?: Infobar;
   #resizeObserver: ResizeObserver;
@@ -676,7 +685,7 @@ export class InspectorView extends VBox implements ViewLocationResolver {
   }
 
   displayReloadRequiredWarning(message: string): void {
-    if (!this.reloadRequiredInfobar) {
+    if (!this.reloadRequiredInfobar && !this.#chromeRestartRequiredInfobar) {
       const infobar = new Infobar(
           InfobarType.INFO, message,
           [
@@ -693,7 +702,37 @@ export class InspectorView extends VBox implements ViewLocationResolver {
       this.attachInfobar(infobar);
       this.reloadRequiredInfobar = infobar;
       infobar.setCloseCallback(() => {
-        delete this.reloadRequiredInfobar;
+        this.reloadRequiredInfobar = undefined;
+      });
+    }
+  }
+
+  displayChromeRestartRequiredWarning(message: string): void {
+    if (this.reloadRequiredInfobar) {
+      this.reloadRequiredInfobar.dispose();
+    }
+    if (!this.#chromeRestartRequiredInfobar) {
+      const infobar = new Infobar(
+          InfobarType.INFO, message,
+          [
+            {
+              text: i18nString(UIStrings.restartChrome),
+              delegate: () => {
+                if (confirm(i18nString(UIStrings.areYouSureYouWantToRestartChrome))) {
+                  Host.InspectorFrontendHost.InspectorFrontendHostInstance.requestRestart();
+                }
+              },
+              dismiss: false,
+              buttonVariant: Buttons.Button.Variant.PRIMARY,
+              jslogContext: 'main.chrome-restart-chrome',
+            },
+          ],
+          undefined, 'reload-required');
+      infobar.setParentView(this);
+      this.attachInfobar(infobar);
+      this.#chromeRestartRequiredInfobar = infobar;
+      infobar.setCloseCallback(() => {
+        this.#chromeRestartRequiredInfobar = undefined;
       });
     }
   }

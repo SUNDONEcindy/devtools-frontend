@@ -565,4 +565,6 @@ export class InspectorFrontendHostStub implements InspectorFrontendHostAPI {
 
   setChromeFlag(_flagName: string, _value: boolean): void {
   }
+  requestRestart(): void {
+  }
 }

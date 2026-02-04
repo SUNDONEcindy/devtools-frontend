@@ -61,6 +61,10 @@ const UIStrings = {
    */
   settingsChangedReloadDevTools: 'Settings changed. To apply, reload DevTools.',
   /**
+   * @description Message to display if a setting change requires a reload of DevTools
+   */
+  settingsChangedRestartChrome: 'Settings changed. To apply, restart Chrome.',
+  /**
    * @description Warning text shown when the user has entered text to filter the
    * list of experiments, but no experiments match the filter.
    */
@@ -464,8 +468,13 @@ export class ExperimentsSettingsTab extends UI.Widget.VBox implements SettingsTa
       }
       experiment.setEnabled(checkbox.checked);
       Host.userMetrics.experimentChanged(experiment.name, experiment.isEnabled());
-      UI.InspectorView.InspectorView.instance().displayReloadRequiredWarning(
-          i18nString(UIStrings.settingsChangedReloadDevTools));
+      if (experiment instanceof Root.Runtime.HostExperiment && experiment.requiresChromeRestart) {
+        UI.InspectorView.InspectorView.instance().displayChromeRestartRequiredWarning(
+            i18nString(UIStrings.settingsChangedRestartChrome));
+      } else {
+        UI.InspectorView.InspectorView.instance().displayReloadRequiredWarning(
+            i18nString(UIStrings.settingsChangedReloadDevTools));
+      }
     }
     checkbox.addEventListener('click', listener, false);
 

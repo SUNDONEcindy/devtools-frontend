@@ -453,6 +453,7 @@ export interface InspectorFrontendHostAPI {
   recordFunctionCall(event: FunctionCallEvent): void;
 
   setChromeFlag(flagName: string, value: boolean): void;
+  requestRestart(): void;
 }
 
 export interface AcceleratorDescriptor {

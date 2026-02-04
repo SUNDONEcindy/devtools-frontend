@@ -175,6 +175,7 @@ export class ExperimentsSupport {
     title: string,
     aboutFlag: string,
     isEnabled: boolean,
+    requiresChromeRestart: boolean,
     docLink?: Platform.DevToolsPath.UrlString,
     readonly feedbackLink?: Platform.DevToolsPath.UrlString,
   }): HostExperiment {
@@ -377,6 +378,7 @@ export class HostExperiment {
   // It is NOT the the name of the corresponding Chromium `base::Feature`.
   aboutFlag: string;
   #isEnabled: boolean;
+  readonly requiresChromeRestart: boolean;
   docLink?: Platform.DevToolsPath.UrlString;
   readonly feedbackLink?: Platform.DevToolsPath.UrlString;
 
@@ -386,6 +388,7 @@ export class HostExperiment {
     experiments: ExperimentsSupport,
     aboutFlag: string,
     isEnabled: boolean,
+    requiresChromeRestart: boolean,
     docLink?: Platform.DevToolsPath.UrlString,
     feedbackLink?: Platform.DevToolsPath.UrlString,
   }) {
@@ -394,6 +397,7 @@ export class HostExperiment {
     this.#experiments = params.experiments;
     this.aboutFlag = params.aboutFlag;
     this.#isEnabled = params.isEnabled;
+    this.requiresChromeRestart = params.requiresChromeRestart;
     this.docLink = params.docLink;
     this.feedbackLink = params.feedbackLink;
   }

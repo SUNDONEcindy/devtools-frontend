@@ -352,6 +352,7 @@ export class MainImpl {
       title: 'Protocol Monitor',
       aboutFlag: 'devtools-protocol-monitor',
       isEnabled: enableProtocolMonitor,
+      requiresChromeRestart: false,
       docLink: 'https://developer.chrome.com/blog/new-in-devtools-92/#protocol-monitor' as
           Platform.DevToolsPath.UrlString,
     });

@@ -2495,6 +2495,7 @@ export const knownContextValues = new Set([
   'main-menu',
   'main-selected-tab',
   'main-tab-order',
+  'main.chrome-restart-chrome',
   'main.debug-reload',
   'main.next-tab',
   'main.previous-tab',
