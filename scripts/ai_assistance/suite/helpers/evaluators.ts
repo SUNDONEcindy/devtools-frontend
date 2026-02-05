@@ -314,112 +314,78 @@ function calculateStandardDeviation(values: number[]): number {
   return Math.sqrt(variance);
 }
 
+/**
+ * Calculate the overall score for a conversation based on rubric importance.
+ */
+function calculateWeightedScore(rubricScores: RubricScore[], weights: RubricWeights): number {
+  let totalWeightedScore = 0;
+  let totalWeight = 0;
+  for (const {rubric, score} of rubricScores) {
+    const weight = weights[rubric] ?? IMPORTANCE_WEIGHTS.minor;
+    totalWeightedScore += score * weight;
+    totalWeight += weight;
+  }
+  return totalWeight > 0 ? totalWeightedScore / totalWeight : 0;
+}
+
 export async function itEval(config: ItEval): Promise<void> {
   const state = stateStorage.getStore();
   assert.ok(state);
-  if ('succeed' in config) {
-    for (const [date, outputs] of Object.entries(state.outputsByDate)) {
-      if (!outputs) {
-        continue;
-      }
 
-      const allDevToolsConversations = outputs.flatMap(o => o.contents.conversations);
+  let goldenText = '';
+  if ('rouge' in config) {
+    const golden = await getGolden(state.store.type, state.store.label);
+    goldenText = golden?.queries.at(-1)?.response.text ?? '';
+  }
 
-      let total = 0;
-      let succeeded = 0;
-      for (const conversation of allDevToolsConversations) {
-        total++;
-        if (config.succeed(conversation)) {
-          succeeded++;
-        }
-        state.store.saveResult(config.test, date, {type: 'BINARY', success: succeeded, total});
-      }
+  for (const [date, outputs] of Object.entries(state.outputsByDate)) {
+    if (!outputs) {
+      continue;
     }
-  } else if ('judge' in config) {
-    for (const [date, outputs] of Object.entries(state.outputsByDate)) {
-      if (!outputs) {
-        continue;
-      }
-      const allDevToolsConversations = outputs.flatMap(o => o.contents.conversations);
+    const conversations = outputs.flatMap(o => o.contents.conversations);
+
+    if ('succeed' in config) {
+      const details = conversations.map(conversation => ({
+                                          success: config.succeed(conversation),
+                                          conversation,
+                                        }));
+      state.store.saveResult(config.test, date, {type: 'BINARY', details});
+    } else if ('judge' in config) {
       const repeatCount = argv.repeat;
-
-      // Collect scores from all examples.
-      const results = await Promise.all(allDevToolsConversations.flatMap(example => {
-        return Array.from({length: repeatCount}, () => geminiLimiter.run(() => config.judge(example)));
-      }));
-
-      // Calculate stats for each rubric (take the average for each rubric among multiple conversations)
-      const inputCount = allDevToolsConversations.length;
-      const statsByRubric: Record<RubricName, RubricStats> = {};
-      const allRubrics = new Set(results.flatMap(r => r.rubricScores.map(i => i.rubric)));
-      for (const rubric of allRubrics) {
-        const scores = results.flatMap(r => r.rubricScores.filter(i => i.rubric === rubric).map(i => i.score));
-        const total = scores.reduce((acc, score) => acc + score, 0);
-
-        const average = scores.length ? total / scores.length : 0;
-        const standardDeviation = calculateStandardDeviation(scores);
-        statsByRubric[rubric] = {average, standardDeviation, allScores: scores};
-      }
-
-      // Weight all rubrics (take the first result's weights, as they should be the same for all results).
-      const weights = results.length > 0 ? results[0].rubricWeights : {};
-      const allWeightedScores: number[] = [];
-      for (const rubricScores of results) {
-        let totalWeightedScore = 0;
-        let totalWeight = 0;
-        for (const {rubric, score} of rubricScores.rubricScores) {
-          const weight = weights[rubric] ?? IMPORTANCE_WEIGHTS.minor;
-          totalWeightedScore += score * weight;
-          totalWeight += weight;
-        }
-        if (totalWeight > 0) {
-          allWeightedScores.push(totalWeightedScore / totalWeight);
-        }
-      }
-
-      // Calculate average and standard deviation for the overall score.
-      const overallAverage = allWeightedScores.length ?
-          allWeightedScores.reduce((acc, score) => acc + score, 0) / allWeightedScores.length :
-          0;
-      const overallStandardDeviation = calculateStandardDeviation(allWeightedScores);
-      const overallStats: RubricStats = {
-        average: overallAverage,
-        standardDeviation: overallStandardDeviation,
-        allScores: allWeightedScores,
-      };
+      const scoredEvals =
+          conversations.flatMap(conversation => Array.from({length: repeatCount}, () => geminiLimiter.run(async () => {
+            const res = await config.judge(conversation);
+            return {
+              conversation,
+              rubricScores: res.rubricScores,
+              rubricWeights: res.rubricWeights,
+            };
+          })));
+      const results = await Promise.all(scoredEvals);
+      const rubricWeights = results.length > 0 ? results[0].rubricWeights : {};
 
       state.store.saveResult(config.test, date, {
         type: 'JUDGE',
-        statsByRubric,
-        overallStats,
-        inputCount,
         repetitionCount: repeatCount,
+        rubricWeights,
+        details: results.map(r => ({
+                               conversation: r.conversation,
+                               rubricScores: r.rubricScores,
+                             })),
       });
-    }
-  } else if ('rouge' in config) {
-    const golden = await getGolden(state.store.type, state.store.label);
-    const goldenText = golden?.queries.at(-1)?.response.text ?? '';
-
-    for (const [date, outputs] of Object.entries(state.outputsByDate)) {
-      if (!outputs) {
-        continue;
-      }
-      const allDevToolsConversations = outputs.flatMap(o => o.contents.conversations);
-      const scores: number[] = [];
-
-      for (const conversation of allDevToolsConversations) {
+    } else if ('rouge' in config) {
+      const details = conversations.map(conversation => {
         const candidateText = conversation.queries.at(-1)?.response.text ?? '';
-        const score = ROUGE.score(candidateText, goldenText);
-        scores.push(score);
-      }
-
-      const total = scores.reduce((acc, score) => acc + score, 0);
-      const average = scores.length ? total / scores.length : 0;
-      const standardDeviation = calculateStandardDeviation(scores);
+        return {
+          conversation,
+          score: ROUGE.score(candidateText, goldenText),
+          goldenResponse: goldenText,
+        };
+      });
 
       state.store.saveResult(config.test, date, {
         type: 'ROUGE',
-        stats: {average, standardDeviation, allScores: scores},
+        details,
       });
     }
   }
@@ -443,9 +409,9 @@ export async function evalGroup(config: GroupConfig, cb: (() => Promise<void>)):
 
   await stateStorage.run(state, async () => {
     await cb();
-    console.log(state.logs.join('\n'));
-    printResults(state.store);
   });
+  log(0, state.logs.join('\n'));
+  printResults(state.store);
 }
 
 function log(indentation: number, message: string): void {
@@ -462,69 +428,72 @@ function formatRubricStats(stats: RubricStats): string {
   return `${stats.average.toFixed(2)} (mean) ±${stats.standardDeviation.toFixed(2)}`;
 }
 
-function formatJudgeResult(result: Extract<Result, {type: 'JUDGE'}>, row: string): string {
+function formatJudgeResult(stats: JudgeStats, row: string, repetitionCount: number): string {
   if (row === NUM_CONVERSATIONS) {
-    return String(result.inputCount);
+    return String(stats.inputCount);
   }
   if (row === NUM_EVALS_PER_CONVERSATION) {
-    return String(result.repetitionCount);
+    return String(repetitionCount);
   }
   if (row === OVERALL_STATS) {
-    return formatRubricStats(result.overallStats);
+    return formatRubricStats(stats.overallStats);
   }
-  const stats = result.statsByRubric[row];
-  return stats ? formatRubricStats(stats) : '-';
+  const rubricStats = stats.statsByRubric[row];
+  return rubricStats ? formatRubricStats(rubricStats) : '-';
+}
+
+function populateTableData(tableData: Record<string, Record<string, string>>, date: string, result: Result): void {
+  const stats = calculateStats(result);
+  if (!stats) {
+    return;
+  }
+
+  switch (result.type) {
+    case 'BINARY': {
+      if (!tableData[PASS_RATE]) {
+        tableData[PASS_RATE] = {};
+      }
+      const binary = stats as BinaryStats;
+      tableData[PASS_RATE][date] = `${binary.success} / ${binary.total} passed`;
+      break;
+    }
+    case 'JUDGE': {
+      const judge = stats as JudgeStats;
+      const rubrics = Object.keys(judge.statsByRubric).sort();
+      for (const row of [OVERALL_STATS, ...rubrics, NUM_CONVERSATIONS, NUM_EVALS_PER_CONVERSATION]) {
+        if (!tableData[row]) {
+          tableData[row] = {};
+        }
+        tableData[row][date] = formatJudgeResult(judge, row, result.repetitionCount);
+      }
+      break;
+    }
+    case 'ROUGE': {
+      if (!tableData[ROUGE_L_SUM]) {
+        tableData[ROUGE_L_SUM] = {};
+      }
+      const rouge = stats as RougeStats;
+      tableData[ROUGE_L_SUM][date] = formatRubricStats(rouge);
+      break;
+    }
+  }
 }
 
 function printResults(store: ResultStore): void {
   log(0, `Results for: ${store.type}/${store.label}`);
 
   for (const [test, dateToResult] of store.results) {
-    if (Object.keys(Object.fromEntries(dateToResult)).length === 0) {
+    if (dateToResult.size === 0) {
       continue;
     }
     log(0, `\nTest: ${test}`);
 
     const sortedDates = Array.from(dateToResult.keys()).sort();
-    // Collect all rubric names, if this is a LLM-as-a-judge rating
-    const allRubrics = new Set<string>();
-    for (const result of dateToResult.values()) {
-      if (result.type === 'JUDGE') {
-        Object.keys(result.statsByRubric).forEach(r => allRubrics.add(r));
-      }
-    }
-
     const tableData: Record<string, Record<string, string>> = {};
     for (const date of sortedDates) {
       const result = dateToResult.get(date);
-      if (!result) {
-        continue;
-      }
-
-      switch (result.type) {
-        case 'BINARY':
-          if (!tableData[PASS_RATE]) {
-            tableData[PASS_RATE] = {};
-          }
-          tableData[PASS_RATE][date] = `${result.success} / ${result.total} passed`;
-          break;
-        case 'JUDGE':
-          // Create a row for each rubric, including overall and runs per query/input
-          for (const row
-                   of [OVERALL_STATS, ...Array.from(allRubrics).sort(), NUM_CONVERSATIONS,
-                       NUM_EVALS_PER_CONVERSATION]) {
-            if (!tableData[row]) {
-              tableData[row] = {};
-            }
-            tableData[row][date] = formatJudgeResult(result, row);
-          }
-          break;
-        case 'ROUGE':
-          if (!tableData[ROUGE_L_SUM]) {
-            tableData[ROUGE_L_SUM] = {};
-          }
-          tableData[ROUGE_L_SUM][date] = formatRubricStats(result.stats);
-          break;
+      if (result) {
+        populateTableData(tableData, date, result);
       }
     }
     console.table(tableData);
@@ -537,21 +506,85 @@ interface RubricStats {
   allScores: number[];
 }
 
+interface BinaryStats {
+  success: number;
+  total: number;
+}
+type RougeStats = RubricStats;
+interface JudgeStats {
+  statsByRubric: Record<string, RubricStats>;
+  overallStats: RubricStats;
+  inputCount: number;
+}
+
 type Result = {
   type: 'BINARY',
-  total: number,
-  success: number,
+  details: Array<{success: boolean, conversation: Conversation}>,
 }|{
   type: 'JUDGE',
-
-  statsByRubric: Record<RubricName, RubricStats>,
-  overallStats: RubricStats,
-  inputCount: number,
   repetitionCount: number,
+  rubricWeights: RubricWeights,
+  details: Array<{conversation: Conversation, rubricScores: RubricScore[]}>,
 }|{
   type: 'ROUGE',
-  stats: RubricStats,
+  details: Array<{conversation: Conversation, score: number, goldenResponse: string}>,
 };
+
+function calculateBinaryStats(result: Extract<Result, {type: 'BINARY'}>): BinaryStats {
+  const success = result.details.filter(d => d.success).length;
+  return {success, total: result.details.length};
+}
+
+function calculateRougeStats(result: Extract<Result, {type: 'ROUGE'}>): RougeStats {
+  const scores = result.details.map(d => d.score);
+  const average = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  return {average, standardDeviation: calculateStandardDeviation(scores), allScores: scores};
+}
+
+function calculateJudgeStats(result: Extract<Result, {type: 'JUDGE'}>): JudgeStats {
+  const statsByRubric: Record<string, RubricStats> = {};
+  assert.ok(result.details.length > 0, 'A judge result must have at least one conversation');
+
+  const allRubrics = result.details[0].rubricScores.map(s => s.rubric).sort();
+  for (const detail of result.details) {
+    const currentRubrics = detail.rubricScores.map(s => s.rubric).sort();
+    assert.deepStrictEqual(
+        currentRubrics, allRubrics, 'All conversations in a judge result must have the same rubrics');
+  }
+
+  for (const rubric of allRubrics) {
+    const scores = result.details.flatMap(d => d.rubricScores.filter(s => s.rubric === rubric).map(s => s.score));
+    const average = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+    statsByRubric[rubric] = {average, standardDeviation: calculateStandardDeviation(scores), allScores: scores};
+  }
+
+  const overallScores = result.details.map(d => calculateWeightedScore(d.rubricScores, result.rubricWeights));
+  const overallAverage = overallScores.length ? overallScores.reduce((a, b) => a + b, 0) / overallScores.length : 0;
+  const overallStats = {
+    average: overallAverage,
+    standardDeviation: calculateStandardDeviation(overallScores),
+    allScores: overallScores,
+  };
+
+  return {
+    statsByRubric,
+    overallStats,
+    inputCount: result.details.length / result.repetitionCount,
+  };
+}
+
+function calculateStats(result: Result): BinaryStats|RougeStats|JudgeStats|null {
+  switch (result.type) {
+    case 'BINARY':
+      return calculateBinaryStats(result);
+    case 'ROUGE':
+      return calculateRougeStats(result);
+    case 'JUDGE':
+      return calculateJudgeStats(result);
+    default:
+      return null;
+  }
+}
 
 class ResultStore {
   // Map of testName => YYYY-MM-DD => Result
