@@ -13,6 +13,7 @@ import type {Conversation} from '../types.js';
 
 import {generateGeminiContent} from './gemini.ts';
 import {getGolden, getMarkdownConversation, getOutputs, type Output} from './outputs.ts';
+import {generateReport} from './report_generator.ts';
 
 const argv = yargs(hideBin(process.argv)).option('repeat', {type: 'number', default: 1}).parseSync();
 
@@ -50,6 +51,14 @@ class ConcurrencyLimiter {
 
 const geminiLimiter = new ConcurrencyLimiter(25);
 
+const allStores: ResultStore[] = [];
+
+process.on('exit', () => {
+  if (allStores.length > 0) {
+    generateReport(allStores);
+  }
+});
+
 abstract class Evaluator {}
 
 const NUM_CONVERSATIONS = '# of conversations';
@@ -58,13 +67,13 @@ const OVERALL_STATS = 'Weighted Overall';
 const PASS_RATE = 'Pass Rate';
 const ROUGE_L_SUM = 'ROUGE-Lsum';
 
-type RubricName = string;
-interface RubricScore {
+export type RubricName = string;
+export interface RubricScore {
   rubric: RubricName;
   score: number;
   reason: string;
 }
-type RubricWeights = Record<RubricName, number>;
+export type RubricWeights = Record<RubricName, number>;
 
 const IMPORTANCE_WEIGHTS: Record<string, number> = {
   critical: 5,
@@ -317,7 +326,7 @@ function calculateStandardDeviation(values: number[]): number {
 /**
  * Calculate the overall score for a conversation based on rubric importance.
  */
-function calculateWeightedScore(rubricScores: RubricScore[], weights: RubricWeights): number {
+export function calculateWeightedScore(rubricScores: RubricScore[], weights: RubricWeights): number {
   let totalWeightedScore = 0;
   let totalWeight = 0;
   for (const {rubric, score} of rubricScores) {
@@ -398,6 +407,7 @@ export interface GroupConfig {
 
 export async function evalGroup(config: GroupConfig, cb: (() => Promise<void>)): Promise<void> {
   const store = new ResultStore(config.type, config.label);
+  allStores.push(store);
   const outputs = await getOutputs(config.type, config.label);
   const outputsByDate = Object.groupBy(outputs, o => o.dateFolder);
 
@@ -407,6 +417,7 @@ export async function evalGroup(config: GroupConfig, cb: (() => Promise<void>)):
     logs: [],
   };
 
+  log(0, `Evaluating ${config.type} / ${config.label}...`);
   await stateStorage.run(state, async () => {
     await cb();
   });
@@ -500,24 +511,24 @@ function printResults(store: ResultStore): void {
   }
 }
 
-interface RubricStats {
+export interface RubricStats {
   average: number;
   standardDeviation: number;
   allScores: number[];
 }
 
-interface BinaryStats {
+export interface BinaryStats {
   success: number;
   total: number;
 }
-type RougeStats = RubricStats;
-interface JudgeStats {
+export type RougeStats = RubricStats;
+export interface JudgeStats {
   statsByRubric: Record<string, RubricStats>;
   overallStats: RubricStats;
   inputCount: number;
 }
 
-type Result = {
+export type Result = {
   type: 'BINARY',
   details: Array<{success: boolean, conversation: Conversation}>,
 }|{
@@ -573,7 +584,7 @@ function calculateJudgeStats(result: Extract<Result, {type: 'JUDGE'}>): JudgeSta
   };
 }
 
-function calculateStats(result: Result): BinaryStats|RougeStats|JudgeStats|null {
+export function calculateStats(result: Result): BinaryStats|RougeStats|JudgeStats|null {
   switch (result.type) {
     case 'BINARY':
       return calculateBinaryStats(result);
@@ -586,7 +597,7 @@ function calculateStats(result: Result): BinaryStats|RougeStats|JudgeStats|null 
   }
 }
 
-class ResultStore {
+export class ResultStore {
   // Map of testName => YYYY-MM-DD => Result
   #results = new Map<string, Map<string, Result>>();
   #type: string;
