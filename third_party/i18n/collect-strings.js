@@ -741,7 +741,7 @@ export function writeStringsToCtcFiles(directory, locale, strings) {
 }
 
 // @ts-ignore Test if called from the CLI or as a module.
-if (import.meta.url === import.meta.main) {
+if (import.meta.main) {
   if (process.argv.length === 2) {
     throw new Error(
         'Provide at least one directory from which to collect strings!',
