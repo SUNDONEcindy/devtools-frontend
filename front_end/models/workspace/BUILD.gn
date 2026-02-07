@@ -92,6 +92,7 @@ devtools_entrypoint("meta") {
   visibility = [
     "../../../mcp/*",
     "../../entrypoints/*",
+    "../../panels/greendev/*",
   ]
 }
 

@@ -70,6 +70,7 @@ devtools_entrypoint("bundle") {
     ":*",
     "../../testing/*",
     "../devtools_app:*",
+    "../greendev_floaty:*",
     "../js_app:*",
     "../ndb_app:*",
     "../node_app:*",
@@ -96,6 +97,8 @@ devtools_entrypoint("meta") {
   ]
 
   visibility = [
+    "../../panels/greendev/*",
+    "../greendev_floaty/*",
     "../shell/*",
     "../trace_app:*",
   ]

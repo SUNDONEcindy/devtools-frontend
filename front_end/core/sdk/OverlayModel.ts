@@ -925,6 +925,8 @@ export const enum Events {
   PERSISTENT_FLEX_CONTAINER_OVERLAY_STATE_CHANGED = 'PersistentFlexContainerOverlayStateChanged',
   PERSISTENT_SCROLL_SNAP_OVERLAY_STATE_CHANGED = 'PersistentScrollSnapOverlayStateChanged',
   PERSISTENT_CONTAINER_QUERY_OVERLAY_STATE_CHANGED = 'PersistentContainerQueryOverlayStateChanged',
+  INSPECT_PANEL_SHOW_REQUESTED = 'InspectPanelShowRequested',
+  INSPECTED_ELEMENT_WINDOW_RESTORED = 'InspectedElementWindowRestored',
 }
 
 export interface ChangedNodeId {
@@ -941,6 +943,8 @@ export interface EventTypes {
   [Events.PERSISTENT_FLEX_CONTAINER_OVERLAY_STATE_CHANGED]: ChangedNodeId;
   [Events.PERSISTENT_SCROLL_SNAP_OVERLAY_STATE_CHANGED]: ChangedNodeId;
   [Events.PERSISTENT_CONTAINER_QUERY_OVERLAY_STATE_CHANGED]: ChangedNodeId;
+  [Events.INSPECT_PANEL_SHOW_REQUESTED]: number;
+  [Events.INSPECTED_ELEMENT_WINDOW_RESTORED]: number;
 }
 
 export interface Highlighter {

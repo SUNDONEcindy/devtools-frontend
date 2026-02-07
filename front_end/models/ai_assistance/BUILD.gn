@@ -71,11 +71,13 @@ devtools_entrypoint("bundle") {
 
   visibility = [
     ":*",
+    "../../entrypoints/greendev_floaty/*",
     "../../entrypoints/main/*",
     "../../panels/ai_assistance/*",
     "../../panels/common/*",
     "../../panels/console/*",
     "../../panels/elements/*",
+    "../../panels/greendev/*",
     "../../panels/settings/*",
     "../../panels/sources/*",
     "../../panels/timeline/*",
