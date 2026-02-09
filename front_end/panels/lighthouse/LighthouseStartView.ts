@@ -166,8 +166,6 @@ export class StartView extends UI.Widget.Widget {
         checkbox.setIndeterminate(true);
       }
     }
-    UI.ARIAUtils.markAsGroup(categoryFormElements);
-    UI.ARIAUtils.setLabel(categoryFormElements, i18nString(UIStrings.categories));
   }
 
   private render(): void {
@@ -194,10 +192,10 @@ export class StartView extends UI.Widget.Widget {
       <div class="lighthouse-form-elements" $="device-type-form-elements"></div>
     </div>
     <div class="lighthouse-form-categories">
-      <div class="lighthouse-form-section">
-        <div class="lighthouse-form-section-label">${i18nString(UIStrings.categories)}</div>
+      <fieldset class="lighthouse-form-section lighthouse-form-categories-fieldset">
+        <legend class="lighthouse-form-section-label">${i18nString(UIStrings.categories)}</legend>
         <div class="lighthouse-form-elements" $="categories-form-elements"></div>
-      </div>
+      </fieldset>
     </div>
   </div>
   <div $="warning-text" class="lighthouse-warning-text hidden"></div>

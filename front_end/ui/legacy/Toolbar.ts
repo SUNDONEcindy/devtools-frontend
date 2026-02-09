@@ -1321,11 +1321,11 @@ export class ToolbarCheckbox extends ToolbarItem<void> {
   constructor(
       text: Common.UIString.LocalizedString, tooltip?: Common.UIString.LocalizedString,
       listener?: ((arg0: MouseEvent) => void), jslogContext?: string) {
-    const checkboxLabel = CheckboxLabel.create(text, undefined, undefined, jslogContext);
+    // Pass tooltip to CheckboxLabel.create so it's set on the inner input/text elements,
+    // rather than installing it on the wrapper element which causes screen readers to
+    // incorrectly announce it as a group name.
+    const checkboxLabel = CheckboxLabel.create(text, undefined, undefined, jslogContext, undefined, tooltip);
     super(checkboxLabel);
-    if (tooltip) {
-      Tooltip.install(this.element, tooltip);
-    }
     if (listener) {
       this.element.addEventListener('click', listener, false);
     }

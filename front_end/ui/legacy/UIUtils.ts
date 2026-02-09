@@ -1173,7 +1173,7 @@ export class CheckboxLabel extends HTMLElement {
 
   static create(
       title?: Platform.UIString.LocalizedString, checked?: boolean, subtitle?: Platform.UIString.LocalizedString,
-      jslogContext?: string, small?: boolean): CheckboxLabel {
+      jslogContext?: string, small?: boolean, tooltip?: Platform.UIString.LocalizedString): CheckboxLabel {
     const element = document.createElement('devtools-checkbox');
     element.#checkboxElement.checked = Boolean(checked);
     if (jslogContext) {
@@ -1182,10 +1182,16 @@ export class CheckboxLabel extends HTMLElement {
     }
     if (title !== undefined) {
       element.#textElement.textContent = title;
-      element.#checkboxElement.title = title;
       if (subtitle !== undefined) {
         element.#textElement.createChild('div', 'devtools-checkbox-subtitle').textContent = subtitle;
       }
+    }
+    // checkboxElement tooltip: tooltip first, then title (custom tooltip takes precedence for the input)
+    const inputTooltip = tooltip ?? title;
+    if (inputTooltip) {
+      element.#checkboxElement.title = inputTooltip;
+      // Set aria-description for screen reader announcement
+      element.#checkboxElement.setAttribute('aria-description', inputTooltip);
     }
     element.#checkboxElement.classList.toggle('small', small);
     return element;
