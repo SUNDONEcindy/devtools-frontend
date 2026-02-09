@@ -791,6 +791,12 @@ export class OverlayModel extends SDKModel<EventTypes> implements ProtocolProxyA
   async hasStyleSheetText(url: Platform.DevToolsPath.UrlString): Promise<boolean> {
     return await this.#windowControls.initializeStyleSheetText(url);
   }
+
+  inspectPanelShowRequested(_event: Protocol.Overlay.InspectNodeRequestedEvent): void {
+  }
+
+  inspectedElementWindowRestored(_event: Protocol.Overlay.InspectNodeRequestedEvent): void {
+  }
 }
 
 export class WindowControls {

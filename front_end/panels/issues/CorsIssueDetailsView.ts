@@ -176,7 +176,7 @@ export class CorsIssueDetailsView extends AffectedResourcesView {
         this.appendColumnTitle(header, i18nString(UIStrings.preflightRequestIfProblematic));
         this.appendColumnTitle(header, i18nString(UIStrings.allowCredentialsValueFromHeader));
         break;
-      case IssuesManager.CorsIssue.IssueCode.INSECURE_PRIVATE_NETWORK:
+      case IssuesManager.CorsIssue.IssueCode.INSECURE_LOCAL_NETWORK:
         this.appendColumnTitle(header, i18nString(UIStrings.resourceAddressSpace));
         this.appendColumnTitle(header, i18nString(UIStrings.initiatorAddressSpace));
         this.appendColumnTitle(header, i18nString(UIStrings.initiatorContext));
@@ -207,7 +207,7 @@ export class CorsIssueDetailsView extends AffectedResourcesView {
       default:
         Platform.assertUnhandled<IssuesManager.CorsIssue.IssueCode.PREFLIGHT_MISSING_ALLOW_EXTERNAL|
                                  IssuesManager.CorsIssue.IssueCode.PREFLIGHT_INVALID_ALLOW_EXTERNAL|
-                                 IssuesManager.CorsIssue.IssueCode.INVALID_PRIVATE_NETWORK_ACCESS|
+                                 IssuesManager.CorsIssue.IssueCode.INVALID_LOCAL_NETWORK_ACCESS|
                                  IssuesManager.CorsIssue.IssueCode.LOCAL_NETWORK_ACCESS_PERMISSION_DENIED>(issueCode);
     }
 
@@ -362,7 +362,7 @@ export class CorsIssueDetailsView extends AffectedResourcesView {
         }
         this.appendIssueDetailCell(element, details.corsErrorStatus.failedParameter, 'code-example');
         break;
-      case IssuesManager.CorsIssue.IssueCode.INSECURE_PRIVATE_NETWORK:
+      case IssuesManager.CorsIssue.IssueCode.INSECURE_LOCAL_NETWORK:
         element.appendChild(this.createRequestCell(details.request, opts));
         this.#appendStatus(element, details.isWarning);
         this.appendIssueDetailCell(element, details.resourceIPAddressSpace ?? '');
@@ -433,7 +433,7 @@ export class CorsIssueDetailsView extends AffectedResourcesView {
         this.#appendStatus(element, details.isWarning);
         Platform.assertUnhandled<IssuesManager.CorsIssue.IssueCode.PREFLIGHT_MISSING_ALLOW_EXTERNAL|
                                  IssuesManager.CorsIssue.IssueCode.PREFLIGHT_INVALID_ALLOW_EXTERNAL|
-                                 IssuesManager.CorsIssue.IssueCode.INVALID_PRIVATE_NETWORK_ACCESS|
+                                 IssuesManager.CorsIssue.IssueCode.INVALID_LOCAL_NETWORK_ACCESS|
                                  IssuesManager.CorsIssue.IssueCode.LOCAL_NETWORK_ACCESS_PERMISSION_DENIED>(issueCode);
         break;
     }

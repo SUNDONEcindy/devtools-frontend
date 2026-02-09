@@ -15,10 +15,6 @@ const UIStrings = {
    */
   corsLocalNetworkAccess: 'Local Network Access',
   /**
-   * @description Label for the link for CORS private network issues
-   */
-  corsPrivateNetworkAccess: 'Private Network Access',
-  /**
    * @description Label for the link for CORS network issues
    */
   CORS: 'Cross-Origin Resource Sharing (`CORS`)',
@@ -27,7 +23,7 @@ const str_ = i18n.i18n.registerUIStrings('models/issues_manager/CorsIssue.ts', U
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
 
 export const enum IssueCode {
-  INSECURE_PRIVATE_NETWORK = 'CorsIssue::InsecurePrivateNetwork',
+  INSECURE_LOCAL_NETWORK = 'CorsIssue::InsecureLocalNetwork',
   INVALID_HEADER_VALUES = 'CorsIssue::InvalidHeaders',
   WILDCARD_ORIGN_NOT_ALLOWED = 'CorsIssue::WildcardOriginWithCredentials',
   PREFLIGHT_RESPONSE_INVALID = 'CorsIssue::PreflightResponseInvalid',
@@ -43,7 +39,8 @@ export const enum IssueCode {
   // TODO(https://crbug.com/1263483): Remove this once it's removed from CDP.
   PREFLIGHT_INVALID_ALLOW_EXTERNAL = 'CorsIssue::PreflightInvalidAllowExternal',
   NO_CORS_REDIRECT_MODE_NOT_FOLLOW = 'CorsIssue::NoCorsRedirectModeNotFollow',
-  INVALID_PRIVATE_NETWORK_ACCESS = 'CorsIssue::InvalidPrivateNetworkAccess',
+
+  INVALID_LOCAL_NETWORK_ACCESS = 'CorsIssue::InvalidLocalNetworkAccess',
   LOCAL_NETWORK_ACCESS_PERMISSION_DENIED = 'CorsIssue::LocalNetworkAccessPermissionDenied',
 }
 
@@ -85,12 +82,12 @@ function getIssueCode(details: Protocol.Audits.CorsIssueDetails): IssueCode {
       return IssueCode.PREFLIGHT_MISSING_ALLOW_EXTERNAL;
     case Protocol.Network.CorsError.PreflightInvalidAllowExternal:
       return IssueCode.PREFLIGHT_INVALID_ALLOW_EXTERNAL;
-    case Protocol.Network.CorsError.InsecurePrivateNetwork:
-      return IssueCode.INSECURE_PRIVATE_NETWORK;
+    case Protocol.Network.CorsError.InsecureLocalNetwork:
+      return IssueCode.INSECURE_LOCAL_NETWORK;
     case Protocol.Network.CorsError.NoCorsRedirectModeNotFollow:
       return IssueCode.NO_CORS_REDIRECT_MODE_NOT_FOLLOW;
-    case Protocol.Network.CorsError.InvalidPrivateNetworkAccess:
-      return IssueCode.INVALID_PRIVATE_NETWORK_ACCESS;
+    case Protocol.Network.CorsError.InvalidLocalNetworkAccess:
+      return IssueCode.INVALID_LOCAL_NETWORK_ACCESS;
     case Protocol.Network.CorsError.LocalNetworkAccessPermissionDenied:
       return IssueCode.LOCAL_NETWORK_ACCESS_PERMISSION_DENIED;
   }
@@ -109,12 +106,12 @@ export class CorsIssue extends Issue<Protocol.Audits.CorsIssueDetails, IssueCode
 
   getDescription(): MarkdownIssueDescription|null {
     switch (getIssueCode(this.details())) {
-      case IssueCode.INSECURE_PRIVATE_NETWORK:
+      case IssueCode.INSECURE_LOCAL_NETWORK:
         return {
           file: 'corsInsecurePrivateNetwork.md',
           links: [{
             link: 'https://developer.chrome.com/blog/private-network-access-update',
-            linkTitle: i18nString(UIStrings.corsPrivateNetworkAccess),
+            linkTitle: i18nString(UIStrings.corsLocalNetworkAccess),
           }],
         };
       case IssueCode.INVALID_HEADER_VALUES:
@@ -215,7 +212,7 @@ export class CorsIssue extends Issue<Protocol.Audits.CorsIssueDetails, IssueCode
         };
       case IssueCode.PREFLIGHT_MISSING_ALLOW_EXTERNAL:
       case IssueCode.PREFLIGHT_INVALID_ALLOW_EXTERNAL:
-      case IssueCode.INVALID_PRIVATE_NETWORK_ACCESS:
+      case IssueCode.INVALID_LOCAL_NETWORK_ACCESS:
         return null;
     }
   }
@@ -226,7 +223,7 @@ export class CorsIssue extends Issue<Protocol.Audits.CorsIssueDetails, IssueCode
 
   getKind(): IssueKind {
     if (this.details().isWarning &&
-        this.details().corsErrorStatus.corsError === Protocol.Network.CorsError.InsecurePrivateNetwork) {
+        this.details().corsErrorStatus.corsError === Protocol.Network.CorsError.InsecureLocalNetwork) {
       return IssueKind.BREAKING_CHANGE;
     }
     return IssueKind.PAGE_ERROR;

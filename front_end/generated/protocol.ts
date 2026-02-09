@@ -1127,6 +1127,15 @@ export namespace Audits {
     IncorrectDigestLength = 'IncorrectDigestLength',
   }
 
+  export const enum ConnectionAllowlistError {
+    InvalidHeader = 'InvalidHeader',
+    MoreThanOneList = 'MoreThanOneList',
+    ItemNotInnerList = 'ItemNotInnerList',
+    InvalidAllowlistItemType = 'InvalidAllowlistItemType',
+    ReportingEndpointNotToken = 'ReportingEndpointNotToken',
+    InvalidUrlPattern = 'InvalidUrlPattern',
+  }
+
   /**
    * Details for issues around "Attribution Reporting API" usage.
    * Explainer: https://github.com/WICG/attribution-reporting-api
@@ -1176,6 +1185,11 @@ export namespace Audits {
 
   export interface UnencodedDigestIssueDetails {
     error: UnencodedDigestError;
+    request: AffectedRequest;
+  }
+
+  export interface ConnectionAllowlistIssueDetails {
+    error: ConnectionAllowlistError;
     request: AffectedRequest;
   }
 
@@ -1553,6 +1567,7 @@ export namespace Audits {
     ElementAccessibilityIssue = 'ElementAccessibilityIssue',
     SRIMessageSignatureIssue = 'SRIMessageSignatureIssue',
     UnencodedDigestIssue = 'UnencodedDigestIssue',
+    ConnectionAllowlistIssue = 'ConnectionAllowlistIssue',
     UserReidentificationIssue = 'UserReidentificationIssue',
     PermissionElementIssue = 'PermissionElementIssue',
   }
@@ -1591,6 +1606,7 @@ export namespace Audits {
     elementAccessibilityIssueDetails?: ElementAccessibilityIssueDetails;
     sriMessageSignatureIssueDetails?: SRIMessageSignatureIssueDetails;
     unencodedDigestIssueDetails?: UnencodedDigestIssueDetails;
+    connectionAllowlistIssueDetails?: ConnectionAllowlistIssueDetails;
     userReidentificationIssueDetails?: UserReidentificationIssueDetails;
     permissionElementIssueDetails?: PermissionElementIssueDetails;
   }
@@ -10275,8 +10291,8 @@ export namespace Network {
     MethodDisallowedByPreflightResponse = 'MethodDisallowedByPreflightResponse',
     HeaderDisallowedByPreflightResponse = 'HeaderDisallowedByPreflightResponse',
     RedirectContainsCredentials = 'RedirectContainsCredentials',
-    InsecurePrivateNetwork = 'InsecurePrivateNetwork',
-    InvalidPrivateNetworkAccess = 'InvalidPrivateNetworkAccess',
+    InsecureLocalNetwork = 'InsecureLocalNetwork',
+    InvalidLocalNetworkAccess = 'InvalidLocalNetworkAccess',
     NoCorsRedirectModeNotFollow = 'NoCorsRedirectModeNotFollow',
     LocalNetworkAccessPermissionDenied = 'LocalNetworkAccessPermissionDenied',
   }
@@ -13546,6 +13562,17 @@ export namespace Overlay {
     None = 'none',
   }
 
+  export interface InspectedElementAnchorConfig {
+    /**
+     * Identifier of the node to highlight.
+     */
+    nodeId?: DOM.NodeId;
+    /**
+     * Identifier of the backend node to highlight.
+     */
+    backendNodeId?: DOM.BackendNodeId;
+  }
+
   export interface GetHighlightObjectForTestRequest {
     /**
      * Id of the node to get highlight object for.
@@ -13771,6 +13798,13 @@ export namespace Overlay {
     containerQueryHighlightConfigs: ContainerQueryHighlightConfig[];
   }
 
+  export interface SetShowInspectedElementAnchorRequest {
+    /**
+     * Node identifier for which to show an anchor for.
+     */
+    inspectedElementAnchorConfig: InspectedElementAnchorConfig;
+  }
+
   export interface SetShowPaintRectsRequest {
     /**
      * True for showing paint rectangles
@@ -13857,6 +13891,26 @@ export namespace Overlay {
      * Viewport to capture, in device independent pixels (dip).
      */
     viewport: Page.Viewport;
+  }
+
+  /**
+   * Fired when user asks to show the Inspect panel.
+   */
+  export interface InspectPanelShowRequestedEvent {
+    /**
+     * Id of the node to show in the panel.
+     */
+    backendNodeId: DOM.BackendNodeId;
+  }
+
+  /**
+   * Fired when user asks to restore the Inspected Element floating window.
+   */
+  export interface InspectedElementWindowRestoredEvent {
+    /**
+     * Id of the node to restore the floating window for.
+     */
+    backendNodeId: DOM.BackendNodeId;
   }
 }
 
