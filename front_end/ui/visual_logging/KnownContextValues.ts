@@ -923,6 +923,7 @@ export const knownContextValues = new Set([
   'content-type',
   'content-visibility',
   'context',
+  'context-added',
   'context-change-drjones-file',
   'context-change-drjones-network-request',
   'context-change-drjones-performance',

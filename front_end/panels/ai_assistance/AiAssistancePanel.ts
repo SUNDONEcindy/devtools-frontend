@@ -504,6 +504,7 @@ export class AiAssistancePanel extends UI.Panel.Panel {
   #selectedRequest: AiAssistanceModel.NetworkAgent.RequestContext|null = null;
   // Messages displayed in the `ChatView` component.
   #messages: Message[] = [];
+  #isContextAutoSelectionSuspended = false;
 
   // Whether the UI should show loading or not.
   #isLoading = false;
@@ -755,11 +756,14 @@ export class AiAssistancePanel extends UI.Panel.Panel {
       }
 
       this.#conversation = conversation;
+      this.#isContextAutoSelectionSuspended = false;
     }
 
-    this.#conversation?.setContext(this.#getConversationContext(
-        isAiAssistanceContextSelectionAgentEnabled() ? this.#getDefaultConversationType() :
-                                                       (this.#conversation?.type ?? null)));
+    if (!this.#isContextAutoSelectionSuspended) {
+      this.#conversation?.setContext(this.#getConversationContext(
+          isAiAssistanceContextSelectionAgentEnabled() ? this.#getDefaultConversationType() :
+                                                         (this.#conversation?.type ?? null)));
+    }
 
     this.requestUpdate();
   }
@@ -1131,10 +1135,12 @@ export class AiAssistancePanel extends UI.Panel.Panel {
 
   #handleContextRemoved(): void {
     this.#conversation?.setContext(null);
+    this.#isContextAutoSelectionSuspended = true;
     this.requestUpdate();
   }
 
   #handleContextAdd(): void {
+    this.#isContextAutoSelectionSuspended = false;
     this.#conversation?.setContext(this.#getConversationContext(this.#getDefaultConversationType()));
     this.requestUpdate();
   }
@@ -1156,6 +1162,7 @@ export class AiAssistancePanel extends UI.Panel.Panel {
       return;
     }
 
+    this.#isContextAutoSelectionSuspended = false;
     let targetConversationType: AiAssistanceModel.AiHistoryStorage.ConversationType|undefined;
     switch (actionId) {
       case 'freestyler.elements-floating-button': {
@@ -1357,6 +1364,8 @@ export class AiAssistancePanel extends UI.Panel.Panel {
       this.#selectedPerformanceTrace = context;
       this.#conversation?.setContext(context);
     }
+
+    this.#isContextAutoSelectionSuspended = false;
 
     void VisualLogging.logFunctionCall(`context-change-${this.#conversation?.type}`);
 

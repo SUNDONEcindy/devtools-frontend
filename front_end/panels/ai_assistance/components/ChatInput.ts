@@ -392,7 +392,7 @@ export const
                                     class="add-context"
                                     .iconName=${'plus'}
                                     .size=${Buttons.Button.Size.SMALL}
-                                    .jslogContext=${'context-add'}
+                                    .jslogContext=${'context-added'}
                                     .variant=${Buttons.Button.Variant.ICON}
                                     @click=${input.onContextAdd}></devtools-button>` : Lit.nothing}
               </div>
