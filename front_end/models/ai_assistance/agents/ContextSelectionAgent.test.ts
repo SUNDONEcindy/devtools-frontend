@@ -16,6 +16,7 @@ import {describeWithMockConnection} from '../../../testing/MockConnection.js';
 import {SnapshotTester} from '../../../testing/SnapshotTester.js';
 import * as Bindings from '../../bindings/bindings.js';
 import * as Logs from '../../logs/logs.js';
+import type * as Trace from '../../trace/trace.js';
 import * as Workspace from '../../workspace/workspace.js';
 import {AiAgent, ContextSelectionAgent} from '../ai_assistance.js';
 
@@ -108,6 +109,38 @@ describeWithMockConnection('ContextSelectionAgent', function() {
           parts: [{text: 'This is the answer'}],
         },
       ]);
+    });
+
+    it('can call the performanceRecordAndReload tool', async () => {
+      const trace = {
+        metadata: {},
+        samples: {},
+        insights: new Map(),
+      } as unknown as Trace.TraceModel.ParsedTrace;
+      const performanceRecordAndReload = sinon.stub().resolves(trace);
+      const agent = new ContextSelectionAgent.ContextSelectionAgent({
+        aidaClient: mockAidaClient([
+          [{
+            functionCalls: [{
+              name: 'performanceRecordAndReload',
+              args: {},
+            }],
+            explanation: '',
+          }],
+          [{
+            explanation: 'Performance recording completed',
+          }]
+        ]),
+        performanceRecordAndReload,
+      });
+
+      const responses = await Array.fromAsync(agent.run('test', {selected: null}));
+
+      sinon.assert.calledOnce(performanceRecordAndReload);
+      const contextChange = responses.find(r => r.type === AiAgent.ResponseType.CONTEXT_CHANGE);
+      assert.exists(contextChange);
+      // @ts-expect-error context is unknown
+      assert.strictEqual(contextChange.context.parsedTrace, trace);
     });
   });
 

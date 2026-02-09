@@ -55,6 +55,7 @@ export class AiConversation {
         undefined,
         undefined,
         serializedConversation.isExternal,
+        undefined,
     );
   }
 
@@ -74,6 +75,8 @@ export class AiConversation {
 
   #contexts: Array<ConversationContext<unknown>> = [];
 
+  #performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>;
+
   constructor(
       type: ConversationType,
       data: ResponseData[] = [],
@@ -82,9 +85,11 @@ export class AiConversation {
       aidaClient: Host.AidaClient.AidaClient = new Host.AidaClient.AidaClient(),
       changeManager?: ChangeManager,
       isExternal = false,
+      performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>,
   ) {
     this.#changeManager = changeManager;
     this.#aidaClient = aidaClient;
+    this.#performanceRecordAndReload = performanceRecordAndReload;
 
     this.id = id;
     this.#isReadOnly = isReadOnly;
@@ -278,6 +283,7 @@ export class AiConversation {
       serverSideLoggingEnabled: isAiAssistanceServerSideLoggingEnabled(),
       sessionId: this.id,
       changeManager: this.#changeManager,
+      performanceRecordAndReload: this.#performanceRecordAndReload,
     };
     switch (type) {
       case ConversationType.STYLING: {

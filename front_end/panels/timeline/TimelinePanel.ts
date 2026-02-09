@@ -3041,6 +3041,31 @@ export class TimelinePanel extends Common.ObjectWrapper.eventMixin<EventTypes, t
     this.#setActiveInsight({model: insightModel, insightSetKey}, {highlightInsight: true});
   }
 
+  static async executeRecordAndReload(): Promise<Trace.TraceModel.ParsedTrace> {
+    await UI.ViewManager.ViewManager.instance().showView('timeline');
+    const panelInstance = TimelinePanel.instance();
+
+    const result: EventTypes[Events.RECORDING_COMPLETED] = await new Promise(resolve => {
+      function listener(e: Common.EventTarget.EventTargetEvent<EventTypes[Events.RECORDING_COMPLETED]>): void {
+        resolve(e.data);
+        panelInstance.removeEventListener(Events.RECORDING_COMPLETED, listener);
+      }
+      panelInstance.addEventListener(Events.RECORDING_COMPLETED, listener);
+      panelInstance.recordReload();
+    });
+
+    if ('errorText' in result) {
+      throw new Error(result.errorText);
+    }
+
+    const trace = panelInstance.model.parsedTrace(result.traceIndex);
+    if (!trace) {
+      throw new Error('Failed to parse trace');
+    }
+
+    return trace;
+  }
+
   static async *
       handleExternalRecordRequest(): AsyncGenerator<
           AiAssistanceModel.AiAgent.ExternalRequestResponse, AiAssistanceModel.AiAgent.ExternalRequestResponse> {

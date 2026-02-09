@@ -15,6 +15,7 @@ import * as Annotations from '../../models/annotations/annotations.js';
 import * as Badges from '../../models/badges/badges.js';
 import * as GreenDev from '../../models/greendev/greendev.js';
 import * as TextUtils from '../../models/text_utils/text_utils.js';
+import type * as Trace from '../../models/trace/trace.js';
 import * as Workspace from '../../models/workspace/workspace.js';
 import * as Buttons from '../../ui/components/buttons/buttons.js';
 import * as Snackbars from '../../ui/components/snackbars/snackbars.js';
@@ -672,6 +673,10 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     this.requestUpdate();
   }
 
+  async #handlePerformanceRecordAndReload(): Promise<Trace.TraceModel.ParsedTrace> {
+    return await TimelinePanel.TimelinePanel.TimelinePanel.executeRecordAndReload();
+  }
+
   #getDefaultConversationType(): AiAssistanceModel.AiHistoryStorage.ConversationType|undefined {
     const {hostConfig} = Root.Runtime;
     const viewManager = UI.ViewManager.ViewManager.instance();
@@ -715,7 +720,8 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     }
     const conversation = targetConversationType ?
         new AiAssistanceModel.AiConversation.AiConversation(
-            targetConversationType, [], undefined, false, this.#aidaClient, this.#changeManager) :
+            targetConversationType, [], undefined, false, this.#aidaClient, this.#changeManager, false,
+            this.#handlePerformanceRecordAndReload.bind(this)) :
         undefined;
 
     this.#updateConversationState(conversation);
@@ -735,7 +741,8 @@ export class AiAssistancePanel extends UI.Panel.Panel {
         const conversationType = this.#getDefaultConversationType();
         if (conversationType) {
           conversation = new AiAssistanceModel.AiConversation.AiConversation(
-              conversationType, [], undefined, false, this.#aidaClient, this.#changeManager);
+              conversationType, [], undefined, false, this.#aidaClient, this.#changeManager, false,
+              this.#handlePerformanceRecordAndReload.bind(this));
         }
       }
 

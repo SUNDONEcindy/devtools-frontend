@@ -88,6 +88,17 @@ Content:
           }
         }
       }
+    },
+    {
+      "name": "performanceRecordAndReload",
+      "description": "Start a new performance recording and reload the page.",
+      "parameters": {
+        "type": 6,
+        "description": "",
+        "nullable": true,
+        "required": [],
+        "properties": {}
+      }
     }
   ],
   "options": {},

@@ -9,7 +9,9 @@ import * as Platform from '../../../core/platform/platform.js';
 import * as Root from '../../../core/root/root.js';
 import * as SDK from '../../../core/sdk/sdk.js';
 import * as Logs from '../../logs/logs.js';
+import type * as Trace from '../../trace/trace.js';
 import * as Workspace from '../../workspace/workspace.js';
+import {AgentFocus} from '../performance/AIContext.js';
 
 import {
   type AgentOptions,
@@ -71,8 +73,13 @@ export class ContextSelectionAgent extends AiAgent<never> {
     };
   }
 
-  constructor(opts: AgentOptions) {
+  readonly #performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>;
+
+  constructor(opts: AgentOptions&{
+    performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>,
+  }) {
     super(opts);
+    this.#performanceRecordAndReload = opts.performanceRecordAndReload;
 
     this.declareFunction<Record<string, never>>('listNetworkRequests', {
       description: `Gives a list of network requests including URL, status code, and duration in ms`,
@@ -211,6 +218,35 @@ export class ContextSelectionAgent extends AiAgent<never> {
         }
 
         return {error: 'Unable to find file.'};
+      },
+    });
+
+    this.declareFunction('performanceRecordAndReload', {
+      description: 'Start a new performance recording and reload the page.',
+      parameters: {
+        type: Host.AidaClient.ParametersTypes.OBJECT,
+        description: '',
+        nullable: true,
+        required: [],
+        properties: {},
+      },
+      displayInfoFromArgs: () => {
+        return {
+          title: 'Recording a performance trace…',
+          action: 'performanceRecordAndReload()',
+        };
+      },
+      handler: async () => {
+        if (!this.#performanceRecordAndReload) {
+          return {
+            error: 'Performance recording is not available.',
+          };
+        }
+        const result = await this.#performanceRecordAndReload();
+
+        return {
+          context: AgentFocus.fromParsedTrace(result),
+        };
       },
     });
   }
