@@ -792,10 +792,12 @@ export class OverlayModel extends SDKModel<EventTypes> implements ProtocolProxyA
     return await this.#windowControls.initializeStyleSheetText(url);
   }
 
-  inspectPanelShowRequested(_event: Protocol.Overlay.InspectNodeRequestedEvent): void {
+  inspectPanelShowRequested({backendNodeId}: Protocol.Overlay.InspectPanelShowRequestedEvent): void {
+    this.dispatchEventToListeners(Events.INSPECT_PANEL_SHOW_REQUESTED, backendNodeId);
   }
 
-  inspectedElementWindowRestored(_event: Protocol.Overlay.InspectNodeRequestedEvent): void {
+  inspectedElementWindowRestored({backendNodeId}: Protocol.Overlay.InspectedElementWindowRestoredEvent): void {
+    this.dispatchEventToListeners(Events.INSPECTED_ELEMENT_WINDOW_RESTORED, backendNodeId);
   }
 }
 

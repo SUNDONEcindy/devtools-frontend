@@ -66,8 +66,8 @@ class GreenDevFloaty {
         // Refresh the anchor by re-sending the show command.
         const msg = JSON.stringify({
           id: 9999,
-          method: 'Overlay.setShowGreenDevFloatyAnchor',
-          params: {greenDevFloatyHighlightConfig: {backendNodeId: this.#backendNodeId}}
+          method: 'Overlay.setShowInspectedElementAnchor',
+          params: {inspectedElementAnchorConfig: {backendNodeId: this.#backendNodeId}}
         });
         Host.InspectorFrontendHost.InspectorFrontendHostInstance.sendMessageToBackend(msg);
       }
@@ -403,8 +403,8 @@ async function init(): Promise<void> {
             if (backendNodeId) {
               const msg = JSON.stringify({
                 id: 9999,
-                method: 'Overlay.setShowGreenDevFloatyAnchor',
-                params: {greenDevFloatyHighlightConfig: {backendNodeId}}
+                method: 'Overlay.setShowInspectedElementAnchor',
+                params: {inspectedElementAnchorConfig: {backendNodeId}}
               });
               Host.InspectorFrontendHost.InspectorFrontendHostInstance.sendMessageToBackend(msg);
             }

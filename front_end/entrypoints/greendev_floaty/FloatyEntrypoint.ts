@@ -12,6 +12,7 @@ import '../../entrypoints/main/main-meta.js';
 import * as Common from '../../core/common/common.js';
 import * as Host from '../../core/host/host.js';
 import * as i18n from '../../core/i18n/i18n.js';
+import type * as Platform from '../../core/platform/platform.js';
 import type * as ExperimentNames from '../../core/root/ExperimentNames.js';
 import * as Root from '../../core/root/root.js';
 import * as SDK from '../../core/sdk/sdk.js';
@@ -81,8 +82,8 @@ class GreenDevFloaty {
       if (this.#node && this.#backendNodeId) {
         const msg = JSON.stringify({
           id: 9999,
-          method: 'Overlay.setShowGreenDevFloatyAnchor',
-          params: {greenDevFloatyHighlightConfig: {backendNodeId: this.#backendNodeId}}
+          method: 'Overlay.setShowInspectedElementAnchor',
+          params: {inspectedElementAnchorConfig: {backendNodeId: this.#backendNodeId}}
         });
         Host.InspectorFrontendHost.InspectorFrontendHostInstance.sendMessageToBackend(msg);
       }
@@ -147,15 +148,8 @@ class GreenDevFloaty {
   handlePanelRequest = (event: Common.EventTarget.EventTargetEvent<number>): void => {
     pendingActivationSessionId = event.data;
     this.#sendActivatePanelMessage(pendingActivationSessionId, 0);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).DevToolsAPI?.sendMessageToEmbedder) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).DevToolsAPI.sendMessageToEmbedder('openDevTools', [], () => {});
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (Host.InspectorFrontendHost.InspectorFrontendHostInstance as any).sendMessageToEmbedder('openDevTools', []);
-    }
+    Host.InspectorFrontendHost.InspectorFrontendHostInstance.openInNewTab(
+        'magic:open-devtools' as Platform.DevToolsPath.UrlString);
   };
 
   readonly #maxActivationRetries = 10;
@@ -183,13 +177,16 @@ class GreenDevFloaty {
   }
 
   handleRestoreEvent(event: Common.EventTarget.EventTargetEvent<number>): void {
+    const sessionId = event.data;
     // Only the main DevTools window (which is NOT a floaty window) should broadcast the restore request.
     if (!this.#isFloatyWindow) {
-      const sessionId = event.data;
       this.#syncChannel.postMessage({type: 'restore-floaty', sessionId});
+    } else if (this.#backendNodeId === sessionId) {
+      // If a floaty window receives a restore request for its own session,
+      // it should bring itself to the front.
+      console.error('[GreenDev] Calling bringToFront for session ' + sessionId);
+      Host.InspectorFrontendHost.InspectorFrontendHostInstance.bringToFront();
     }
-    // If a floaty window receives a restore request for its own session,
-    // it should bring itself to the front. This is handled in #onSyncMessage.
   }
 
   setNode(node: SDK.DOMModel.DOMNode): void {
@@ -228,8 +225,8 @@ class GreenDevFloaty {
     if (this.#backendNodeId) {
       const msg = JSON.stringify({
         id: 9999,
-        method: 'Overlay.setShowGreenDevFloatyAnchor',
-        params: {greenDevFloatyHighlightConfig: {backendNodeId: this.#backendNodeId}}
+        method: 'Overlay.setShowInspectedElementAnchor',
+        params: {inspectedElementAnchorConfig: {backendNodeId: this.#backendNodeId}}
       });
       Host.InspectorFrontendHost.InspectorFrontendHostInstance.sendMessageToBackend(msg);
     }
