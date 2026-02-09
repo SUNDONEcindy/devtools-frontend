@@ -16,6 +16,20 @@ new RuleTester().run('no-imperative-dom-api', rule, {
           }
       }`,
     },
+    {
+      filename: 'front_end/ui/components/component/file.ts',
+      code: `
+        const el = document.createElement('div');
+        el.appendChild();
+      `,
+    },
+    {
+      filename: 'front_end/ui/components/component/file.ts',
+      code: `
+        const el = document.createElement('div');
+        el.setAttribute();
+      `,
+    },
   ],
 
   invalid: [
