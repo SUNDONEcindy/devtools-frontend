@@ -721,7 +721,7 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     const conversation = targetConversationType ?
         new AiAssistanceModel.AiConversation.AiConversation(
             targetConversationType, [], undefined, false, this.#aidaClient, this.#changeManager, false,
-            this.#handlePerformanceRecordAndReload.bind(this)) :
+            this.#handlePerformanceRecordAndReload.bind(this), this.#handleInspectElement.bind(this)) :
         undefined;
 
     this.#updateConversationState(conversation);
@@ -741,8 +741,16 @@ export class AiAssistancePanel extends UI.Panel.Panel {
         const conversationType = this.#getDefaultConversationType();
         if (conversationType) {
           conversation = new AiAssistanceModel.AiConversation.AiConversation(
-              conversationType, [], undefined, false, this.#aidaClient, this.#changeManager, false,
-              this.#handlePerformanceRecordAndReload.bind(this));
+              conversationType,
+              [],
+              undefined,
+              false,
+              this.#aidaClient,
+              this.#changeManager,
+              false,
+              this.#handlePerformanceRecordAndReload.bind(this),
+              this.#handleInspectElement.bind(this),
+          );
         }
       }
 
@@ -1194,7 +1202,16 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     let conversation = this.#conversation;
     if (!this.#conversation || this.#conversation.type !== targetConversationType || this.#conversation.isEmpty) {
       conversation = new AiAssistanceModel.AiConversation.AiConversation(
-          targetConversationType, [], undefined, false, this.#aidaClient, this.#changeManager);
+          targetConversationType,
+          [],
+          undefined,
+          false,
+          this.#aidaClient,
+          this.#changeManager,
+          false,
+          this.#handlePerformanceRecordAndReload.bind(this),
+          this.#handleInspectElement.bind(this),
+      );
     }
     this.#updateConversationState(conversation);
     const predefinedPrompt = opts?.['prompt'];
@@ -1345,6 +1362,54 @@ export class AiAssistancePanel extends UI.Panel.Panel {
 
     this.requestUpdate();
   };
+
+  async #handleInspectElement(): Promise<SDK.DOMModel.DOMNode|null> {
+    if (!this.#toggleSearchElementAction) {
+      return null;
+    }
+
+    const result = new Promise<SDK.DOMModel.DOMNode|null>(resolve => {
+      // Track the new flavor change for dom node.
+      const handleDOMNodeFlavorChange = (ev: Common.EventTarget.EventTargetEvent<SDK.DOMModel.DOMNode>): void => {
+        if (!ev.data) {
+          return;
+        }
+        resolve(selectedElementFilter(ev.data));
+        removeListeners();
+      };
+
+      // If the inspect mode is toggled, we want to resolve null.
+      const handleInspectModeToggled = (ev: Common.EventTarget.EventTargetEvent<boolean>): void => {
+        if (!ev.data) {
+          // The inspect element is toggled off
+          // before the flavor change event fires
+          // so we need to wait a bit to see if the flavor changed.
+          window.setTimeout(() => {
+            resolve((selectedElementFilter(UI.Context.Context.instance().flavor(SDK.DOMModel.DOMNode))));
+            removeListeners();
+          }, 50);
+        }
+      };
+
+      const removeListeners = (): void => {
+        UI.Context.Context.instance().removeFlavorChangeListener(SDK.DOMModel.DOMNode, handleDOMNodeFlavorChange);
+        this.#toggleSearchElementAction?.removeEventListener(
+            UI.ActionRegistration.Events.TOGGLED, handleInspectModeToggled);
+      };
+
+      UI.Context.Context.instance().addFlavorChangeListener(SDK.DOMModel.DOMNode, handleDOMNodeFlavorChange);
+      this.#toggleSearchElementAction?.addEventListener(UI.ActionRegistration.Events.TOGGLED, handleInspectModeToggled);
+
+      // Clean-up listeners in case of abort.
+      this.#runAbortController.signal.addEventListener('abort', () => {
+        resolve(null);
+        removeListeners();
+      }, {once: true});
+    });
+
+    void this.#toggleSearchElementAction.execute();
+    return await result;
+  }
 
   async #startConversation(
       text: string,

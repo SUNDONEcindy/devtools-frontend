@@ -929,6 +929,7 @@ export const knownContextValues = new Set([
   'context-change-freestyler',
   'context-change-none',
   'context-change-performance-insight',
+  'context-removed',
   'context3',
   'contextmenu',
   'continue',

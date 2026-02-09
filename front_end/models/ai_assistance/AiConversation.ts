@@ -76,6 +76,7 @@ export class AiConversation {
   #contexts: Array<ConversationContext<unknown>> = [];
 
   #performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>;
+  #onInspectElement?: () => Promise<SDK.DOMModel.DOMNode|null>;
 
   constructor(
       type: ConversationType,
@@ -86,10 +87,12 @@ export class AiConversation {
       changeManager?: ChangeManager,
       isExternal = false,
       performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>,
+      onInspectElement?: () => Promise<SDK.DOMModel.DOMNode|null>,
   ) {
     this.#changeManager = changeManager;
     this.#aidaClient = aidaClient;
     this.#performanceRecordAndReload = performanceRecordAndReload;
+    this.#onInspectElement = onInspectElement;
 
     this.id = id;
     this.#isReadOnly = isReadOnly;
@@ -284,6 +287,7 @@ export class AiConversation {
       sessionId: this.id,
       changeManager: this.#changeManager,
       performanceRecordAndReload: this.#performanceRecordAndReload,
+      onInspectElement: this.#onInspectElement,
     };
     switch (type) {
       case ConversationType.STYLING: {

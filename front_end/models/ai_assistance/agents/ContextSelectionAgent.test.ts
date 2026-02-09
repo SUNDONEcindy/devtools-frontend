@@ -275,4 +275,31 @@ describeWithMockConnection('ContextSelectionAgent', function() {
       ]);
     });
   });
+
+  describe('inspect_dom', () => {
+    it('inspects DOM node', async () => {
+      const node = sinon.createStubInstance(SDK.DOMModel.DOMNode);
+      const onInspectElement = sinon.stub().resolves(node);
+      const agent = new ContextSelectionAgent.ContextSelectionAgent({
+        aidaClient: mockAidaClient([
+          [{
+            functionCalls: [{
+              name: 'inspectDom',
+              args: {},
+            }],
+            explanation: '',
+          }],
+          [{explanation: 'Done'}],
+        ]),
+        onInspectElement,
+      });
+
+      const responses = await Array.fromAsync(agent.run('test', {selected: null}));
+      const contextChange = responses.find(r => r.type === AiAgent.ResponseType.CONTEXT_CHANGE);
+
+      sinon.assert.calledOnce(onInspectElement);
+      assert.exists(contextChange);
+      assert.strictEqual(contextChange.context, node);
+    });
+  });
 });

@@ -99,6 +99,17 @@ Content:
         "required": [],
         "properties": {}
       }
+    },
+    {
+      "name": "inspectDom",
+      "description": "Prompts user to select a DOM element from the page.",
+      "parameters": {
+        "type": 6,
+        "description": "",
+        "nullable": true,
+        "required": [],
+        "properties": {}
+      }
     }
   ],
   "options": {},

@@ -74,12 +74,15 @@ export class ContextSelectionAgent extends AiAgent<never> {
   }
 
   readonly #performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>;
+  readonly #onInspectElement?: () => Promise<SDK.DOMModel.DOMNode|null>;
 
   constructor(opts: AgentOptions&{
     performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>,
+    onInspectElement?: () => Promise<SDK.DOMModel.DOMNode|null>,
   }) {
     super(opts);
     this.#performanceRecordAndReload = opts.performanceRecordAndReload;
+    this.#onInspectElement = opts.onInspectElement;
 
     this.declareFunction<Record<string, never>>('listNetworkRequests', {
       description: `Gives a list of network requests including URL, status code, and duration in ms`,
@@ -246,6 +249,37 @@ export class ContextSelectionAgent extends AiAgent<never> {
 
         return {
           context: AgentFocus.fromParsedTrace(result),
+        };
+      }
+    });
+
+    this.declareFunction<Record<string, never>>('inspectDom', {
+      description: `Prompts user to select a DOM element from the page.`,
+      parameters: {
+        type: Host.AidaClient.ParametersTypes.OBJECT,
+        description: '',
+        nullable: true,
+        required: [],
+        properties: {},
+      },
+      displayInfoFromArgs: () => {
+        return {
+          title: lockedString('Please select an element on the page...'),
+          action: 'selectElement()',
+        };
+      },
+      handler: async () => {
+        if (!this.#onInspectElement) {
+          return {error: 'The inspect element action is not available.'};
+        }
+        const node = await this.#onInspectElement();
+        if (node) {
+          return {
+            context: node,
+          };
+        }
+        return {
+          error: 'Unable to select element.',
         };
       },
     });

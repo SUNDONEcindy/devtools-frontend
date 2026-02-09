@@ -4,6 +4,7 @@
 
 import * as Host from '../../../core/host/host.js';
 import * as Root from '../../../core/root/root.js';
+import type * as SDK from '../../../core/sdk/sdk.js';
 import {debugLog, isStructuredLogEnabled} from '../debug.js';
 
 export const enum ResponseType {
@@ -133,6 +134,7 @@ export interface AgentOptions {
   serverSideLoggingEnabled?: boolean;
   sessionId?: string;
   confirmSideEffectForTest?: typeof Promise.withResolvers;
+  onInspectElement?: () => Promise<SDK.DOMModel.DOMNode|null>;
 }
 
 export interface ParsedAnswer {
