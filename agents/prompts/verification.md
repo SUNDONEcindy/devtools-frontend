@@ -17,7 +17,8 @@
 
 ## Linting
 
-- `npm run lint` will execute ESLint and StyleLint and report any violations that must be fixed.
+- `npm run lint` will execute ESLint and StyleLint. It will report any violations and automatically fix them where possible.
+- To run the linter on a specific file or directory, you can run `npm run lint -- <PATH>` where `PATH` is a path to a file or directory. This will also automatically fix violations where possible.
 
 ## Best practices
 
