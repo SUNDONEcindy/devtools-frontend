@@ -73,12 +73,12 @@ const UIStringsNotTranslate = {
    * @description Code generation disclaimer item text for the fre dialog.
    */
   freDisclaimerDescribeCodeInComment:
-      'In Console or Sources, describe the code you need in a comment, then press Ctrl+I to generate it.',
+      'In Console or Sources, describe the code you need in a comment, then press ctrl+i to generate it.',
   /**
    * @description Code generation disclaimer item text for the fre dialog.
    */
   freDisclaimerDescribeCodeInCommentForMacOs:
-      'In Console or Sources, describe the code you need in a comment, then press Cmd+I to generate it.',
+      'In Console or Sources, describe the code you need in a comment, then press cmd+i to generate it.',
   /**
    * @description Privacy disclaimer item text for the fre dialog.
    */
