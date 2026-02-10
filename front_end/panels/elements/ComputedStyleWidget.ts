@@ -53,7 +53,7 @@ import {categorizePropertyName, type Category, DefaultCategoryOrder} from './Pro
 import {Renderer, rendererBase, type RenderingContext, StringRenderer, URLRenderer} from './PropertyRenderer.js';
 import {StylePropertiesSection} from './StylePropertiesSection.js';
 
-const {html} = Lit;
+const {html, render} = Lit;
 
 const UIStrings = {
   /**
@@ -197,7 +197,7 @@ const createTraceElement =
       return trace;
     };
 
-/** clang-format off **/
+// clang-format off
 class ColorRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.ColorMatch) {
   // clang-format on
   override render(match: SDK.CSSPropertyParserMatchers.ColorMatch, context: RenderingContext): Node[] {
@@ -261,21 +261,47 @@ type ComputedStyleData = {
   name: string,
 };
 
+interface ComputedStyleWidgetInput {
+  computedStylesTree: TreeOutline.TreeOutline.TreeOutline<ComputedStyleData>;
+  toolbar: HTMLElement;
+  hasMatches: boolean;
+  computedStyleModel: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel;
+}
+
+type View = (input: ComputedStyleWidgetInput, output: null, target: HTMLElement) => void;
+
+export const DEFAULT_VIEW: View = (input, _output, target) => {
+  // clang-format off
+  render(html`
+    <div class="styles-sidebar-pane-toolbar">${input.toolbar}</div>
+    <div class="computed-style-tree-outline-container">
+      ${input.computedStylesTree}
+    </div>
+    ${!input.hasMatches ? html`<div class="gray-info-message">${i18nString(UIStrings.noMatchingProperty)}</div>` : ''}
+    <div class="platform-fonts-widget-container">
+      <devtools-widget .widgetConfig=${UI.Widget.widgetConfig(PlatformFontsWidget, { sharedModel: input.computedStyleModel})}></devtools-widget>
+    </div>
+  `, target);
+  // clang-format on
+};
+
 export class ComputedStyleWidget extends UI.Widget.VBox {
   private computedStyleModel: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel;
   private readonly showInheritedComputedStylePropertiesSetting: Common.Settings.Setting<boolean>;
   private readonly groupComputedStylesSetting: Common.Settings.Setting<boolean>;
   input: UI.Toolbar.ToolbarInput;
   private filterRegex: RegExp|null;
-  private readonly noMatchesElement: HTMLElement;
   private readonly linkifier: Components.Linkifier.Linkifier;
   private readonly imagePreviewPopover: ImagePreviewPopover;
 
   #computedStylesTree = new TreeOutline.TreeOutline.TreeOutline<ComputedStyleData>();
   #treeData?: TreeOutline.TreeOutline.TreeOutlineData<ComputedStyleData>;
+  readonly #view: View;
+  private readonly toolbarElement: HTMLElement;
 
   constructor(computedStyleModel: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel) {
     super({useShadowDom: true});
+    this.#view = DEFAULT_VIEW;
     this.registerRequiredCSS(computedStyleSidebarPaneStyles);
 
     this.contentElement.classList.add('styles-sidebar-computed-style-widget');
@@ -295,8 +321,12 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
       this.requestUpdate();
     });
 
-    const hbox = this.contentElement.createChild('div', 'hbox styles-sidebar-pane-toolbar');
-    const toolbar = hbox.createChild('devtools-toolbar', 'styles-pane-toolbar');
+    this.toolbarElement = document.createElement('div');
+    this.toolbarElement.classList.add('hbox', 'styles-sidebar-pane-toolbar');
+    const toolbar = document.createElement('devtools-toolbar');
+    toolbar.classList.add('styles-pane-toolbar');
+    this.toolbarElement.appendChild(toolbar);
+
     const filterInput = new UI.Toolbar.ToolbarFilter(undefined, 1, 1, undefined, undefined, false);
     filterInput.addEventListener(UI.Toolbar.ToolbarInput.Event.TEXT_CHANGED, this.onFilterChanged, this);
     toolbar.appendToolbarItem(filterInput);
@@ -308,11 +338,6 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
     toolbar.appendToolbarItem(
         new UI.Toolbar.ToolbarSettingCheckbox(this.groupComputedStylesSetting, undefined, i18nString(UIStrings.group)));
 
-    this.noMatchesElement = this.contentElement.createChild('div', 'gray-info-message');
-    this.noMatchesElement.textContent = i18nString(UIStrings.noMatchingProperty);
-
-    this.contentElement.appendChild(this.#computedStylesTree);
-
     this.linkifier = new Components.Linkifier.Linkifier(maxLinkLength);
 
     this.imagePreviewPopover = new ImagePreviewPopover(this.contentElement, event => {
@@ -323,8 +348,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
       return null;
     }, () => this.computedStyleModel.node);
 
-    const fontsWidget = new PlatformFontsWidget(this.computedStyleModel);
-    fontsWidget.show(this.contentElement);
+    this.#updateView({hasMatches: true});
   }
 
   override onResize(): void {
@@ -342,10 +366,24 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
     UI.Context.Context.instance().setFlavor(ComputedStyleWidget, null);
   }
 
+  /**
+   * @param input.hasMatches Whether any properties matched the current filter (or if any properties exist at all).
+   */
+  #updateView({hasMatches}: {hasMatches: boolean}): void {
+    this.#view(
+        {
+          computedStylesTree: this.#computedStylesTree,
+          toolbar: this.toolbarElement,
+          hasMatches,
+          computedStyleModel: this.computedStyleModel,
+        },
+        null, this.contentElement);
+  }
+
   override async performUpdate(): Promise<void> {
     const {computedStyle: nodeStyles, matchedStyles} = await this.computedStyleModel.fetchAllComputedStyleInfo();
     if (!nodeStyles || !matchedStyles) {
-      this.noMatchesElement.classList.remove('hidden');
+      this.#updateView({hasMatches: false});
       return;
     }
     const shouldGroupComputedStyles = this.groupComputedStylesSetting.get();
@@ -406,7 +444,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
     this.linkifier.reset();
     const cssModel = this.computedStyleModel.cssModel();
     if (!nodeStyle || !matchedStyles || !cssModel) {
-      this.noMatchesElement.classList.remove('hidden');
+      this.#updateView({hasMatches: false});
       return;
     }
 
@@ -628,7 +666,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
       defaultRenderer: this.#treeData.defaultRenderer,
       compact: this.#treeData.compact,
     };
-    this.noMatchesElement.classList.toggle('hidden', Boolean(tree.length));
+    this.#updateView({hasMatches: Boolean(tree.length)});
   }
 
   private async filterGroupLists(): Promise<void> {
@@ -655,7 +693,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
       compact: this.#treeData.compact,
     };
     await this.#computedStylesTree.expandRecursively(0);
-    this.noMatchesElement.classList.toggle('hidden', Boolean(tree.length));
+    this.#updateView({hasMatches: Boolean(tree.length)});
   }
 }
 
