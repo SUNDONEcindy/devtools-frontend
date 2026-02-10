@@ -72,6 +72,15 @@ class GreenDevFloaty {
       });
     }
 
+    const learnMoreLink = doc.querySelector('.learn-more-link');
+    if (learnMoreLink) {
+      learnMoreLink.addEventListener('click', event => {
+        event.preventDefault();
+        Host.InspectorFrontendHost.InspectorFrontendHostInstance.openInNewTab(
+            'https://developer.chrome.com/docs/devtools/ai-assistance' as Platform.DevToolsPath.UrlString);
+      });
+    }
+
     const nodeDescriptionElement = doc.querySelector('.green-dev-floaty-dialog-node-description') as HTMLDivElement;
     nodeDescriptionElement?.addEventListener('mousemove', () => {
       if (this.#node) {
