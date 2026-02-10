@@ -140,7 +140,17 @@ export const DEFAULT_VIEW: View = (input, _output, target) => {
               <span>${lockedString(UIStringsNotTranslate.i)}</span>
             </span>
             </span>&nbsp;${lockedString(UIStringsNotTranslate.toTurnOnCodeSuggestions)}&nbsp;
-            <span role="button" class="ai-code-completion-teaser-dismiss" @click=${input.onDismiss}
+            <span role="button" class="ai-code-completion-teaser-dismiss"
+              tabindex="0"
+              @click=${input.onDismiss}
+              @keydown=${(e: KeyboardEvent) => {
+                // Handle Enter and Space events to make dismiss button accessible for only keyboard users.
+                if (e.key === 'Enter' || e.key === ' ') {
+                  input.onDismiss(e);
+                  e.stopPropagation();
+                  e.preventDefault();
+                }
+              }}
               jslog=${VisualLogging.action('ai-code-completion-teaser.dismiss').track({click: true})}>
                 ${lockedString(UIStringsNotTranslate.dontShowAgain)}
             </span>
