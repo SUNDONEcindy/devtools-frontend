@@ -631,16 +631,6 @@ const GREENDEV_VIEW: View = (input, _output, target) => {
                ${renderPrototypeCheckboxes(input.settings, ['aiAnnotations', 'inDevToolsFloaty', 'copyToGemini'])}
              </div>
            </devtools-card>
-
-           <devtools-card .heading=${'GreenDev widgets'}>
-             <div class="experiments-warning-subsection">
-              <devtools-icon .name=${'warning'}></devtools-icon>
-              <span>${i18nString(UIStrings.greenDevUnstable)}</span>
-             </div>
-             <div class="settings-experiments-block greendev-widgets">
-               ${renderWidgetOptions(input.settings)}
-             </div>
-           </devtools-card>
          </div>
        `, target);
   // clang-format on
@@ -649,49 +639,8 @@ const GREENDEV_VIEW: View = (input, _output, target) => {
 const GREENDEV_PROTOTYPE_NAMES: Record<keyof GreenDev.GreenDevSettings, string> = {
   inDevToolsFloaty: 'In DevTools context picker',
   aiAnnotations: 'AI auto-annotations',
-  inlineWidgets: 'Inline widgets in AI Assistance',
-  artifactViewer: 'Widgets in the Artifact viewer',
   copyToGemini: 'Copy changes to AI Prompt'
 };
-
-function renderWidgetOptions(settings: GreenDev.GreenDevSettings): TemplateResult {
-  function onChange(nowActiveRadio: 'inlineWidgets'|'artifactViewer'|'none') {
-    return () => {
-      switch (nowActiveRadio) {
-        case 'inlineWidgets': {
-          settings.artifactViewer.set(false);
-          settings.inlineWidgets.set(true);
-          break;
-        }
-        case 'artifactViewer': {
-          settings.artifactViewer.set(true);
-          settings.inlineWidgets.set(false);
-          break;
-        }
-        case 'none': {
-          settings.artifactViewer.set(false);
-          settings.inlineWidgets.set(false);
-        }
-      }
-
-      UI.InspectorView.InspectorView.instance().displayReloadRequiredWarning(
-          i18nString(UIStrings.settingsChangedReloadDevTools));
-    };
-  }
-  // clang-format off
-  return html`
-    <p class="settings-experiment">
-      <label><input type="radio" name="widgets-choice" @change=${onChange('inlineWidgets')}>${GREENDEV_PROTOTYPE_NAMES['inlineWidgets']}</label>
-    </p>
-    <p class="settings-experiment">
-      <label><input type="radio" name="widgets-choice" @change=${onChange('artifactViewer')}>${GREENDEV_PROTOTYPE_NAMES['artifactViewer']}</label>
-    </p>
-    <p class="settings-experiment">
-      <label><input type="radio" name="widgets-choice" @change=${onChange('none')}>None</label>
-    </p>
-  `;
-  // clang-format on
-}
 
 function renderPrototypeCheckboxes(
     settings: GreenDev.GreenDevSettings,

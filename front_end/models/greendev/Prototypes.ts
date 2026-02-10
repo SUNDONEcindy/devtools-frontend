@@ -9,8 +9,6 @@ let instance: Prototypes|null = null;
 
 export interface GreenDevSettings {
   inDevToolsFloaty: Common.Settings.Setting<boolean>;
-  inlineWidgets: Common.Settings.Setting<boolean>;
-  artifactViewer: Common.Settings.Setting<boolean>;
   aiAnnotations: Common.Settings.Setting<boolean>;
   copyToGemini: Common.Settings.Setting<boolean>;
 }
@@ -41,21 +39,14 @@ export class Prototypes {
     const inDevToolsFloaty =
         settings.createSetting('greendev-in-devtools-floaty-enabled', false, Common.Settings.SettingStorageType.LOCAL);
 
-    const inlineWidgets =
-        settings.createSetting('greendev-inline-widgets-enabled', false, Common.Settings.SettingStorageType.LOCAL);
-
     const aiAnnotations = settings.createSetting(
         'greendev-ai-annotations-enabled',
         false,
         Common.Settings.SettingStorageType.LOCAL,
     );
-
-    const artifactViewer =
-        settings.createSetting('greendev-artifact-viewer-enabled', false, Common.Settings.SettingStorageType.LOCAL);
-
     const copyToGemini =
         settings.createSetting('greendev-copy-to-gemini-enabled', false, Common.Settings.SettingStorageType.LOCAL);
 
-    return {inDevToolsFloaty, inlineWidgets, aiAnnotations, artifactViewer, copyToGemini};
+    return {inDevToolsFloaty, aiAnnotations, copyToGemini};
   }
 }
