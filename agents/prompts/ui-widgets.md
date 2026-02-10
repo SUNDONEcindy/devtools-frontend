@@ -57,6 +57,55 @@ const DEFAULT_VIEW = (input: ViewInput, output: ViewOutput, target: HTMLElement)
 * Properties passed from a parent MUST be declared as public fields on the child presenter class.
 * The framework automatically updates these properties and calls `requestUpdate()` on the child when the parent re-renders.
 
+## Refactoring Legacy Components
+
+When migrating imperative components (extending `UI.VBox`, `UI.Panel`, or `HTMLElement`) to the MVP architecture:
+
+1.  **Analyze Rendering Logic:** Identify where DOM is created (constructor, `wasShown`, imperative methods). This logic moves to the `DEFAULT_VIEW`.
+2.  **Convert Base Class:**
+    *   Prefer extending `UI.Widget.Widget`.
+    *   **Special Case:** If the component *must* extend `UI.Panel.Panel` or `UI.Dialog.Dialog` (to retain specific functionality), you cannot use `requestUpdate()`. Instead, call `this.performUpdate()` directly on state changes.
+3.  **State Migration:** Move DOM-stored state to private class fields.
+4.  **Update Usage:** Replace `new MyComponent()` instantiations with declarative `<devtools-widget .widgetConfig=...>` in parent templates.
+5.  **Scoping Styles:** Ensure your CSS file uses the `@scope` block to prevent style leaks:
+    ```css
+    @scope to (devtools-widget > *) {
+      ...
+    }
+    ```
+
+## Key Implementation Details (Gotchas)
+
+### Styling Strategy
+DevTools widgets typically render into Light DOM (the default for `UI.Widget`). To ensure styles are scoped to the component and do not leak into child widgets, wrap your CSS in an `@scope` block:
+
+```css
+/* myWidget.css */
+@scope to (devtools-widget > *) {
+  .my-class { ... }
+}
+```
+
+Then, include the styles in your `DEFAULT_VIEW`:
+
+```ts
+import myWidgetStyles from './myWidget.css.js';
+// ...
+render(html`
+  <style>${myWidgetStyles}</style>
+  <div class="my-widget">...</div>
+`, target);
+```
+
+**Note:** The `{host: input}` option in `render()` is generally **not required** unless you are using specific Shadow DOM patterns that necessitate it. The `@scope` strategy is the preferred method for style isolation in DevTools widgets.
+
+### Legacy Interop & Refs
+*   **Raw Elements:** Use `Lit.Directives.ref` to obtain a reference to a raw `HTMLElement` if needed for imperative APIs (e.g., `splitWidget.installResizer(element)`).
+*   **Child Widgets:** Use `UI.Widget.widgetRef` to obtain the class instance of a child `<devtools-widget>` if you need to call methods on it directly (though declarative data flow is preferred).
+
+### Dependencies
+The `DEFAULT_VIEW` is typically a module-level function. Ensure all dependencies (enums, constants, other components) are imported at the top of the file so they are available in the function scope.
+
 ## Step-by-Step Implementation Example
 
 ### 1\. Create the Widget File and Styles
