@@ -4,6 +4,7 @@
 
 import * as SDK from '../../../core/sdk/sdk.js';
 import * as Protocol from '../../../generated/protocol.js';
+import * as Logs from '../../../models/logs/logs.js';
 import {assertGridContents, assertGridWidgetContents} from '../../../testing/DataGridHelpers.js';
 import {
   getCleanTextContentFromElements,
@@ -602,6 +603,76 @@ describeWithMockConnection('PreloadingAttemptView', () => {
     const placeholder = view.contentElement.querySelector('.empty-state');
     assert.exists(placeholder);
     assert.deepEqual(window.getComputedStyle(placeholder).display, 'none');
+  });
+
+  it('shows status code for prefetch failure in the grid', async () => {
+    const emulator = new NavigationEmulator();
+    await emulator.openDevTools();
+    const view = createAttemptView(emulator.primaryTarget);
+
+    await emulator.navigateAndDispatchEvents('');
+    await emulator.addSpecRules(`
+{
+  "prefetch": [
+    {
+      "source": "list",
+      "urls": ["/prefetch.html"]
+    }
+  ]
+}
+`);
+
+    dispatchEvent(emulator.primaryTarget, 'Preload.preloadingAttemptSourcesUpdated', {
+      loaderId: 'loaderId:1' as Protocol.Network.LoaderId,
+      preloadingAttemptSources: [
+        {
+          key: {
+            loaderId: 'loaderId:1' as Protocol.Network.LoaderId,
+            action: Protocol.Preload.SpeculationAction.Prefetch,
+            url: 'https://example.com/prefetch.html',
+          },
+          ruleSetIds: ['ruleSetId:0.2'] as Protocol.Preload.RuleSetId[],
+          nodeIds: [2] as Protocol.DOM.BackendNodeId[],
+        },
+      ],
+    });
+
+    const requestId = 'requestId:1' as Protocol.Network.RequestId;
+    sinon.stub(Logs.NetworkLog.NetworkLog.instance(), 'requestsForId').withArgs(requestId).returns([
+      {statusCode: 404} as SDK.NetworkRequest.NetworkRequest,
+    ]);
+
+    dispatchEvent(emulator.primaryTarget, 'Preload.prefetchStatusUpdated', {
+      key: {
+        loaderId: 'loaderId:1' as Protocol.Network.LoaderId,
+        action: Protocol.Preload.SpeculationAction.Prefetch,
+        url: 'https://example.com/prefetch.html',
+      },
+      pipelineId: 'pipelineId:1' as Protocol.Preload.PreloadPipelineId,
+      initiatingFrameId: 'frameId' as Protocol.Page.FrameId,
+      prefetchUrl: 'https://example.com/prefetch.html',
+      status: Protocol.Preload.PreloadingStatus.Failure,
+      prefetchStatus: Protocol.Preload.PrefetchStatus.PrefetchFailedNon2XX,
+      requestId,
+    } as Protocol.Preload.PrefetchStatusUpdatedEvent);
+
+    await RenderCoordinator.done();
+
+    const preloadingGridComponent = view.getPreloadingGridForTest();
+    assert.isNotNull(preloadingGridComponent.contentElement);
+
+    assertGridWidgetContents(
+        preloadingGridComponent.contentElement,
+        ['URL', 'Action', 'Rule set', 'Status'],
+        [
+          [
+            '/prefetch.html',
+            'Prefetch',
+            'example.com/',
+            'Failure - The prefetch failed because of a non-2xx HTTP response status code (404).',
+          ],
+        ],
+    );
   });
 
   // See https://crbug.com/1432880

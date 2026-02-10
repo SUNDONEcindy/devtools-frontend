@@ -22,7 +22,7 @@ import * as VisualLogging from '../../../ui/visual_logging/visual_logging.js';
 
 import * as PreloadingComponents from './components/components.js';
 import {ruleSetTagOrLocationShort} from './components/PreloadingString.js';
-import type * as PreloadingHelper from './helper/helper.js';
+import * as PreloadingHelper from './helper/helper.js';
 import preloadingViewStyles from './preloadingView.css.js';
 import preloadingViewDropDownStyles from './preloadingViewDropDown.css.js';
 
@@ -501,10 +501,17 @@ export class PreloadingAttemptView extends UI.Widget.VBox {
         const ruleSet = this.model.getRuleSetById(id);
         return ruleSet === null ? [] : [ruleSet];
       });
+
+      // Lookup status code for prefetch attempts
+      const statusCode = attempt.action === Protocol.Preload.SpeculationAction.Prefetch ?
+          PreloadingHelper.PreloadingForward.prefetchStatusCode(attempt.requestId) :
+          undefined;
+
       return {
         id,
         pipeline,
         ruleSets,
+        statusCode,
       };
     });
     this.preloadingGrid.rows = rows;
