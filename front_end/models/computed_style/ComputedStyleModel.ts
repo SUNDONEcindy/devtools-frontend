@@ -137,6 +137,32 @@ export class ComputedStyleModel extends Common.ObjectWrapper.ObjectWrapper<Event
                                                            null as ComputedStyle | null;
     }
   }
+
+  private async fetchMatchedCascade(): Promise<SDK.CSSMatchedStyles.CSSMatchedStyles|null> {
+    const node = this.node;
+    if (!node || !this.cssModel()) {
+      return null;
+    }
+
+    const cssModel = this.cssModel();
+    if (!cssModel) {
+      return null;
+    }
+
+    const matchedStyles = await cssModel.cachedMatchedCascadeForNode(node);
+    if (!matchedStyles) {
+      return null;
+    }
+    return matchedStyles.node() === this.node ? matchedStyles : null;
+  }
+
+  async fetchAllComputedStyleInfo(): Promise<{
+    computedStyle: ComputedStyle | null,
+    matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles|null,
+  }> {
+    const [computedStyle, matchedStyles] = await Promise.all([this.fetchComputedStyle(), this.fetchMatchedCascade()]);
+    return {computedStyle, matchedStyles};
+  }
 }
 
 export const enum Events {

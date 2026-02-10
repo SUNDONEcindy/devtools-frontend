@@ -343,8 +343,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
   }
 
   override async performUpdate(): Promise<void> {
-    const [nodeStyles, matchedStyles] =
-        await Promise.all([this.computedStyleModel.fetchComputedStyle(), this.fetchMatchedCascade()]);
+    const {computedStyle: nodeStyles, matchedStyles} = await this.computedStyleModel.fetchAllComputedStyleInfo();
     if (!nodeStyles || !matchedStyles) {
       this.noMatchesElement.classList.remove('hidden');
       return;
@@ -354,25 +353,6 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
       await this.rebuildGroupedList(nodeStyles, matchedStyles);
     } else {
       await this.rebuildAlphabeticalList(nodeStyles, matchedStyles);
-    }
-  }
-
-  private async fetchMatchedCascade(): Promise<SDK.CSSMatchedStyles.CSSMatchedStyles|null> {
-    const node = this.computedStyleModel.node;
-    if (!node || !this.computedStyleModel.cssModel()) {
-      return null;
-    }
-
-    const cssModel = this.computedStyleModel.cssModel();
-    if (!cssModel) {
-      return null;
-    }
-
-    return await cssModel.cachedMatchedCascadeForNode(node).then(validateStyles.bind(this));
-
-    function validateStyles(this: ComputedStyleWidget, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles|null):
-        SDK.CSSMatchedStyles.CSSMatchedStyles|null {
-      return matchedStyles && matchedStyles.node() === this.computedStyleModel.node ? matchedStyles : null;
     }
   }
 
