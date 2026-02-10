@@ -33,7 +33,9 @@ const flags = yargs(hideBin(process.argv))
   })
   .option('debug', {
     type: 'boolean',
-    default: false,
+    // LUCI_CONTEXT is an env that exists on the bots
+    // We want to disable caches and run more logging there.
+    default: false || Boolean(process.env['LUCI_CONTEXT']),
     describe:
       'Disable cache validations during debugging, useful for custom rule creation/debugging.'
   })
