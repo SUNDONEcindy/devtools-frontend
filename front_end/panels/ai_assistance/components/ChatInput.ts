@@ -42,11 +42,11 @@ const UIStrings = {
   /**
    * @description Label added to the button that remove the currently selected context in AI Assistance panel.
    */
-  removeContext: 'Remove selected context',
+  removeContext: 'Remove from context',
   /**
    * @description Label added to the button that add selected context from the current panel in AI Assistance panel.
    */
-  addContext: 'Add currently selected context',
+  addContext: 'Add selected item as context',
 } as const;
 
 /*
