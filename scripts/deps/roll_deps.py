@@ -10,12 +10,13 @@ Update manually maintained dependencies from Chromium.
 import argparse
 import enum
 import json
+import hashlib
 import os
+import re
 import subprocess
 import sys
-import urllib.request
 import tempfile
-import hashlib
+import urllib.request
 
 
 def node_path(options):
@@ -289,9 +290,9 @@ def updateCfT(options):
                 ['gclient', 'getdep', f'--revision={key}'],
                 cwd=options.devtools_dir,
                 text=True).strip()
-            object_path = json.loads(dep_props.replace(
-                "'", '"'))[0]['object_name'].replace(current_version,
-                                                     new_version)
+            object_name = json.loads(dep_props.replace("'",
+                                                       '"'))[0]['object_name']
+            object_path = re.sub(r'^([^/]+)', new_version, object_name)
             gcs_metadata = get_gcs_metadata('chrome-for-testing-public',
                                             object_path)
             if not gcs_metadata:
@@ -307,7 +308,6 @@ def updateCfT(options):
                                   cwd=options.devtools_dir)
     else:
         print(f'Chrome for Testing is up to date: {current_version}')
-
     return commit_position
 
 
