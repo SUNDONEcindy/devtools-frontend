@@ -4552,6 +4552,7 @@ export const generatedProperties = [
    "uppercase",
    "lowercase",
    "full-width",
+   "full-size-kana",
    "none",
    "math-auto"
   ],
@@ -7048,6 +7049,7 @@ export const generatedPropertyValues = {
    "uppercase",
    "lowercase",
    "full-width",
+   "full-size-kana",
    "none",
    "math-auto"
   ]
