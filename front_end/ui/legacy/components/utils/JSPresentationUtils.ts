@@ -189,14 +189,9 @@ function buildStackTraceRows(
         inlineFrameIndex: 0,
         revealBreakpoint: previousStackFrameWasBreakpointCondition,
       });
-      if (link) {
-        link.setAttribute('jslog', `${VisualLogging.link('stack-trace').track({click: true})}`);
-        link.addEventListener('contextmenu', populateContextMenu.bind(null, link));
+      link.setAttribute('jslog', `${VisualLogging.link('stack-trace').track({click: true})}`);
+      link.addEventListener('contextmenu', populateContextMenu.bind(null, link));
 
-        if (!link.textContent) {
-          link.textContent = i18nString(UIStrings.unknownSource);
-        }
-      }
       stackTraceRows.push({functionName, link});
       previousStackFrameWasBreakpointCondition = [
         SDK.DebuggerModel.COND_BREAKPOINT_SOURCE_URL,

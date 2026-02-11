@@ -9,7 +9,7 @@ import * as Trace from '../../models/trace/trace.js';
 import * as Workspace from '../../models/workspace/workspace.js';
 import * as TraceBounds from '../../services/trace_bounds/trace_bounds.js';
 import {assertScreenshot, dispatchClickEvent, doubleRaf, raf, renderElementIntoDOM} from '../../testing/DOMHelpers.js';
-import {describeWithEnvironment} from '../../testing/EnvironmentHelpers.js';
+import {createTarget, describeWithEnvironment} from '../../testing/EnvironmentHelpers.js';
 import {
   allThreadEntriesInTrace,
   microsecondsTraceWindow,
@@ -152,6 +152,7 @@ describeWithEnvironment('TimelineFlameChartView', function() {
     });
 
     it('shows the details for a selected main thread event', async function() {
+      createTarget();  // TimelineUIUtils will pick this up as the "root" target to translate stack traces.
       const parsedTrace = await TraceLoader.traceEngine(this, 'web-dev-with-commit.json.gz');
       const mockViewDelegate = new MockViewDelegate();
 

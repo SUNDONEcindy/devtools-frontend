@@ -345,8 +345,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
   }
 
   maybeLinkifyStackTraceFrame(
-      target: SDK.Target.Target|null, frame: StackTrace.StackTrace.Frame, options?: LinkifyOptions): HTMLElement|null {
-    let fallbackAnchor: HTMLElement|null = null;
+      target: SDK.Target.Target|null, frame: StackTrace.StackTrace.Frame, options?: LinkifyOptions): HTMLElement {
     const linkifyURLOptions: LinkifyURLOptions = {
       ...options,
       lineNumber: frame.line,
@@ -361,10 +360,8 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
       omitOrigin: options?.omitOrigin,
     };
     const {className = ''} = linkifyURLOptions;
-    if (frame.url) {
-      fallbackAnchor = Linkifier.linkifyURL(frame.url as Platform.DevToolsPath.UrlString, linkifyURLOptions);
-    }
-    if (!target || target.isDisposed()) {
+    const fallbackAnchor = Linkifier.linkifyURL(frame.url as Platform.DevToolsPath.UrlString, linkifyURLOptions);
+    if (!target || target.isDisposed() || !frame.uiSourceCode) {
       return fallbackAnchor;
     }
 
@@ -383,7 +380,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
       revealBreakpoint: options?.revealBreakpoint,
     };
 
-    const uiLocation = frame.uiSourceCode?.uiLocation(frame.line, frame.column) ?? null;
+    const uiLocation = frame.uiSourceCode.uiLocation(frame.line, frame.column) ?? null;
     this.updateAnchorFromUILocation(link, linkDisplayOptions, uiLocation);
 
     const anchors = (this.anchorsByTarget.get(target) as Element[]);
