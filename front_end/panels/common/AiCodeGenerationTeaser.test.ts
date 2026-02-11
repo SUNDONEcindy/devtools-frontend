@@ -26,11 +26,6 @@ describeWithEnvironment('AiCodeGenerationTeaser', () => {
 
   it('displayState state is updated', async () => {
     const {view, widget} = await createTeaser();
-    assert.deepEqual(view.input.displayState, AiCodeGenerationTeaserDisplayState.TRIGGER);
-
-    widget.displayState = AiCodeGenerationTeaserDisplayState.DISCOVERY;
-    await view.nextInput;
-
     assert.deepEqual(view.input.displayState, AiCodeGenerationTeaserDisplayState.DISCOVERY);
 
     widget.displayState = AiCodeGenerationTeaserDisplayState.TRIGGER;
@@ -120,6 +115,25 @@ describeWithEnvironment('AiCodeGenerationTeaser', () => {
     view.input.onManageInSettingsTooltipClick(new Event('click'));
 
     assert.isTrue(showViewStub.calledOnceWith('chrome-ai'));
+    widget.detach();
+  });
+
+  it('dataUsageTeaserShown is true after leaving TRIGGER state', async () => {
+    const {view, widget} = await createTeaser();
+    assert.isTrue(view.input.showDataUsageTeaser);
+
+    widget.displayState = AiCodeGenerationTeaserDisplayState.TRIGGER;
+    await view.nextInput;
+    assert.isTrue(view.input.showDataUsageTeaser);
+
+    widget.displayState = AiCodeGenerationTeaserDisplayState.DISCOVERY;
+    await view.nextInput;
+    assert.isFalse(view.input.showDataUsageTeaser);
+
+    widget.displayState = AiCodeGenerationTeaserDisplayState.TRIGGER;
+    await view.nextInput;
+    assert.isFalse(view.input.showDataUsageTeaser);
+
     widget.detach();
   });
 });
