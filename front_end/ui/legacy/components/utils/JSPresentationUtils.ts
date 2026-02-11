@@ -96,7 +96,7 @@ function populateContextMenu(link: Element, event: Event): void {
 }
 
 // TODO(crbug.com/456517732): remove when all usages of runtimeStackTrace are migrated.
-export function buildStackTraceRowsForLegacyRuntimeStackTrace(
+function buildStackTraceRowsForLegacyRuntimeStackTrace(
     stackTrace: Protocol.Runtime.StackTrace,
     target: SDK.Target.Target|null,
     linkifier: Linkifier,
@@ -159,7 +159,7 @@ export function buildStackTraceRowsForLegacyRuntimeStackTrace(
   return stackTraceRows;
 }
 
-export function buildStackTraceRows(
+function buildStackTraceRows(
     stackTrace: StackTrace.StackTrace.StackTrace,
     target: SDK.Target.Target|null,
     linkifier: Linkifier,
@@ -306,12 +306,12 @@ export interface Options {
   expandable?: boolean;
 }
 
-export interface StackTraceRegularRow {
+interface StackTraceRegularRow {
   functionName: string;
   link: HTMLElement|null;
 }
 
-export interface StackTraceAsyncRow {
+interface StackTraceAsyncRow {
   asyncDescription: string;
 }
 
