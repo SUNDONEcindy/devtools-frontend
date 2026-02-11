@@ -31,7 +31,7 @@ Content:
   "function_declarations": [
     {
       "name": "listNetworkRequests",
-      "description": "Gives a list of network requests including URL, status code, and duration in ms",
+      "description": "Gives a list of network requests including URL, status code, and duration in ms.",
       "parameters": {
         "type": 6,
         "description": "",
@@ -42,7 +42,7 @@ Content:
     },
     {
       "name": "selectNetworkRequest",
-      "description": "From the list of selected request select one to debug",
+      "description": "Selects a specific network request to further provide information about. Use this when asked about network requests issues.",
       "parameters": {
         "type": 6,
         "description": "",
@@ -72,7 +72,7 @@ Content:
     },
     {
       "name": "selectSourceFile",
-      "description": "Returns a list of all files in the project.",
+      "description": "Selects a source file. Use this when asked about files on the page.",
       "parameters": {
         "type": 6,
         "description": "",
@@ -83,7 +83,7 @@ Content:
         "properties": {
           "name": {
             "type": 1,
-            "description": "The name of the file",
+            "description": "The name of the file you want to select.",
             "nullable": false
           }
         }
@@ -91,7 +91,7 @@ Content:
     },
     {
       "name": "performanceRecordAndReload",
-      "description": "Start a new performance recording and reload the page.",
+      "description": "Records a new performance trace, to help debug performance issue.",
       "parameters": {
         "type": 6,
         "description": "",
@@ -102,7 +102,7 @@ Content:
     },
     {
       "name": "inspectDom",
-      "description": "Prompts user to select a DOM element from the page.",
+      "description": "Prompts user to select a DOM element from the page. Use this when you don't know which element is selected.",
       "parameters": {
         "type": 6,
         "description": "",
