@@ -22,23 +22,30 @@ import {
   stopTrackingAsyncActivity,
 } from './TrackAsyncOperations.js';
 
-const style = document.createElement('style');
-style.innerText =
-    '@import url(\'https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap\');';
-document.head.append(style);
-document.documentElement.classList.add('platform-screenshot-test');
+async function setupTestFont() {
+  document.documentElement.classList.add('platform-screenshot-test');
 
-// Warm-up fonts to be readily available.
-before(async function() {
-  const div = document.createElement('div');
-  div.style.fontFamily = 'roboto';
-  // Some latin characters to trigger the latin font file to be loaded.
-  // Additional non-latin characters can be included if needed.
-  div.innerText = 'abc';
-  // eslint-disable-next-line @devtools/no-document-body-mutation
-  document.body.append(div);
+  await new Promise(r => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap';
+    link.onload = r;
+    document.head.appendChild(link);
+  });
+
+  await Promise.all([
+    document.fonts.load('400 16px "Roboto"'),  // Normal
+    document.fonts.load('500 16px "Roboto"'),  // Medium
+    document.fonts.load('700 16px "Roboto"'),  // Bold
+    document.fonts.load('italic 400 16px "Roboto"'),
+    document.fonts.load('italic 500 16px "Roboto"'),
+    document.fonts.load('italic 700 16px "Roboto"'),
+  ]);
   await document.fonts.ready;
-  div.remove();
+}
+
+before(async function() {
+  await setupTestFont();
 
   // There is no way to provide after each file run via a test set up file.
   // What we do instead is add and after all in all global test suits
