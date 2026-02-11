@@ -1704,7 +1704,7 @@ export class TreeViewElement extends HTMLElementWithLightDOMTemplate {
     super();
     this.#treeOutline.addEventListener(Events.ElementSelected, event => {
       if (event.data instanceof TreeViewTreeElement) {
-        this.dispatchEvent(new TreeViewElement.SelectEvent(event.data.configElement));
+        event.data.listItemElement.dispatchEvent(new TreeViewElement.SelectEvent());
       }
     });
     this.#treeOutline.addEventListener(Events.ElementExpanded, event => {
@@ -1859,9 +1859,9 @@ export class TreeViewElement extends HTMLElementWithLightDOMTemplate {
 }
 
 export namespace TreeViewElement {
-  export class SelectEvent extends CustomEvent<HTMLLIElement> {
-    constructor(detail: HTMLLIElement) {
-      super('select', {detail});
+  export class SelectEvent extends CustomEvent<void> {
+    constructor() {
+      super('select');
     }
   }
 

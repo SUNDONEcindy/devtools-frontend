@@ -203,14 +203,6 @@ export const DEFAULT_VIEW = (input: ViewInput, output: ViewOutput, target: HTMLE
             }
           };
 
-  const itemByConfigElement =
-      new WeakMap<Element, SDK.CategorizedBreakpoint.Category|SDK.CategorizedBreakpoint.CategorizedBreakpoint>();
-
-  const onSelect = (e: UI.TreeOutline.TreeViewElement.SelectEvent): void => {
-    const item = itemByConfigElement.get(e.detail);
-    input.onItemSelected(item ?? null);
-  };
-
   const onKeyDown = (e: KeyboardEvent): void => {
     if (e.key === ' ') {
       input.onSpaceKeyDown();
@@ -228,10 +220,10 @@ export const DEFAULT_VIEW = (input: ViewInput, output: ViewOutput, target: HTMLE
         style="flex: 1;"
         ></devtools-toolbar-input>
     </devtools-toolbar>
-    <devtools-tree autofocus @select=${onSelect} @keydown=${onKeyDown} .template=${html`
+    <devtools-tree autofocus @keydown=${onKeyDown} .template=${html`
       <ul role="tree">
         ${filteredCategories.map(([category, breakpoints]) => html`
-          <li ${Lit.Directives.ref(el => { if (el) { itemByConfigElement.set(el, category); } })}
+          <li @select=${() => input.onItemSelected(category)}
               @expand=${(e: UI.TreeOutline.TreeViewElement.ExpandEvent) => onExpand(category, e)}
               role="treeitem"
               jslog-context=${category}
@@ -252,7 +244,7 @@ export const DEFAULT_VIEW = (input: ViewInput, output: ViewOutput, target: HTMLE
                 role="group"
                 ?hidden=${!shouldExpandCategory(breakpoints) && !input.userExpandedCategories.has(category)}>
               ${breakpoints.map(breakpoint => html`
-              <li ${Lit.Directives.ref(el => { if (el) { itemByConfigElement.set(el, breakpoint); } })}
+              <li @select=${() => input.onItemSelected(breakpoint)}
                   role="treeitem"
                   aria-checked=${breakpoint.enabled()}
                   jslog-context=${Platform.StringUtilities.toKebabCase(breakpoint.name)}>

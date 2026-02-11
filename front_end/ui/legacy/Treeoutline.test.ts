@@ -195,26 +195,33 @@ describe('TreeViewElement', () => {
   });
 
   it('sends a `select` event when a node is selected', async () => {
-    const onSelect = sinon.stub<[UI.TreeOutline.TreeViewElement.SelectEvent]>();
+    const onSelectFirst = sinon.stub<[UI.TreeOutline.TreeViewElement.SelectEvent]>();
+    const onSelectSecond = sinon.stub<[UI.TreeOutline.TreeViewElement.SelectEvent]>();
     let firstConfigElement, secondConfigElement;
-    const component = await makeTree(
-        html`<devtools-tree @select=${onSelect as (e: UI.TreeOutline.TreeViewElement.SelectEvent) => void} .template=${
-            html`
-      <ul role="tree">
-        <li ${Lit.Directives.ref(e => {
-              firstConfigElement = e;
-            })} role="treeitem">first node</li>
-        <li ${Lit.Directives.ref(e => {
-              secondConfigElement = e;
-            })} role="treeitem">second node</li>
-      </ul>`}></devtools-tree>`);
+    // clang-format off
+    const component = await makeTree(html`
+      <devtools-tree .template=${html`
+        <ul role="tree">
+          <li ${Lit.Directives.ref(e => { firstConfigElement = e; })}
+              role="treeitem"
+              @select=${onSelectFirst}>
+            first node
+          </li>
+          <li ${Lit.Directives.ref(e => { secondConfigElement = e; })}
+              role="treeitem"
+              @select=${onSelectSecond}>
+            second node
+          </li>
+        </ul>`}>
+      </devtools-tree>`);
+    // clang-format on
 
     assert.exists(firstConfigElement);
     assert.exists(secondConfigElement);
     component.getInternalTreeOutlineForTest().rootElement().lastChild()?.select();
 
-    sinon.assert.calledOnce(onSelect);
-    assert.strictEqual(onSelect.args[0][0].detail, secondConfigElement);
+    sinon.assert.notCalled(onSelectFirst);
+    sinon.assert.calledOnce(onSelectSecond);
   });
 
   it('sends an `expand` event when a node is expanded or collapsed', async () => {
