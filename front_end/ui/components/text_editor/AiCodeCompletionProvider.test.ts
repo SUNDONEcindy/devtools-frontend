@@ -442,6 +442,7 @@ describeWithEnvironment('AiCodeCompletionProvider', () => {
           startTime: performance.now(),
           clearCachedRequest: () => {},
           onImpression: () => {},
+          source: Config.AiSuggestionSource.COMPLETION,
         }),
       });
       editor.editor.contentDOM.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}));
@@ -464,6 +465,7 @@ describeWithEnvironment('AiCodeCompletionProvider', () => {
           startTime: performance.now(),
           clearCachedRequest: () => {},
           onImpression: () => {},
+          source: Config.AiSuggestionSource.COMPLETION,
         }),
       });
 

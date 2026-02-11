@@ -196,6 +196,7 @@ describeWithEnvironment('AiCodeGenerationProvider', () => {
           sampleId: 1,
           startTime: performance.now(),
           onImpression: () => {},
+          source: Config.AiSuggestionSource.GENERATION,
         }),
       });
       editor.editor.contentDOM.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}));
@@ -216,6 +217,7 @@ describeWithEnvironment('AiCodeGenerationProvider', () => {
           sampleId: 1,
           startTime: performance.now(),
           onImpression: () => {},
+          source: Config.AiSuggestionSource.GENERATION,
         }),
       });
 
