@@ -2193,14 +2193,29 @@ export const bindCheckboxImpl = function(
   };
 };
 
+export type BindToSettingOpts = ((newSettingValue: string) => boolean)|{
+  validator?: (newSettingValue: string) => boolean,
+  jslog?: boolean,
+};
 export const bindToSetting =
     (settingOrName: string|Common.Settings.Setting<boolean|string>|Common.Settings.RegExpSetting,
-     stringValidator?: (newSettingValue: string) => boolean): ReturnType<typeof Directives.ref> => {
+     optionsOrValidator?: BindToSettingOpts): ReturnType<typeof Directives.ref> => {
       const setting = typeof settingOrName === 'string' ?
           Common.Settings.Settings.instance().moduleSetting(settingOrName) :
           settingOrName;
 
-      const jslog = VisualLogging.toggle(setting.name).track({change: true});
+      let stringValidator: ((newSettingValue: string) => boolean)|undefined;
+      let jslog = true;
+      if (typeof optionsOrValidator === 'function') {
+        stringValidator = optionsOrValidator;
+      } else if (optionsOrValidator) {
+        stringValidator = optionsOrValidator.validator;
+        if (optionsOrValidator.jslog !== undefined) {
+          jslog = optionsOrValidator.jslog;
+        }
+      }
+
+      const jslogBuilder = jslog ? VisualLogging.toggle(setting.name).track({change: true}) : null;
       // We can't use `setValue` as the change listener directly, otherwise we won't
       // be able to remove it again.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2215,7 +2230,9 @@ export const bindToSetting =
             setting.removeChangeListener(settingChanged);
             return;
           }
-          e.setAttribute('jslog', jslog.toString());
+          if (jslogBuilder) {
+            e.setAttribute('jslog', jslogBuilder.toString());
+          }
 
           setting.addChangeListener(settingChanged);
           setValue =
@@ -2231,7 +2248,9 @@ export const bindToSetting =
             return;
           }
 
-          e.setAttribute('jslog', jslog.toString());
+          if (jslogBuilder) {
+            e.setAttribute('jslog', jslogBuilder.toString());
+          }
           setting.addChangeListener(settingChanged);
           setValue = bindInput(e as HTMLInputElement, setting.set.bind(setting), (value: string) => {
             try {
@@ -2252,7 +2271,9 @@ export const bindToSetting =
             return;
           }
 
-          e.setAttribute('jslog', jslog.toString());
+          if (jslogBuilder) {
+            e.setAttribute('jslog', jslogBuilder.toString());
+          }
           setting.addChangeListener(settingChanged);
           setValue = bindInput(
               e as HTMLInputElement, setting.set.bind(setting), stringValidator ?? (() => true), /* numeric */ false);

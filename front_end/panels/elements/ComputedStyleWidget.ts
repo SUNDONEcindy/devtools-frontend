@@ -44,7 +44,6 @@ import * as InlineEditor from '../../ui/legacy/components/inline_editor/inline_e
 import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import * as Lit from '../../ui/lit/lit.js';
-import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 
 import * as ElementsComponents from './components/components.js';
 import computedStyleWidgetStyles from './computedStyleWidget.css.js';
@@ -289,12 +288,10 @@ export const DEFAULT_VIEW: View = (input, _output, target) => {
         ></devtools-toolbar-input>
         <devtools-checkbox
           title=${i18nString(UIStrings.showAll)}
-          jslog=${VisualLogging.toggle('show-inherited-computed-style-properties').track({ change: true })}
           ${bindToSetting(input.showInheritedComputedStylePropertiesSetting)}
         >${i18nString(UIStrings.showAll)}</devtools-checkbox>
         <devtools-checkbox
           title=${i18nString(UIStrings.group)}
-          jslog=${VisualLogging.toggle('group-computed-styles').track({ change: true })}
           ${bindToSetting(input.groupComputedStylesSetting)}
         >${i18nString(UIStrings.group)}</devtools-checkbox>
       </devtools-toolbar>

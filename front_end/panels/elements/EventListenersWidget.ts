@@ -105,8 +105,7 @@ export const DEFAULT_VIEW: View = (input, _output, target) => {
       <devtools-toolbar class="event-listener-toolbar" role="presentation">
         <devtools-button ${bindToAction(input.refreshEventListenersActionName)}></devtools-button>
         <devtools-checkbox title=${i18nString(UIStrings.showListenersOnTheAncestors)}
-          ${bindToSetting(input.showForAncestorsSetting)}
-          jslog=${VisualLogging.toggle('show-event-listeners-for-ancestors').track({ change: true })}>
+          ${bindToSetting(input.showForAncestorsSetting)}>
           ${i18nString(UIStrings.ancestors)}
         </devtools-checkbox>
         <select class="dispatch-filter"
@@ -120,8 +119,7 @@ export const DEFAULT_VIEW: View = (input, _output, target) => {
             </option>`)}
         </select>
         <devtools-checkbox title=${i18nString(UIStrings.resolveEventListenersBoundWith)}
-          ${bindToSetting(input.showFrameworkListenersSetting)}
-          jslog=${VisualLogging.toggle('show-frameowkr-listeners').track({ change: true })}>
+          ${bindToSetting(input.showFrameworkListenersSetting)}>
           ${i18nString(UIStrings.frameworkListeners)}
         </devtools-checkbox>
       </devtools-toolbar>

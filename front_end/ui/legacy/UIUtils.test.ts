@@ -343,13 +343,13 @@ describe('UIUtils', () => {
 });
 
 describe('bindToSetting (string)', () => {
-  function setup(validate?: (arg: string) => boolean) {
+  function setup(opts: UI.UIUtils.BindToSettingOpts = {}) {
     const {bindToSetting} = UI.UIUtils;
     const setting = createFakeSetting<string>('fake-setting', 'defaultValue');
     const container = document.createElement('div');
     renderElementIntoDOM(container);
     const inputRef = Lit.Directives.createRef<HTMLInputElement>();
-    Lit.render(html`<input ${Lit.Directives.ref(inputRef)} ${bindToSetting(setting, validate)}></input>`, container);
+    Lit.render(html`<input ${Lit.Directives.ref(inputRef)} ${bindToSetting(setting, opts)}></input>`, container);
 
     const input = inputRef.value;
     assert.exists(input);
@@ -367,6 +367,12 @@ describe('bindToSetting (string)', () => {
     const {input} = setup();
 
     assert.strictEqual(input.getAttribute('jslog'), 'Toggle; context: fake-setting; track: change');
+  });
+
+  it('does not add jslog if disabled via options', async () => {
+    const {input} = setup({jslog: false});
+
+    assert.isNull(input.getAttribute('jslog'));
   });
 
   it('changes the setting when the input changes', () => {
@@ -387,7 +393,7 @@ describe('bindToSetting (string)', () => {
   });
 
   it('does not change the setting when validation fails', () => {
-    const {setting, input} = setup(arg => /[0-9]+/.test(arg));
+    const {setting, input} = setup({validator: arg => /[0-9]+/.test(arg)});
 
     input.value = 'text must not update the setting';
     input.dispatchEvent(new Event('change'));
@@ -412,14 +418,14 @@ describe('bindToSetting (string)', () => {
 });
 
 describe('bindToSetting (boolean)', () => {
-  function setup() {
+  function setup(opts: UI.UIUtils.BindToSettingOpts = {}) {
     const {bindToSetting} = UI.UIUtils;
     const setting = createFakeSetting<boolean>('fake-setting', true);
     const container = document.createElement('div');
     renderElementIntoDOM(container);
     const inputRef = Lit.Directives.createRef<UI.UIUtils.CheckboxLabel>();
     Lit.render(
-        html`<devtools-checkbox ${Lit.Directives.ref(inputRef)} ${bindToSetting(setting)}></devtools-checkbox>`,
+        html`<devtools-checkbox ${Lit.Directives.ref(inputRef)} ${bindToSetting(setting, opts)}></devtools-checkbox>`,
         container);
 
     const input = inputRef.value;
@@ -438,6 +444,12 @@ describe('bindToSetting (boolean)', () => {
     const {input} = setup();
 
     assert.strictEqual(input.getAttribute('jslog'), 'Toggle; context: fake-setting; track: change');
+  });
+
+  it('does not add jslog if disabled via options', async () => {
+    const {input} = setup({jslog: false});
+
+    assert.isNull(input.getAttribute('jslog'));
   });
 
   it('changes the setting when the checkbox changes', () => {
