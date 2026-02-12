@@ -2200,6 +2200,7 @@ export const bindToSetting =
           Common.Settings.Settings.instance().moduleSetting(settingOrName) :
           settingOrName;
 
+      const jslog = VisualLogging.toggle(setting.name).track({change: true});
       // We can't use `setValue` as the change listener directly, otherwise we won't
       // be able to remove it again.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2214,6 +2215,7 @@ export const bindToSetting =
             setting.removeChangeListener(settingChanged);
             return;
           }
+          e.setAttribute('jslog', jslog.toString());
 
           setting.addChangeListener(settingChanged);
           setValue =
@@ -2229,6 +2231,7 @@ export const bindToSetting =
             return;
           }
 
+          e.setAttribute('jslog', jslog.toString());
           setting.addChangeListener(settingChanged);
           setValue = bindInput(e as HTMLInputElement, setting.set.bind(setting), (value: string) => {
             try {
@@ -2249,6 +2252,7 @@ export const bindToSetting =
             return;
           }
 
+          e.setAttribute('jslog', jslog.toString());
           setting.addChangeListener(settingChanged);
           setValue = bindInput(
               e as HTMLInputElement, setting.set.bind(setting), stringValidator ?? (() => true), /* numeric */ false);

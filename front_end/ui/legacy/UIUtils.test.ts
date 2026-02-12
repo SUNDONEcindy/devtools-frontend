@@ -363,6 +363,12 @@ describe('bindToSetting (string)', () => {
     assert.strictEqual(input.value, 'defaultValue');
   });
 
+  it('adds jslog for tracking changes', async () => {
+    const {input} = setup();
+
+    assert.strictEqual(input.getAttribute('jslog'), 'Toggle; context: fake-setting; track: change');
+  });
+
   it('changes the setting when the input changes', () => {
     const {setting, input} = setup();
 
@@ -426,6 +432,12 @@ describe('bindToSetting (boolean)', () => {
     const {input} = setup();
 
     assert.isTrue(input.checked);
+  });
+
+  it('adds jslog for tracking changes', async () => {
+    const {input} = setup();
+
+    assert.strictEqual(input.getAttribute('jslog'), 'Toggle; context: fake-setting; track: change');
   });
 
   it('changes the setting when the checkbox changes', () => {
