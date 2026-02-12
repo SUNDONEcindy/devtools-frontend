@@ -2898,8 +2898,7 @@ export class StylePropertyTreeElement extends UI.TreeOutline.TreeElement {
     const regex = new RegExp(propertyNamePattern, 'i');
     await computedStyleWidget.filterComputedStyles(regex);
 
-    computedStyleWidget.input.setValue(this.property.name);
-    computedStyleWidget.input.element.focus();
+    computedStyleWidget.setFilterInput(this.property.name);
   }
 
   private copyCssDeclarationAsJs(): void {

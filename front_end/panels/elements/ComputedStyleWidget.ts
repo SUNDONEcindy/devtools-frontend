@@ -44,9 +44,10 @@ import * as InlineEditor from '../../ui/legacy/components/inline_editor/inline_e
 import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import * as Lit from '../../ui/lit/lit.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 
 import * as ElementsComponents from './components/components.js';
-import computedStyleSidebarPaneStyles from './computedStyleSidebarPane.css.js';
+import computedStyleWidgetStyles from './computedStyleWidget.css.js';
 import {ImagePreviewPopover} from './ImagePreviewPopover.js';
 import {PlatformFontsWidget} from './PlatformFontsWidget.js';
 import {categorizePropertyName, type Category, DefaultCategoryOrder} from './PropertyNameCategories.js';
@@ -54,6 +55,7 @@ import {Renderer, rendererBase, type RenderingContext, StringRenderer, URLRender
 import {StylePropertiesSection} from './StylePropertiesSection.js';
 
 const {html, render} = Lit;
+const {bindToSetting} = UI.UIUtils;
 
 const UIStrings = {
   /**
@@ -263,9 +265,12 @@ type ComputedStyleData = {
 
 interface ComputedStyleWidgetInput {
   computedStylesTree: TreeOutline.TreeOutline.TreeOutline<ComputedStyleData>;
-  toolbar: HTMLElement;
   hasMatches: boolean;
   computedStyleModel: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel;
+  showInheritedComputedStylePropertiesSetting: Common.Settings.Setting<boolean>;
+  groupComputedStylesSetting: Common.Settings.Setting<boolean>;
+  onFilterChanged: (event: CustomEvent<string>) => void;
+  filterText: string;
 }
 
 type View = (input: ComputedStyleWidgetInput, output: null, target: HTMLElement) => void;
@@ -273,14 +278,32 @@ type View = (input: ComputedStyleWidgetInput, output: null, target: HTMLElement)
 export const DEFAULT_VIEW: View = (input, _output, target) => {
   // clang-format off
   render(html`
-    <div class="styles-sidebar-pane-toolbar">${input.toolbar}</div>
+    <style>${computedStyleWidgetStyles}</style>
+    <div class="styles-sidebar-pane-toolbar">
+      <devtools-toolbar class="styles-pane-toolbar" role="presentation">
+        <devtools-toolbar-input
+          type="filter"
+          autofocus
+          value=${input.filterText}
+          @change=${input.onFilterChanged}
+        ></devtools-toolbar-input>
+        <devtools-checkbox
+          title=${i18nString(UIStrings.showAll)}
+          jslog=${VisualLogging.toggle('show-inherited-computed-style-properties').track({ change: true })}
+          ${bindToSetting(input.showInheritedComputedStylePropertiesSetting)}
+        >${i18nString(UIStrings.showAll)}</devtools-checkbox>
+        <devtools-checkbox
+          title=${i18nString(UIStrings.group)}
+          jslog=${VisualLogging.toggle('group-computed-styles').track({ change: true })}
+          ${bindToSetting(input.groupComputedStylesSetting)}
+        >${i18nString(UIStrings.group)}</devtools-checkbox>
+      </devtools-toolbar>
+    </div>
     <div class="computed-style-tree-outline-container">
       ${input.computedStylesTree}
     </div>
     ${!input.hasMatches ? html`<div class="gray-info-message">${i18nString(UIStrings.noMatchingProperty)}</div>` : ''}
-    <div class="platform-fonts-widget-container">
-      <devtools-widget .widgetConfig=${UI.Widget.widgetConfig(PlatformFontsWidget, { sharedModel: input.computedStyleModel})}></devtools-widget>
-    </div>
+    <devtools-widget .widgetConfig=${UI.Widget.widgetConfig(PlatformFontsWidget, { sharedModel: input.computedStyleModel})}></devtools-widget>
   `, target);
   // clang-format on
 };
@@ -289,7 +312,6 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
   private computedStyleModel: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel;
   private readonly showInheritedComputedStylePropertiesSetting: Common.Settings.Setting<boolean>;
   private readonly groupComputedStylesSetting: Common.Settings.Setting<boolean>;
-  input: UI.Toolbar.ToolbarInput;
   private filterRegex: RegExp|null;
   private readonly linkifier: Components.Linkifier.Linkifier;
   private readonly imagePreviewPopover: ImagePreviewPopover;
@@ -297,12 +319,11 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
   #computedStylesTree = new TreeOutline.TreeOutline.TreeOutline<ComputedStyleData>();
   #treeData?: TreeOutline.TreeOutline.TreeOutlineData<ComputedStyleData>;
   readonly #view: View;
-  private readonly toolbarElement: HTMLElement;
+  #filterText = '';
 
   constructor(computedStyleModel: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel) {
     super({useShadowDom: true});
     this.#view = DEFAULT_VIEW;
-    this.registerRequiredCSS(computedStyleSidebarPaneStyles);
 
     this.contentElement.classList.add('styles-sidebar-computed-style-widget');
 
@@ -321,22 +342,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
       this.requestUpdate();
     });
 
-    this.toolbarElement = document.createElement('div');
-    this.toolbarElement.classList.add('hbox', 'styles-sidebar-pane-toolbar');
-    const toolbar = document.createElement('devtools-toolbar');
-    toolbar.classList.add('styles-pane-toolbar');
-    this.toolbarElement.appendChild(toolbar);
-
-    const filterInput = new UI.Toolbar.ToolbarFilter(undefined, 1, 1, undefined, undefined, false);
-    filterInput.addEventListener(UI.Toolbar.ToolbarInput.Event.TEXT_CHANGED, this.onFilterChanged, this);
-    toolbar.appendToolbarItem(filterInput);
-    this.input = filterInput;
     this.filterRegex = null;
-
-    toolbar.appendToolbarItem(new UI.Toolbar.ToolbarSettingCheckbox(
-        this.showInheritedComputedStylePropertiesSetting, undefined, i18nString(UIStrings.showAll)));
-    toolbar.appendToolbarItem(
-        new UI.Toolbar.ToolbarSettingCheckbox(this.groupComputedStylesSetting, undefined, i18nString(UIStrings.group)));
 
     this.linkifier = new Components.Linkifier.Linkifier(maxLinkLength);
 
@@ -373,9 +379,12 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
     this.#view(
         {
           computedStylesTree: this.#computedStylesTree,
-          toolbar: this.toolbarElement,
           hasMatches,
           computedStyleModel: this.computedStyleModel,
+          showInheritedComputedStylePropertiesSetting: this.showInheritedComputedStylePropertiesSetting,
+          groupComputedStylesSetting: this.groupComputedStylesSetting,
+          onFilterChanged: this.onFilterChanged.bind(this),
+          filterText: this.#filterText,
         },
         null, this.contentElement);
   }
@@ -628,13 +637,14 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
     return result;
   }
 
-  private async onFilterChanged(event: Common.EventTarget.EventTargetEvent<string>): Promise<void> {
+  private async onFilterChanged(event: CustomEvent<string>): Promise<void> {
+    this.#filterText = event.detail;
     await this.filterComputedStyles(
-        event.data ? new RegExp(Platform.StringUtilities.escapeForRegExp(event.data), 'i') : null);
+        event.detail ? new RegExp(Platform.StringUtilities.escapeForRegExp(event.detail), 'i') : null);
 
-    if (event.data && this.#computedStylesTree.data && this.#computedStylesTree.data.tree) {
+    if (event.detail && this.#computedStylesTree.data && this.#computedStylesTree.data.tree) {
       UI.ARIAUtils.LiveAnnouncer.alert(i18nString(
-          UIStrings.filterUpdateAriaText, {PH1: event.data, PH2: this.#computedStylesTree.data.tree.length}));
+          UIStrings.filterUpdateAriaText, {PH1: event.detail, PH2: this.#computedStylesTree.data.tree.length}));
     }
   }
 
@@ -644,6 +654,11 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
       return await this.filterGroupLists();
     }
     return this.filterAlphabeticalList();
+  }
+
+  setFilterInput(text: string): void {
+    this.#filterText = text;
+    this.requestUpdate();
   }
 
   private nodeFilter(node: TreeOutline.TreeOutlineUtils.TreeNode<ComputedStyleData>): boolean {
