@@ -370,14 +370,16 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
       return;
     }
 
-    // TODO(crbug.com/456517732): remove when all usages of runtimeStackTrace are migrated.
-    const updateCallback =
-        renderStackTraceTable.bind(null, this.#table, this.element, this.#options.expandable ?? false);
-    const stackTraceRows = buildStackTraceRowsForLegacyRuntimeStackTrace(
-        runtimeStackTrace ?? {callFrames: []}, this.#target ?? null, this.#linkifier, tabStops, updateCallback,
-        this.#options.showColumnNumber);
-    this.#hasRows = stackTraceRows.length > 0;
-    this.#links = renderStackTraceTable(this.#table, this.element, this.#options.expandable ?? false, stackTraceRows);
+    if (runtimeStackTrace) {
+      // TODO(crbug.com/456517732): remove when all usages of runtimeStackTrace are migrated.
+      const updateCallback =
+          renderStackTraceTable.bind(null, this.#table, this.element, this.#options.expandable ?? false);
+      const stackTraceRows = buildStackTraceRowsForLegacyRuntimeStackTrace(
+          runtimeStackTrace ?? {callFrames: []}, this.#target ?? null, this.#linkifier, tabStops, updateCallback,
+          this.#options.showColumnNumber);
+      this.#hasRows = stackTraceRows.length > 0;
+      this.#links = renderStackTraceTable(this.#table, this.element, this.#options.expandable ?? false, stackTraceRows);
+    }
   }
 
   get linkElements(): readonly HTMLElement[] {
