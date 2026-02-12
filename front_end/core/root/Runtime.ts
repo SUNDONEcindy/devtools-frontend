@@ -582,10 +582,6 @@ interface AiPromptApi {
   allowWithoutGpu: boolean;
 }
 
-interface DevToolsIndividualRequestThrottling {
-  enabled: boolean;
-}
-
 export interface DevToolsEnableDurableMessages {
   enabled: boolean;
 }
@@ -631,7 +627,6 @@ export type HostConfig = Platform.TypeScriptUtilities.RecursivePartial<{
   devToolsAiCodeGeneration: HostConfigAiCodeGeneration,
   devToolsVeLogging: HostConfigVeLogging,
   devToolsWellKnown: HostConfigWellKnown,
-  devToolsIndividualRequestThrottling: DevToolsIndividualRequestThrottling,
   /**
    * OffTheRecord here indicates that the user's profile is either incognito,
    * or guest mode, rather than a "normal" profile.

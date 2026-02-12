@@ -7,7 +7,7 @@ import * as Bindings from '../../models/bindings/bindings.js';
 import * as Persistence from '../../models/persistence/persistence.js';
 import * as TextUtils from '../../models/text_utils/text_utils.js';
 import * as Workspace from '../../models/workspace/workspace.js';
-import {createTarget, describeWithEnvironment, updateHostConfig} from '../../testing/EnvironmentHelpers.js';
+import {createTarget, describeWithEnvironment} from '../../testing/EnvironmentHelpers.js';
 import {describeWithMockConnection, setMockConnectionResponseHandler} from '../../testing/MockConnection.js';
 import {createWorkspaceProject} from '../../testing/OverridesHelpers.js';
 import * as Common from '../common/common.js';
@@ -1243,42 +1243,7 @@ describeWithMockConnection('MultitargetNetworkManager', () => {
     assert.deepEqual(conditions.conditions.toArray(), [condition1, condition3]);
   });
 
-  it('calls the deprecated emulateNetworkConditions if individual request throttling is disabled', () => {
-    updateHostConfig({devToolsIndividualRequestThrottling: {enabled: false}});
-    const manager = SDK.NetworkManager.MultitargetNetworkManager.instance();
-    manager.setNetworkConditions(SDK.NetworkManager.Slow4GConditions);
-    const targetManager = new SDK.NetworkManager.NetworkManager(createTarget());
-    const stub = sinon.stub(targetManager.target().networkAgent(), 'invoke_emulateNetworkConditions');
-
-    manager.modelAdded(targetManager);
-    sinon.assert.calledOnce(stub);
-    assert.deepEqual(stub.args[0][0], {
-      offline: false,
-      latency: 562.5,
-      downloadThroughput: 180000,
-      uploadThroughput: 84375,
-      packetLoss: undefined,
-      packetQueueLength: undefined,
-      packetReordering: undefined,
-      connectionType: Protocol.Network.ConnectionType.Cellular4g,
-    });
-
-    manager.setNetworkConditions(SDK.NetworkManager.Slow3GConditions);
-    sinon.assert.calledTwice(stub);
-    assert.deepEqual(stub.args[1][0], {
-      offline: false,
-      latency: 2000,
-      downloadThroughput: 50000,
-      uploadThroughput: 50000,
-      packetLoss: undefined,
-      packetQueueLength: undefined,
-      packetReordering: undefined,
-      connectionType: Protocol.Network.ConnectionType.Cellular3g,
-    });
-  });
-
   it('applies global conditions if request conditions are disabled', () => {
-    updateHostConfig({devToolsIndividualRequestThrottling: {enabled: true}});
     createTarget();
     const manager = SDK.NetworkManager.MultitargetNetworkManager.instance({forceNew: true});
 
@@ -1303,7 +1268,6 @@ describeWithMockConnection('MultitargetNetworkManager', () => {
   });
 
   it('calls the request conditions model for global throttling if individual request throttling is enabled', () => {
-    updateHostConfig({devToolsIndividualRequestThrottling: {enabled: true}});
     const manager = SDK.NetworkManager.MultitargetNetworkManager.instance({forceNew: true});
     manager.setNetworkConditions(SDK.NetworkManager.Slow4GConditions);
 
@@ -1525,20 +1489,7 @@ describeWithEnvironment('RequestConditions', () => {
       return {agent, setBlockedURLs, emulateNetworkConditions, emulateNetworkConditionsByRule};
     }
 
-    it('applies blocking if individual request throttling is disabled', () => {
-      updateHostConfig({devToolsIndividualRequestThrottling: {enabled: false}});
-      const {agent, setBlockedURLs} = stubAgent();
-      const conditions = new SDK.NetworkManager.RequestConditions();
-      conditions.conditionsEnabled = true;
-      conditions.add(SDK.NetworkManager.RequestCondition.createFromSetting({url: 'foo', enabled: true}));
-      conditions.add(SDK.NetworkManager.RequestCondition.createFromSetting({url: 'bar', enabled: false}));
-      conditions.applyConditions(false, null, agent);
-
-      sinon.assert.calledOnceWithExactly(setBlockedURLs, {urls: ['foo']});
-    });
-
     it('applies blocking, global, and local throttling if individual request throttling is enabled', () => {
-      updateHostConfig({devToolsIndividualRequestThrottling: {enabled: true}});
       const {agent, setBlockedURLs, emulateNetworkConditions, emulateNetworkConditionsByRule} = stubAgent();
       const conditions = new SDK.NetworkManager.RequestConditions();
       conditions.conditionsEnabled = true;
@@ -1641,7 +1592,6 @@ describeWithEnvironment('RequestConditions', () => {
     });
 
     it('disables throttling and blocking when the effect gets disabled globally', () => {
-      updateHostConfig({devToolsIndividualRequestThrottling: {enabled: true}});
       const conditions = SDK.NetworkManager.MultitargetNetworkManager.instance({forceNew: true}).requestConditions;
       const {setBlockedURLs, emulateNetworkConditions, emulateNetworkConditionsByRule} = stubAgent();
       conditions.conditionsEnabled = true;
@@ -1691,7 +1641,6 @@ describeWithEnvironment('RequestConditions', () => {
     });
 
     it('correctly maps ruleIds to conditions', async () => {
-      updateHostConfig({devToolsIndividualRequestThrottling: {enabled: true}});
       const multitargetNetworkManager = SDK.NetworkManager.MultitargetNetworkManager.instance({forceNew: true});
       const requestConditions = multitargetNetworkManager.requestConditions;
       const {agent, emulateNetworkConditionsByRule} = stubAgent();
