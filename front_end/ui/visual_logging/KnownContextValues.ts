@@ -842,6 +842,7 @@ export const knownContextValues = new Set([
   'columns',
   'combined-diff-view.copy',
   'comic-sans-ms',
+  'command',
   'command-editor',
   'command-input',
   'commit',

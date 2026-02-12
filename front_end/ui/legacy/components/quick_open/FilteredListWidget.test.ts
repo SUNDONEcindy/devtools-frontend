@@ -19,6 +19,7 @@ function createCommandMenuProvider(inputs: string[]) {
     defaultValue: false,
   });
   const provider = new QuickOpen.CommandMenu.CommandMenuProvider(
+      '',
       inputs.map(
           input =>
               QuickOpen.CommandMenu.CommandMenu.createSettingCommand(setting, i18n.i18n.lockedString(input), true)),

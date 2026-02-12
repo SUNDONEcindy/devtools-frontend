@@ -24,11 +24,16 @@ export class HelpQuickOpen extends Provider {
   }
 
   private async addProvider(extension: ProviderRegistration): Promise<void> {
+    // We want to exclude Help menu as we are already in it.
+    if (extension.prefix === '?') {
+      return;
+    }
+
     this.providers.push({
       prefix: extension.prefix || '',
       iconName: extension.iconName,
       title: extension.helpTitle(),
-      jslogContext: (await extension.provider()).jslogContext,
+      jslogContext: extension.jslogContext,
     });
   }
 
@@ -69,8 +74,9 @@ export class HelpQuickOpen extends Provider {
 registerProvider({
   prefix: '?',
   iconName: 'help',
-  provider: () => Promise.resolve(new HelpQuickOpen('help')),
+  provider: jslogContext => Promise.resolve(new HelpQuickOpen(jslogContext)),
   helpTitle: () => 'Help',
   titlePrefix: () => 'Help',
   titleSuggestion: undefined,
+  jslogContext: 'help'
 });

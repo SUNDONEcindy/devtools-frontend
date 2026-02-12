@@ -275,8 +275,8 @@ export const enum PanelOrDrawer {
 export class CommandMenuProvider extends Provider {
   private commands: Command[];
 
-  constructor(commandsForTest: Command[] = []) {
-    super('command');
+  constructor(jslogContext: string, commandsForTest: Command[] = []) {
+    super(jslogContext);
     this.commands = commandsForTest;
   }
 
@@ -455,8 +455,9 @@ export class ShowActionDelegate implements UI.ActionRegistration.ActionDelegate 
 registerProvider({
   prefix: '>',
   iconName: 'chevron-right',
-  provider: () => Promise.resolve(new CommandMenuProvider()),
+  provider: (jslogContext: string) => Promise.resolve(new CommandMenuProvider(jslogContext)),
   helpTitle: () => i18nString(UIStrings.runCommand),
   titlePrefix: () => i18nString(UIStrings.run),
   titleSuggestion: () => i18nString(UIStrings.command),
+  jslogContext: 'command',
 });
