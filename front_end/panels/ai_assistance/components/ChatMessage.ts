@@ -221,6 +221,7 @@ export interface RatingViewInput {
 export interface ActionViewInput {
   onReportClick: () => void;
   onCopyResponseClick: () => void;
+  showActions: boolean;
 }
 
 export interface SuggestionViewInput {
@@ -330,7 +331,7 @@ export const DEFAULT_VIEW = (input: ChatMessageViewInput, output: ViewOutput, ta
         },
       )}
       ${renderError(message)}
-      ${input.isLastMessage && !input.isLoading ? renderActions(input, output) : Lit.nothing}
+      ${input.showActions ? renderActions(input, output) : Lit.nothing}
     </section>
   `, target);
   // clang-format on
@@ -812,8 +813,9 @@ export class ChatMessage extends UI.Widget.Widget {
           onInputChange: this.#handleInputChange.bind(this),
           isSubmitButtonDisabled: this.#isSubmitButtonDisabled,
           // Props for actions logic
+          showActions: !(this.isLastMessage && this.isLoading),
           showRateButtons: this.message.entity === ChatMessageEntity.MODEL && !!this.message.rpcId,
-          suggestions: (this.message.entity === ChatMessageEntity.MODEL && !this.isReadOnly &&
+          suggestions: (this.isLastMessage && this.message.entity === ChatMessageEntity.MODEL && !this.isReadOnly &&
                         this.message.parts.at(-1)?.type === 'answer') ?
               (this.message.parts.at(-1) as AnswerPart).suggestions :
               undefined,
