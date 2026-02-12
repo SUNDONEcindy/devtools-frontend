@@ -581,11 +581,6 @@ interface DeviceBoundSessionsDebugging {
   enabled: boolean;
 }
 
-interface AiPromptApi {
-  enabled: boolean;
-  allowWithoutGpu: boolean;
-}
-
 export interface DevToolsEnableDurableMessages {
   enabled: boolean;
 }
@@ -647,7 +642,6 @@ export type HostConfig = Platform.TypeScriptUtilities.RecursivePartial<{
   devToolsLiveEdit: LiveEdit,
   devToolsFlexibleLayout: DevToolsFlexibleLayout,
   deviceBoundSessionsDebugging: DeviceBoundSessionsDebugging,
-  devToolsAiPromptApi: AiPromptApi,
   devToolsEnableDurableMessages: DevToolsEnableDurableMessages,
   devToolsAiAssistanceContextSelectionAgent: HostConfigAiAssistanceContextSelectionAgent,
   devToolsConsoleInsightsTeasers: ConsoleInsightsTeasers,
