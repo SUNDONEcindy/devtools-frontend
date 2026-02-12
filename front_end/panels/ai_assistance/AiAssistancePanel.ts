@@ -707,12 +707,24 @@ export class AiAssistancePanel extends UI.Panel.Panel {
   // We select the default agent based on the open panels if
   // there isn't any active conversation.
   #selectDefaultAgentIfNeeded(): void {
-    // If there already is an agent and if it is not empty,
-    // we don't automatically change the agent. In addition to this,
-    // we don't change the current agent when there is a message in flight.
-    if ((this.#conversation && !this.#conversation.isEmpty) || this.#isLoading) {
+    // We don't change the current agent when there is a message in flight.
+    if (this.#isLoading) {
       return;
     }
+
+    // If there already is an agent and if it is not empty,
+    // we don't automatically change the agent.
+    if (this.#conversation && !this.#conversation.isEmpty) {
+      // If the context selection agent is enabled,
+      // we update the context of the current agent.
+      const context = this.#getConversationContext(this.#getDefaultConversationType());
+      if (context && isAiAssistanceContextSelectionAgentEnabled()) {
+        this.#conversation?.setContext(context);
+        this.requestUpdate();
+      }
+      return;
+    }
+
     const targetConversationType = this.#getDefaultConversationType();
     if (this.#conversation?.type === targetConversationType) {
       // The above if makes sure even if we have an active agent it's empty

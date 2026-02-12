@@ -287,6 +287,8 @@ describeWithMockConnection('AI Assistance Panel', () => {
     beforeEach(async () => {
       await createNetworkPanelForMockConnection();
       enableAllFeatureAndSetting();
+      sinon.stub(AiAssistanceModel.StylingAgent.NodeContext.prototype, 'getSuggestions')
+          .returns(Promise.resolve([{title: 'test suggestion'}]));
     });
 
     afterEach(async () => {
@@ -300,8 +302,6 @@ describeWithMockConnection('AI Assistance Panel', () => {
           const node = sinon.createStubInstance(SDK.DOMModel.DOMNode, {
             nodeType: Node.ELEMENT_NODE,
           });
-          sinon.stub(AiAssistanceModel.StylingAgent.NodeContext.prototype, 'getSuggestions')
-              .returns(Promise.resolve([{title: 'test suggestion'}]));
           return new AiAssistanceModel.StylingAgent.NodeContext(node);
         },
         action: 'freestyler.elements-floating-button',
@@ -424,8 +424,6 @@ describeWithMockConnection('AI Assistance Panel', () => {
           enabled: true,
         },
       });
-      sinon.stub(AiAssistanceModel.StylingAgent.NodeContext.prototype, 'getSuggestions')
-          .returns(Promise.resolve([{title: 'test suggestion'}]));
       const {panel, view} = await createAiAssistancePanel();
       const initialNode = sinon.createStubInstance(SDK.DOMModel.DOMNode, {
         nodeType: Node.ELEMENT_NODE,
@@ -464,6 +462,52 @@ describeWithMockConnection('AI Assistance Panel', () => {
       nextInput = await view.nextInput;
       assert(nextInput.state === AiAssistancePanel.ViewState.CHAT_VIEW);
       assert.strictEqual(nextInput.props.selectedContext?.getItem(), node2);
+    });
+    it('should update the context when the conversation is not empty if the feature is enabled', async () => {
+      enableAllFeatureAndSetting();
+      updateHostConfig({
+        devToolsAiAssistanceContextSelectionAgent: {
+          enabled: true,
+        },
+      });
+
+      const networkRequest = createNetworkRequest({url: urlString`https://example.com`});
+      UI.Context.Context.instance().setFlavor(SDK.NetworkRequest.NetworkRequest, networkRequest);
+
+      const initialNode = sinon.createStubInstance(SDK.DOMModel.DOMNode, {
+        nodeType: Node.ELEMENT_NODE,
+      });
+      UI.Context.Context.instance().setFlavor(SDK.DOMModel.DOMNode, initialNode);
+      viewManagerIsViewVisibleStub.callsFake(viewName => viewName === 'elements');
+
+      const {panel, view} = await createAiAssistancePanel({
+        aidaClient: mockAidaClient([[{explanation: 'test response'}]]),
+      });
+
+      void panel.handleAction('freestyler.elements-floating-button');
+
+      let nextInput = await view.nextInput;
+
+      assert(nextInput.state === AiAssistancePanel.ViewState.CHAT_VIEW);
+      assert.isNotNull(nextInput.props.selectedContext);
+      assert.strictEqual(nextInput.props.selectedContext?.getItem(), initialNode);
+
+      // Send a message to make the conversation not empty
+      nextInput.props.onTextSubmit('test');
+      nextInput = await view.nextInput;
+      assert(nextInput.state === AiAssistancePanel.ViewState.CHAT_VIEW);
+
+      viewManagerIsViewVisibleStub.callsFake(viewName => viewName === 'network');
+      UI.ViewManager.ViewManager.instance().dispatchEventToListeners(
+          UI.ViewManager.Events.VIEW_VISIBILITY_CHANGED,
+          {location: 'panel', revealedViewId: 'network', hiddenViewId: undefined},
+      );
+      nextInput = await view.nextInput;
+
+      assert(nextInput.state === AiAssistancePanel.ViewState.CHAT_VIEW);
+      assert.strictEqual(
+          nextInput.props.selectedContext?.getItem(), networkRequest,
+          'selectedContext should be updated to network request');
     });
   });
 
