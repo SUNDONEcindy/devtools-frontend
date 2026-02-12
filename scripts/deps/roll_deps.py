@@ -238,6 +238,7 @@ def update_deps_revision(options):
         cwd=options.devtools_dir,
     )
     if options.output:
+        print(f'writing output file at {options.output}')
         with open(options.output, 'w', encoding='utf-8') as f:
             json.dump(
                 {
