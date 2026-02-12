@@ -2192,9 +2192,9 @@ describeWithMockConnection('StylePropertyTreeElement', () => {
       stylePropertyTreeElement.updateTitle();
       stylePropertyTreeElement.startEditingValue();
       const autocompletions = await suggestions();
-      assert.deepEqual(
-          autocompletions.map(({text}) => text),
-          ['row-name', 'row-name-2', 'auto', 'none', 'inherit', 'initial', 'revert', 'revert-layer', 'unset']);
+      assert.deepEqual(autocompletions.map(({text}) => text), [
+        'row-name', 'row-name-2', 'auto', 'none', 'inherit', 'initial', 'revert', 'revert-layer', 'revert-rule', 'unset'
+      ]);
     });
 
     it('includes grid column names', async () => {
@@ -2204,9 +2204,9 @@ describeWithMockConnection('StylePropertyTreeElement', () => {
       stylePropertyTreeElement.updateTitle();
       stylePropertyTreeElement.startEditingValue();
       const autocompletions = await suggestions();
-      assert.deepEqual(
-          autocompletions.map(({text}) => text),
-          ['col-name', 'col-name-2', 'auto', 'none', 'inherit', 'initial', 'revert', 'revert-layer', 'unset']);
+      assert.deepEqual(autocompletions.map(({text}) => text), [
+        'col-name', 'col-name-2', 'auto', 'none', 'inherit', 'initial', 'revert', 'revert-layer', 'revert-rule', 'unset'
+      ]);
     });
 
     it('includes grid area names', async () => {
@@ -2226,6 +2226,7 @@ describeWithMockConnection('StylePropertyTreeElement', () => {
         'initial',
         'revert',
         'revert-layer',
+        'revert-rule',
         'unset',
       ]);
     });

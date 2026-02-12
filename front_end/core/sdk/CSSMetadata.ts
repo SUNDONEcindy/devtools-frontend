@@ -368,17 +368,20 @@ export const enum CSSWideKeyword {
   INITIAL = 'initial',
   REVERT = 'revert',
   REVERT_LAYER = 'revert-layer',
+  REVERT_RULE = 'revert-rule',
   UNSET = 'unset',
 }
 /**
  * Spec: https://drafts.csswg.org/css-cascade/#defaulting-keywords
  * https://drafts.csswg.org/css-cascade-5/#revert-layer
+ * https://drafts.csswg.org/css-cascade-6/#revert-rule
  **/
 export const CSSWideKeywords: CSSWideKeyword[] = [
   CSSWideKeyword.INHERIT,
   CSSWideKeyword.INITIAL,
   CSSWideKeyword.REVERT,
   CSSWideKeyword.REVERT_LAYER,
+  CSSWideKeyword.REVERT_RULE,
   CSSWideKeyword.UNSET,
 ];
 

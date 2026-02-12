@@ -1332,6 +1332,9 @@ class DOMInheritanceCascade {
       case CSSWideKeyword.REVERT_LAYER:
         return this.#findPropertyInPreviousStyle(property, isPreviousLayer) ??
             this.resolveGlobalKeyword(property, CSSWideKeyword.REVERT);
+      case CSSWideKeyword.REVERT_RULE:
+        return this.#findPropertyInPreviousStyle(property, () => true) ??
+            this.resolveGlobalKeyword(property, CSSWideKeyword.UNSET);
       case CSSWideKeyword.UNSET:
         return this.#findPropertyInParentCascadeIfInherited(property) ??
             this.#findCustomPropertyRegistration(property.name);
