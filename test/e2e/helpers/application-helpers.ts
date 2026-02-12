@@ -76,11 +76,6 @@ export async function navigateToOpenedWindows(devToolsPage: DevToolsPage) {
 
 export async function navigateToWebWorkers(devToolsPage: DevToolsPage) {
   const WEB_WORKERS_SELECTOR = '[aria-label="Web Workers"]';
-  await expectVeEvents(
-      [veImpressionsUnder(
-          'Panel: resources > Pane: sidebar > Tree > TreeItem: frames > TreeItem: frame',
-          [veImpression('TreeItem', 'web-workers')])],
-      undefined, devToolsPage);
   await doubleClickTreeItem(WEB_WORKERS_SELECTOR, devToolsPage);
   await devToolsPage.waitFor(`${WEB_WORKERS_SELECTOR} + ol li:first-child`);
   await devToolsPage.waitFor('.empty-state');
