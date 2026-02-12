@@ -67,6 +67,14 @@ describe('ElementsTreeElement', () => {
     ];
     Elements.ElementsTreeElement.DEFAULT_VIEW(
         {
+          node: null,
+          isClosingTag: false,
+          expanded: false,
+          isExpandable: false,
+          isXMLMimeType: false,
+          updateRecord: null,
+          onHighlightSearchResults: () => {},
+          onExpand: () => {},
           containerAdornerActive: false,
           showAdAdorner: false,
           showContainerAdorner: false,
@@ -142,6 +150,9 @@ describeWithMockConnection('ElementsTreeElement', () => {
     sinon.stub(cssModel, 'getLayoutPropertiesFromComputedStyle').resolves(layoutProperties);
 
     const node = new SDK.DOMModel.DOMNode(domModel);
+    sinon.stub(node, 'nodeType').returns(Node.ELEMENT_NODE);
+    sinon.stub(node, 'nodeNameInCorrectCase').returns('div');
+    sinon.stub(node, 'nodeName').returns('DIV');
     const treeOutline = new Elements.ElementsTreeOutline.ElementsTreeOutline();
     const treeElement = new Elements.ElementsTreeElement.ElementsTreeElement(node);
     treeElement.treeOutline = treeOutline;
@@ -214,6 +225,9 @@ describeWithMockConnection('ElementsTreeElement', () => {
     const domModel = target.model(SDK.DOMModel.DOMModel);
     assert.exists(domModel);
     const node = new SDK.DOMModel.DOMNode(domModel);
+    sinon.stub(node, 'nodeType').returns(Node.ELEMENT_NODE);
+    sinon.stub(node, 'nodeNameInCorrectCase').returns('div');
+    sinon.stub(node, 'nodeName').returns('DIV');
     const treeOutline = new Elements.ElementsTreeOutline.ElementsTreeOutline();
     const treeElement = new Elements.ElementsTreeElement.ElementsTreeElement(node);
     treeElement.treeOutline = treeOutline;
@@ -243,6 +257,9 @@ describeWithMockConnection('ElementsTreeElement', () => {
     const domModel = target.model(SDK.DOMModel.DOMModel);
     assert.exists(domModel);
     const node = new SDK.DOMModel.DOMNode(domModel);
+    sinon.stub(node, 'nodeType').returns(Node.ELEMENT_NODE);
+    sinon.stub(node, 'nodeNameInCorrectCase').returns('div');
+    sinon.stub(node, 'nodeName').returns('DIV');
     const treeOutline = new Elements.ElementsTreeOutline.ElementsTreeOutline();
     const treeElement = new Elements.ElementsTreeElement.ElementsTreeElement(node);
     treeElement.treeOutline = treeOutline;
@@ -272,6 +289,9 @@ describeWithMockConnection('ElementsTreeElement', () => {
     const domModel = target.model(SDK.DOMModel.DOMModel);
     assert.exists(domModel);
     const node = new SDK.DOMModel.DOMNode(domModel);
+    sinon.stub(node, 'nodeType').returns(Node.ELEMENT_NODE);
+    sinon.stub(node, 'nodeNameInCorrectCase').returns('div');
+    sinon.stub(node, 'nodeName').returns('DIV');
     const shortcut = {
       deferredNode: {
         resolve: (callback: (node: SDK.DOMModel.DOMNode) => void) => {
@@ -306,6 +326,9 @@ describeWithMockConnection('ElementsTreeElement', () => {
     const cssModel = target.model(SDK.CSSModel.CSSModel);
     assert.exists(cssModel);
     const node = new SDK.DOMModel.DOMNode(domModel);
+    sinon.stub(node, 'nodeType').returns(Node.ELEMENT_NODE);
+    sinon.stub(node, 'nodeNameInCorrectCase').returns('div');
+    sinon.stub(node, 'nodeName').returns('DIV');
     node.id = 1 as Protocol.DOM.NodeId;
 
     const treeOutline = new Elements.ElementsTreeOutline.ElementsTreeOutline();
