@@ -121,11 +121,7 @@ describe('The Network Request view', () => {
     assert.isOk(name);
     await selectRequestByName(name, {}, devToolsPage);
 
-    // This stylesheets violates the iframe csp as well as the devtools csp
-    const styleSrcErrors = [
-      expectError(`Loading the stylesheet '${stylesheet}' violates`),
-      expectError(`Loading the stylesheet '${stylesheet}' violates`)
-    ];
+    const styleSrcError = expectError(`Loading the stylesheet '${stylesheet}' violates`);
     const networkView = await devToolsPage.waitFor('.network-item-view');
     await devToolsPage.click('[aria-label=Preview].tabbed-pane-header-tab', {
       root: networkView,
@@ -139,7 +135,7 @@ describe('The Network Request view', () => {
     const color = await p.evaluate(e => getComputedStyle(e).color);
 
     assert.deepEqual(color, 'rgb(0, 0, 0)');
-    await devToolsPage.waitForFunction(async () => !styleSrcErrors.some(e => !e.caught));
+    await devToolsPage.waitForFunction(async () => styleSrcError.caught);
   });
 
   it('permits inline styles on the preview tab.', async ({devToolsPage, inspectedPage}) => {

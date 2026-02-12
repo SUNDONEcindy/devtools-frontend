@@ -6,11 +6,8 @@ import("../../../../scripts/build/ninja/copy.gni")
 
 copy_to_gen("performance") {
   sources = [
-    # These are automatically served by the hosted-mode server which maps crux
-    # requests for an origin X to an X.rawresponse in this directory.
-    "crux-none.test.rawresponse",
-    "crux-valid.test.rawresponse",
-    "example.com.rawresponse",
+    "crux-none.rawresponse",
+    "crux-valid.rawresponse",
     "fake-website.html",
     "frame-metrics/frame.html",
     "frame-metrics/index.html",
