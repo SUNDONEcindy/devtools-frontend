@@ -228,7 +228,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
       sourceURL: Platform.DevToolsPath.UrlString, lineNumber: number|undefined, options?: LinkifyOptions): HTMLElement
       |null {
     let fallbackAnchor: HTMLElement|null = null;
-    const linkifyURLOptions: LinkifyURLOptions = {
+    const linkifyURLOptions = {
       lineNumber,
       maxLength: options?.maxLength ?? this.maxLength,
       columnNumber: options?.columnNumber,
@@ -239,7 +239,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
       userMetric: options?.userMetric,
       jslogContext: options?.jslogContext || 'script-location',
       omitOrigin: options?.omitOrigin,
-    };
+    } satisfies LinkifyURLOptions;
     const {columnNumber, className = ''} = linkifyURLOptions;
     if (sourceURL) {
       fallbackAnchor = Linkifier.linkifyURL(sourceURL, linkifyURLOptions);
@@ -280,6 +280,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
 
     const linkDisplayOptions: LinkDisplayOptions = {
       showColumnNumber: linkifyURLOptions.showColumnNumber ?? false,
+      maxLength: linkifyURLOptions.maxLength,
       revealBreakpoint: options?.revealBreakpoint,
     };
 
@@ -346,7 +347,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
 
   maybeLinkifyStackTraceFrame(
       target: SDK.Target.Target|null, frame: StackTrace.StackTrace.Frame, options?: LinkifyOptions): HTMLElement {
-    const linkifyURLOptions: LinkifyURLOptions = {
+    const linkifyURLOptions = {
       ...options,
       lineNumber: frame.line,
       maxLength: this.maxLength,
@@ -358,7 +359,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
       userMetric: options?.userMetric,
       jslogContext: options?.jslogContext || 'script-location',
       omitOrigin: options?.omitOrigin,
-    };
+    } satisfies LinkifyURLOptions;
     const {className = ''} = linkifyURLOptions;
     const fallbackAnchor = Linkifier.linkifyURL(frame.url as Platform.DevToolsPath.UrlString, linkifyURLOptions);
     if (!target || target.isDisposed() || !frame.uiSourceCode) {
@@ -377,11 +378,12 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
 
     const linkDisplayOptions: LinkDisplayOptions = {
       showColumnNumber: linkifyURLOptions.showColumnNumber ?? false,
+      maxLength: linkifyURLOptions.maxLength,
       revealBreakpoint: options?.revealBreakpoint,
     };
 
     const uiLocation = frame.uiSourceCode.uiLocation(frame.line, frame.column) ?? null;
-    this.updateAnchorFromUILocation(link, linkDisplayOptions, uiLocation);
+    Linkifier.updateAnchorFromUILocation(link, linkDisplayOptions, uiLocation);
 
     const anchors = (this.anchorsByTarget.get(target) as Element[]);
     anchors.push(link);
@@ -422,7 +424,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
     linkInfo.enableDecorator = this.useLinkDecorator;
     linkInfo.fallback = fallbackAnchor;
 
-    const linkDisplayOptions = {showColumnNumber: false};
+    const linkDisplayOptions = {showColumnNumber: false, maxLength: this.maxLength};
 
     const updateDelegate = async(liveLocation: Bindings.LiveLocation.LiveLocation): Promise<void> => {
       await this.updateAnchor(link, linkDisplayOptions, liveLocation);
@@ -453,7 +455,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
       return link;
     }
 
-    const linkDisplayOptions = {showColumnNumber: false};
+    const linkDisplayOptions = {showColumnNumber: false, maxLength: this.maxLength};
 
     const updateDelegate = async(liveLocation: Bindings.LiveLocation.LiveLocation): Promise<void> => {
       await this.updateAnchor(link, linkDisplayOptions, liveLocation);
@@ -509,10 +511,10 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
     this.#anchorUpdaters.set(anchor, function(this: Linkifier, anchor: HTMLElement) {
       void this.updateAnchor(anchor, options, liveLocation);
     });
-    this.updateAnchorFromUILocation(anchor, options, uiLocation);
+    Linkifier.updateAnchorFromUILocation(anchor, options, uiLocation);
   }
 
-  private updateAnchorFromUILocation(
+  private static updateAnchorFromUILocation(
       anchor: HTMLElement, options: LinkDisplayOptions, uiLocation: Workspace.UISourceCode.UILocation|null): void {
     if (!uiLocation) {
       anchor.classList.add('invalid-link');
@@ -526,7 +528,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
     }
 
     const text = uiLocation.linkText(true /* skipTrim */, options.showColumnNumber);
-    Linkifier.setTrimmedText(anchor, text, this.maxLength);
+    Linkifier.setTrimmedText(anchor, text, options.maxLength);
 
     let titleText: string = uiLocation.uiSourceCode.url();
     if (uiLocation.uiSourceCode.mimeType() === 'application/wasm') {
@@ -1159,6 +1161,7 @@ interface CreateLinkOptions {
 
 interface LinkDisplayOptions {
   showColumnNumber: boolean;
+  maxLength: number;
 
   /**
    * If true, we'll check if there is a breakpoint at the UILocation we get
