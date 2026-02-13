@@ -58,6 +58,14 @@ const UIStringsNotTranslate = {
   /**
    * @description Text for teaser when suggestion has been generated.
    */
+  or: 'or',
+  /**
+   * @description Text for teaser when suggestion has been generated.
+   */
+  enter: 'enter',
+  /**
+   * @description Text for teaser when suggestion has been generated.
+   */
   toAccept: 'to accept',
   /**
    * @description Text for tooltip shown on hovering over "Relevant Data" in the disclaimer text for AI code generation in Console panel.
@@ -234,6 +242,8 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
       // clang-format off
       teaserLabel = html`<div class="ai-code-generation-teaser-generated">
           <span>${lockedString(UIStringsNotTranslate.tab)}</span>
+          &nbsp;${lockedString(UIStringsNotTranslate.or)}&nbsp;
+          <span>${lockedString(UIStringsNotTranslate.enter)}</span>
           &nbsp;${lockedString(UIStringsNotTranslate.toAccept)}
         </div>`;
       // clang-format on

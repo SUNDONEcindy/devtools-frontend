@@ -182,20 +182,11 @@ export class AiCodeGenerationProvider {
       },
       {
         key: 'Tab',
-        run: (): boolean => {
-          if (!this.#aiCodeGeneration || !this.#editor || !hasActiveAiSuggestion(this.#editor.state)) {
-            return false;
-          }
-          const {accepted, suggestion} = acceptAiAutoCompleteSuggestion(this.#editor.editor);
-          if (!accepted) {
-            return false;
-          }
-          if (suggestion?.rpcGlobalId) {
-            this.#aiCodeGeneration.registerUserAcceptance(suggestion.rpcGlobalId, suggestion.sampleId);
-          }
-          this.#aiCodeGenerationConfig?.onSuggestionAccepted(this.#aiCodeGenerationCitations);
-          return true;
-        },
+        run: this.#acceptAiSuggestion.bind(this),
+      },
+      {
+        key: 'Enter',
+        run: this.#acceptAiSuggestion.bind(this),
       },
       {
         any: (_view: unknown, event: KeyboardEvent) => {
@@ -246,6 +237,21 @@ export class AiCodeGenerationProvider {
         setAiAutoCompleteSuggestion.of(null),
       ]
     });
+  }
+
+  #acceptAiSuggestion(): boolean {
+    if (!this.#aiCodeGeneration || !this.#editor || !hasActiveAiSuggestion(this.#editor.state)) {
+      return false;
+    }
+    const {accepted, suggestion} = acceptAiAutoCompleteSuggestion(this.#editor.editor);
+    if (!accepted) {
+      return false;
+    }
+    if (suggestion?.rpcGlobalId) {
+      this.#aiCodeGeneration.registerUserAcceptance(suggestion.rpcGlobalId, suggestion.sampleId);
+    }
+    this.#aiCodeGenerationConfig?.onSuggestionAccepted(this.#aiCodeGenerationCitations);
+    return true;
   }
 
   #activateTeaser(update: CodeMirror.ViewUpdate): void {
@@ -342,7 +348,7 @@ export class AiCodeGenerationProvider {
       this.#editor.dispatch({
         effects: [
           setAiAutoCompleteSuggestion.of({
-            text: '\n' + suggestionText,
+            text: '\n' + suggestionText + '\n',
             from: commentNodeInfo.to,
             rpcGlobalId: generationResponse.metadata.rpcGlobalId,
             sampleId: topSample.sampleId,
