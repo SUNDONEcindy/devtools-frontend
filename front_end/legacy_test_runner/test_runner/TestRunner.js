@@ -1406,6 +1406,7 @@ export async function dumpInspectedPageElementText(querySelector) {
 export async function waitForPendingLiveLocationUpdates() {
   await Bindings.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance().pendingLiveLocationChangesPromise();
   await Bindings.CSSWorkspaceBinding.CSSWorkspaceBinding.instance().pendingLiveLocationChangesPromise();
+  await UI.Widget.Widget.allUpdatesComplete;  // Let async Widgets finish rendering.
 }
 
 /** @type {!{logToStderr: function(), navigateSecondaryWindow: function(string), notifyDone: function()}|undefined} */
