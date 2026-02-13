@@ -863,7 +863,7 @@ describe('Recorder', function() {
     await inspectedPage.bringToFront();
     await inspectedPage.waitForSelector('input:focus');
     await inspectedPage.page.keyboard.press('1');
-    await inspectedPage.page.keyboard.press('Enter', {delay: 50});
+    await inspectedPage.page.keyboard.press('Enter', {delay: 500});
 
     await devToolsPage.waitForFunction(async logger => {
       const controller = await getRecordingController(devToolsPage);
