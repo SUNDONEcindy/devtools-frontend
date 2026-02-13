@@ -697,15 +697,13 @@ export class ElementFocusRestorer {
 export function runCSSAnimationOnce(element: Element, className: string): void {
   function animationEndCallback(): void {
     element.classList.remove(className);
-    element.removeEventListener('webkitAnimationEnd', animationEndCallback, false);
+    element.removeEventListener('animationend', animationEndCallback, false);
     element.removeEventListener('animationcancel', animationEndCallback, false);
   }
 
-  if (element.classList.contains(className)) {
-    element.classList.remove(className);
-  }
-
-  element.addEventListener('webkitAnimationEnd', animationEndCallback, false);
+  // Remove class if it exists.
+  element.classList.toggle(className, /* force=*/ false);
+  element.addEventListener('animationend', animationEndCallback, false);
   element.addEventListener('animationcancel', animationEndCallback, false);
   element.classList.add(className);
 }
