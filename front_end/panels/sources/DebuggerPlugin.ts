@@ -1741,7 +1741,8 @@ export class DebuggerPlugin extends Plugin {
     // still running or scheduled will early return and not do any work.
     this.editor = undefined;
 
-    UI.Context.Context.instance().removeFlavorChangeListener(SDK.DebuggerModel.CallFrame, this.callFrameChanged, this);
+    UI.Context.Context.instance().removeFlavorChangeListener(
+        StackTrace.StackTrace.DebuggableFrameFlavor, this.callFrameChanged, this);
   }
 
   /**
