@@ -73,6 +73,7 @@ import {ImagePreviewPopover} from './ImagePreviewPopover.js';
 import {getRegisteredDecorators, type MarkerDecorator, type MarkerDecoratorRegistration} from './MarkerDecorator.js';
 
 const {html, nothing, render, Directives: {ref}} = Lit;
+const {animateOn} = UI.UIUtils;
 
 const UIStrings = {
   /**
@@ -465,6 +466,8 @@ export interface Decoration {
   color: string;
 }
 
+const DOM_UPDATE_ANIMATION_CLASS_NAME = 'dom-update-highlight';
+
 function handleAdornerKeydown(cb: (event: Event) => void): (event: KeyboardEvent) => void {
   return (event: KeyboardEvent) => {
     if (event.code === 'Enter' || event.code === 'Space') {
@@ -525,14 +528,6 @@ function renderTitle(
         const result = convertUnicodeCharsToHTMLEntities(firstChild.nodeValue());
         const textContent = Platform.StringUtilities.collapseWhitespace(result.text);
 
-        const highlightAnimation = (updateRecord?.hasChangedChildren() || updateRecord?.isCharDataModified()) ?
-            ref(el => {
-              if (el) {
-                UI.UIUtils.runCSSAnimationOnce(el, 'dom-update-highlight');
-              }
-            }) :
-            nothing;
-
         const renderTextNode = ref(el => {
           if (el) {
             el.textContent = textContent;
@@ -541,8 +536,11 @@ function renderTitle(
         });
 
         return html`${openingTag}<span class="webkit-html-text-node" jslog=${
-            VisualLogging.value('text-node').track({change: true, dblclick: true})} ${highlightAnimation} ${
-            renderTextNode}></span>\u200B${renderTag(node, tagName, true, expanded, false, updateRecord)}`;
+            VisualLogging.value('text-node').track({change: true, dblclick: true})} ${
+            animateOn(
+                Boolean((updateRecord?.hasChangedChildren() || updateRecord?.isCharDataModified())),
+                DOM_UPDATE_ANIMATION_CLASS_NAME)} ${renderTextNode}></span>\u200B${
+            renderTag(node, tagName, true, expanded, false, updateRecord)}`;
       }
 
       if (isXMLMimeType || !ForbiddenClosingTagElements.has(tagName)) {
@@ -577,12 +575,6 @@ function renderTitle(
 
       const result = convertUnicodeCharsToHTMLEntities(node.nodeValue());
       const textContent = Platform.StringUtilities.collapseWhitespace(result.text);
-      const highlightAnimation = updateRecord?.isCharDataModified() ? ref(el => {
-        if (el) {
-          UI.UIUtils.runCSSAnimationOnce(el, 'dom-update-highlight');
-        }
-      }) :
-                                                                      nothing;
       const renderTextNode = ref(el => {
         if (el) {
           el.textContent = textContent;
@@ -592,7 +584,8 @@ function renderTitle(
       return html`"<span class="webkit-html-text-node" jslog=${VisualLogging.value('text-node').track({
         change: true,
         dblclick: true
-      })} ${highlightAnimation} ${renderTextNode}></span>"`;
+      })} ${animateOn(Boolean(updateRecord?.isCharDataModified()), DOM_UPDATE_ANIMATION_CLASS_NAME)} ${
+          renderTextNode}></span>"`;
     }
 
     case Node.COMMENT_NODE: {
@@ -683,20 +676,6 @@ function renderAttribute(
     change: true,
     dblclick: true,
   });
-
-  const highlightNameAnimation = updateRecord?.isAttributeModified(name) && !hasText ? ref(el => {
-    if (el) {
-      UI.UIUtils.runCSSAnimationOnce(el, 'dom-update-highlight');
-    }
-  }) :
-                                                                                       nothing;
-
-  const highlightValueAnimation = updateRecord?.isAttributeModified(name) && hasText ? ref(el => {
-    if (el) {
-      UI.UIUtils.runCSSAnimationOnce(el, 'dom-update-highlight');
-    }
-  }) :
-                                                                                       nothing;
 
   function linkifyValue(value: string): Element {
     const rewrittenHref = node ? node.resolveURL(value) : null;
@@ -831,10 +810,13 @@ function renderAttribute(
     }
   }
 
-  return html`<span class="webkit-html-attribute" jslog=${jslog}><span class="webkit-html-attribute-name" ${
-      highlightNameAnimation} ${relationRefDirective}>${name}</span>${
-      hasText ? html`=\u200B"<span class="webkit-html-attribute-value" ${highlightValueAnimation} ${setAttrValue} ${
-                    valueRelationRefDirective}></span>"` :
+  return html`<span class="webkit-html-attribute" jslog=${jslog}><span class="webkit-html-attribute-name"
+      ${animateOn(Boolean(updateRecord?.isAttributeModified(name) && !hasText), DOM_UPDATE_ANIMATION_CLASS_NAME)} ${
+      relationRefDirective}>${name}</span>${
+      hasText ? html`=\u200B"<span class="webkit-html-attribute-value" ${
+                    animateOn(
+                        Boolean(updateRecord?.isAttributeModified(name) && hasText),
+                        DOM_UPDATE_ANIMATION_CLASS_NAME)} ${setAttrValue} ${valueRelationRefDirective}></span>"` :
                 nothing}</span>`;
 }
 
@@ -855,13 +837,6 @@ function renderTag(
     hasUpdates = hasUpdates || (!expanded && updateRecord.hasChangedChildren());
   }
 
-  const highlightAnimation = hasUpdates ? ref(el => {
-    if (el) {
-      UI.UIUtils.runCSSAnimationOnce(el, 'dom-update-highlight');
-    }
-  }) :
-                                          nothing;
-
   // We are taking full text content of the tag, including attributes and children, to set the aria label.
   // FIXME: we should compute the aria label ourselves if it is event needed.
   const setAriaLabel = ref(el => {
@@ -876,7 +851,8 @@ function renderTag(
 
   return html`<span
       class=${Lit.Directives.classMap(classMap)} ${setAriaLabel}
-      >&lt;<span class=${tagNameClass} jslog=${jslog || nothing} ${highlightAnimation}>${tagString}</span>${
+      >&lt;<span class=${tagNameClass} jslog=${jslog || nothing} ${
+      animateOn(hasUpdates, DOM_UPDATE_ANIMATION_CLASS_NAME)}>${tagString}</span>${
       attributes.map(attr => html` ${renderAttribute(attr, updateRecord, false, node)}`)}&gt;</span>\u200B`;
 }
 
@@ -1189,7 +1165,7 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
 
   static animateOnDOMUpdate(treeElement: ElementsTreeElement): void {
     const tagName = treeElement.listItemElement.querySelector('.webkit-html-tag-name');
-    UI.UIUtils.runCSSAnimationOnce(tagName || treeElement.listItemElement, 'dom-update-highlight');
+    UI.UIUtils.runCSSAnimationOnce(tagName || treeElement.listItemElement, DOM_UPDATE_ANIMATION_CLASS_NAME);
   }
 
   static visibleShadowRoots(node: SDK.DOMModel.DOMNode): SDK.DOMModel.DOMNode[] {
@@ -1420,7 +1396,7 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
         }
       }
     }
-    UI.UIUtils.runCSSAnimationOnce(animationElement, 'dom-update-highlight');
+    UI.UIUtils.runCSSAnimationOnce(animationElement, DOM_UPDATE_ANIMATION_CLASS_NAME);
   }
 
   isClosingTag(): boolean {

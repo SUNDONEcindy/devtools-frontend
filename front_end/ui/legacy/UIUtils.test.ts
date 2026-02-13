@@ -340,6 +340,106 @@ describe('UIUtils', () => {
       });
     });
   });
+
+  describe('animateOn', () => {
+    it('triggers an animation when the condition transitions from false to true', () => {
+      const {animateOn} = UI.UIUtils;
+      const container = document.createElement('div');
+      const className = 'animate-me';
+
+      function render(condition: boolean) {
+        Lit.render(html`<div ${animateOn(condition, className)}></div>`, container);
+      }
+
+      render(false);
+      const div = container.firstElementChild as HTMLElement;
+      assert.isFalse(div.classList.contains(className));
+
+      render(true);
+      assert.isTrue(div.classList.contains(className));
+    });
+
+    it('does not trigger an animation when the condition remains true', () => {
+      const {animateOn} = UI.UIUtils;
+      const container = document.createElement('div');
+      const className = 'animate-me';
+
+      function render(condition: boolean) {
+        Lit.render(html`<div ${animateOn(condition, className)}></div>`, container);
+      }
+
+      render(true);
+      const div = container.firstElementChild as HTMLElement;
+      assert.isTrue(div.classList.contains(className));
+
+      // Manually remove the class to see if it gets re-added
+      div.classList.remove(className);
+
+      render(true);
+      assert.isFalse(div.classList.contains(className));
+    });
+
+    it('does not trigger an animation when the condition remains false', () => {
+      const {animateOn} = UI.UIUtils;
+      const container = document.createElement('div');
+      const className = 'animate-me';
+
+      function render(condition: boolean) {
+        Lit.render(html`<div ${animateOn(condition, className)}></div>`, container);
+      }
+
+      render(false);
+      const div = container.firstElementChild as HTMLElement;
+      assert.isFalse(div.classList.contains(className));
+
+      render(false);
+      assert.isFalse(div.classList.contains(className));
+    });
+
+    it('does not trigger an animation when the condition transitions from true to false', () => {
+      const {animateOn} = UI.UIUtils;
+      const container = document.createElement('div');
+      const className = 'animate-me';
+
+      function render(condition: boolean) {
+        Lit.render(html`<div ${animateOn(condition, className)}></div>`, container);
+      }
+
+      render(true);
+      const div = container.firstElementChild as HTMLElement;
+      assert.isTrue(div.classList.contains(className));
+
+      // Manually remove the class
+      div.classList.remove(className);
+
+      render(false);
+      assert.isFalse(div.classList.contains(className));
+    });
+
+    it('triggers an animation when it transitions from false to true, then false, then true again', () => {
+      const {animateOn} = UI.UIUtils;
+      const container = document.createElement('div');
+      const className = 'animate-me';
+
+      function render(condition: boolean) {
+        Lit.render(html`<div ${animateOn(condition, className)}></div>`, container);
+      }
+
+      render(false);
+      const div = container.firstElementChild as HTMLElement;
+      assert.isFalse(div.classList.contains(className));
+
+      render(true);
+      assert.isTrue(div.classList.contains(className));
+
+      div.classList.remove(className);
+      render(false);
+      assert.isFalse(div.classList.contains(className));
+
+      render(true);
+      assert.isTrue(div.classList.contains(className));
+    });
+  });
 });
 
 describe('bindToSetting (string)', () => {

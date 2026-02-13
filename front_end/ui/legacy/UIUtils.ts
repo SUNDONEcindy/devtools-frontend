@@ -708,6 +708,31 @@ export function runCSSAnimationOnce(element: Element, className: string): void {
   element.classList.add(className);
 }
 
+class AnimateOnDirective extends Lit.Directive.Directive {
+  #previousValue = false;
+
+  render(_condition: boolean, _className: string): void {
+    return undefined;  // Directives don't have to render HTML
+  }
+
+  override update(part: Lit.Directive.ElementPart, [condition, className]: [boolean, string]): void {
+    const el = part.element as HTMLElement;
+
+    // Only trigger if the condition transitioned from false -> true
+    if (condition && !this.#previousValue) {
+      this.#animate(el, className);
+    }
+
+    this.#previousValue = condition;
+  }
+
+  #animate(el: HTMLElement, className: string): void {
+    runCSSAnimationOnce(el, className);
+  }
+}
+
+export const animateOn = Lit.Directive.directive(AnimateOnDirective);
+
 export function measurePreferredSize(element: Element, containerElement?: Element|null): Geometry.Size {
   const oldParent = element.parentElement;
   const oldNextSibling = element.nextSibling;
