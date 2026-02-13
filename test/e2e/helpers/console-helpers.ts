@@ -208,7 +208,14 @@ export async function getStructuredConsoleMessages(devToolsPage: DevToolsPage) {
 
   // Ensure all messages are populated.
   await asyncScope.exec(() => devToolsPage.page.waitForFunction((selector: string) => {
-    return Array.from(document.querySelectorAll(selector)).every(message => message.childNodes.length > 0);
+    return Array.from(document.querySelectorAll(selector)).every(message => {
+      // Messages with a stack trace need to wait for the stack trace to show up.
+      const stackTrace = message.querySelector('.hidden-stack-trace > div');
+      if (stackTrace) {
+        return Boolean(stackTrace.shadowRoot?.querySelector('tbody'));
+      }
+      return message.childNodes.length > 0;
+    });
   }, {timeout: 0}, CONSOLE_ALL_MESSAGES_SELECTOR));
   await expectVeEvents([veImpressionForConsoleMessage()], await veRoot(devToolsPage), devToolsPage);
 
