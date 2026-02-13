@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import * as Common from '../../../core/common/common.js';
 import * as Host from '../../../core/host/host.js';
 import * as Platform from '../../../core/platform/platform.js';
 import * as SDK from '../../../core/sdk/sdk.js';
@@ -18,7 +19,14 @@ import * as Bindings from '../../bindings/bindings.js';
 import * as Logs from '../../logs/logs.js';
 import type * as Trace from '../../trace/trace.js';
 import * as Workspace from '../../workspace/workspace.js';
-import {AiAgent, ContextSelectionAgent} from '../ai_assistance.js';
+import {
+  AiAgent,
+  ContextSelectionAgent,
+  FileAgent,
+  NetworkAgent,
+  PerformanceAgent,
+  StylingAgent,
+} from '../ai_assistance.js';
 
 const {urlString} = Platform.DevToolsPath;
 
@@ -80,12 +88,6 @@ describeWithMockConnection('ContextSelectionAgent', function() {
 
       assert.deepEqual(responses, [
         {
-          type: AiAgent.ResponseType.USER_QUERY,
-          query: 'test',
-          imageInput: undefined,
-          imageId: undefined,
-        },
-        {
           type: AiAgent.ResponseType.QUERYING,
         },
         {
@@ -139,8 +141,8 @@ describeWithMockConnection('ContextSelectionAgent', function() {
       sinon.assert.calledOnce(performanceRecordAndReload);
       const contextChange = responses.find(r => r.type === AiAgent.ResponseType.CONTEXT_CHANGE);
       assert.exists(contextChange);
-      // @ts-expect-error context is unknown
-      assert.strictEqual(contextChange.context.parsedTrace, trace);
+      assert.instanceOf(contextChange.context, PerformanceAgent.PerformanceTraceContext);
+      assert.strictEqual(contextChange.context.getItem().parsedTrace, trace);
     });
   });
 
@@ -303,7 +305,83 @@ describeWithMockConnection('ContextSelectionAgent', function() {
 
       sinon.assert.calledOnce(onInspectElement);
       assert.exists(contextChange);
-      assert.strictEqual(contextChange.context, node);
+      assert.instanceOf(contextChange.context, StylingAgent.NodeContext);
+      assert.strictEqual(contextChange.context.getItem(), node);
+    });
+  });
+
+  describe('selectNetworkRequest', () => {
+    it('selects a network request', async () => {
+      const request = SDK.NetworkRequest.NetworkRequest.create(
+          'requestId' as Protocol.Network.RequestId,
+          urlString`https://example.com/`,
+          urlString`https://example.com/`,
+          null,
+          null,
+          null,
+      );
+      request.statusCode = 200;
+
+      const networkLog = Logs.NetworkLog.NetworkLog.instance();
+      sinon.stub(networkLog, 'requests').returns([request]);
+
+      const agent = new ContextSelectionAgent.ContextSelectionAgent({
+        aidaClient: mockAidaClient([
+          [{
+            functionCalls: [{
+              name: 'selectNetworkRequest',
+              args: {
+                url: 'https://example.com/',
+              },
+            }],
+            explanation: '',
+          }],
+          [{explanation: 'Done'}],
+        ]),
+      });
+
+      const responses = await Array.fromAsync(agent.run('test', {selected: null}));
+      const contextChange = responses.find(r => r.type === AiAgent.ResponseType.CONTEXT_CHANGE);
+
+      assert.exists(contextChange);
+      assert.instanceOf(contextChange.context, NetworkAgent.RequestContext);
+      assert.strictEqual(contextChange.context.getItem(), request);
+    });
+  });
+
+  describe('selectSourceFile', () => {
+    it('selects a source file', async () => {
+      const workspace = Workspace.Workspace.WorkspaceImpl.instance();
+      const project = {
+        id: () => 'test-project',
+        type: () => Workspace.Workspace.projectTypes.Network,
+        uiSourceCodes: () => [file],
+        fullDisplayName: () => 'script.js',
+      } as unknown as Workspace.Workspace.Project;
+      const file = new Workspace.UISourceCode.UISourceCode(
+          project, urlString`https://example.com/script.js`, Common.ResourceType.resourceTypes.Script);
+      sinon.stub(workspace, 'projects').returns([project]);
+
+      const agent = new ContextSelectionAgent.ContextSelectionAgent({
+        aidaClient: mockAidaClient([
+          [{
+            functionCalls: [{
+              name: 'selectSourceFile',
+              args: {
+                name: 'script.js',
+              },
+            }],
+            explanation: '',
+          }],
+          [{explanation: 'Done'}],
+        ]),
+      });
+
+      const responses = await Array.fromAsync(agent.run('test', {selected: null}));
+      const contextChange = responses.find(r => r.type === AiAgent.ResponseType.CONTEXT_CHANGE);
+      assert.exists(contextChange);
+      assert.instanceOf(contextChange.context, FileAgent.FileContext);
+      assert.strictEqual(contextChange.context.getItem(), file);
     });
   });
 });

@@ -191,10 +191,6 @@ Title: StylingAgent run generates an answer immediately
 Content:
 [
   {
-    "type": "user-query",
-    "query": "test"
-  },
-  {
     "type": "context",
     "title": "Analyzing the prompt",
     "details": [
@@ -275,10 +271,6 @@ Title: StylingAgent run generates an rpcId for the answer
 Content:
 [
   {
-    "type": "user-query",
-    "query": "test"
-  },
-  {
     "type": "context",
     "title": "Analyzing the prompt",
     "details": [
@@ -303,10 +295,6 @@ Content:
 Title: StylingAgent run throws an error based on the attribution metadata including RecitationAction.BLOCK
 Content:
 [
-  {
-    "type": "user-query",
-    "query": "test"
-  },
   {
     "type": "context",
     "title": "Analyzing the prompt",
@@ -336,10 +324,6 @@ Title: StylingAgent run does not throw an error based on attribution metadata no
 Content:
 [
   {
-    "type": "user-query",
-    "query": "test"
-  },
-  {
     "type": "context",
     "title": "Analyzing the prompt",
     "details": [
@@ -365,10 +349,6 @@ Title: StylingAgent run generates a response if nothing is returned
 Content:
 [
   {
-    "type": "user-query",
-    "query": "test"
-  },
-  {
     "type": "context",
     "title": "Analyzing the prompt",
     "details": [
@@ -391,10 +371,6 @@ Content:
 Title: StylingAgent run generates an action response if action and answer both present
 Content:
 [
-  {
-    "type": "user-query",
-    "query": "test"
-  },
   {
     "type": "context",
     "title": "Analyzing the prompt",

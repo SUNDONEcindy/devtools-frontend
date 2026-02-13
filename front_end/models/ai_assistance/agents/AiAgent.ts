@@ -88,7 +88,7 @@ export interface SideEffectResponse {
 }
 export interface ContextChangeResponse {
   type: ResponseType.CONTEXT_CHANGE;
-  context: unknown;
+  context: ConversationContext<unknown>;
 }
 
 interface SerializedSideEffectResponse extends Omit<SideEffectResponse, 'confirm'> {}
@@ -517,13 +517,6 @@ export abstract class AiAgent<T> {
     // Request is built here to capture history up to this point.
     let request = this.buildRequest(query, Host.AidaClient.Role.USER);
 
-    yield {
-      type: ResponseType.USER_QUERY,
-      query: initialQuery,
-      imageInput: multimodalInput?.input,
-      imageId: multimodalInput?.id,
-    };
-
     yield* this.handleContextDetails(options.selected);
 
     for (let i = 0; i < MAX_STEPS; i++) {
@@ -650,7 +643,7 @@ export abstract class AiAgent<T> {
           name: string,
           args: Record<string, unknown>,
           options?: FunctionHandlerOptions&{explanation?: string},
-          ): AsyncGenerator<FunctionCallResponseData, {result: unknown}|{context: unknown}> {
+          ): AsyncGenerator<FunctionCallResponseData, {result: unknown}|{context: ConversationContext<unknown>}> {
     const call = this.#functionDeclarations.get(name);
     if (!call) {
       throw new Error(`Function ${name} is not found.`);
@@ -762,7 +755,7 @@ export abstract class AiAgent<T> {
     }
 
     if ('context' in result) {
-      return result as {context: unknown};
+      return result as {context: ConversationContext<unknown>};
     }
 
     return result as {result: unknown};

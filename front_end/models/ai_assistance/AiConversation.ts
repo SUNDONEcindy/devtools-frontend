@@ -14,7 +14,8 @@ import {
   type ConversationContext,
   type MultimodalInput,
   type ResponseData,
-  ResponseType
+  ResponseType,
+  type UserQuery
 } from './agents/AiAgent.js';
 import {ContextSelectionAgent} from './agents/ContextSelectionAgent.js';
 import {FileAgent, FileContext} from './agents/FileAgent.js';
@@ -56,6 +57,7 @@ export class AiConversation {
         undefined,
         serializedConversation.isExternal,
         undefined,
+        undefined,
     );
   }
 
@@ -77,6 +79,7 @@ export class AiConversation {
 
   #performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>;
   #onInspectElement?: () => Promise<SDK.DOMModel.DOMNode|null>;
+  #networkTimeCalculator?: NetworkTimeCalculator.NetworkTransferTimeCalculator;
 
   constructor(
       type: ConversationType,
@@ -88,11 +91,13 @@ export class AiConversation {
       isExternal = false,
       performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>,
       onInspectElement?: () => Promise<SDK.DOMModel.DOMNode|null>,
+      networkTimeCalculator?: NetworkTimeCalculator.NetworkTransferTimeCalculator,
   ) {
     this.#changeManager = changeManager;
     this.#aidaClient = aidaClient;
     this.#performanceRecordAndReload = performanceRecordAndReload;
     this.#onInspectElement = onInspectElement;
+    this.#networkTimeCalculator = networkTimeCalculator;
 
     this.id = id;
     this.#isReadOnly = isReadOnly;
@@ -288,6 +293,7 @@ export class AiConversation {
       changeManager: this.#changeManager,
       performanceRecordAndReload: this.#performanceRecordAndReload,
       onInspectElement: this.#onInspectElement,
+      networkTimeCalculator: this.#networkTimeCalculator,
     };
     switch (type) {
       case ConversationType.STYLING: {
@@ -393,12 +399,20 @@ Time: ${micros(time)}`;
       run(
           initialQuery: string,
           options: {
-
             signal?: AbortSignal,
             extraContext?: ExtraContext[],
             multimodalInput?: MultimodalInput,
           } = {},
           ): AsyncGenerator<ResponseData, void, void> {
+    const userQuery: UserQuery = {
+      type: ResponseType.USER_QUERY,
+      query: initialQuery,
+      imageInput: options.multimodalInput?.input,
+      imageId: options.multimodalInput?.id,
+    };
+    void this.addHistoryItem(userQuery);
+    yield userQuery;
+
     if (options.extraContext) {
       await this.#createFactsForExtraContext(options.extraContext);
     }
@@ -408,6 +422,18 @@ Time: ${micros(time)}`;
       throw new Error('Cross-origin context data should not be included');
     }
 
+    yield* this.#runAgent(initialQuery, options);
+  }
+
+  async *
+      #runAgent(
+          initialQuery: string,
+          options: {
+            signal?: AbortSignal,
+            extraContext?: ExtraContext[],
+            multimodalInput?: MultimodalInput,
+          } = {},
+          ): AsyncGenerator<ResponseData, void, void> {
     function shouldAddToHistory(data: ResponseData): boolean {
       if (data.type === ResponseType.CONTEXT_CHANGE) {
         return false;
@@ -433,6 +459,12 @@ Time: ${micros(time)}`;
       if (shouldAddToHistory(data)) {
         void this.addHistoryItem(data);
       }
+      if (data.type === ResponseType.CONTEXT_CHANGE) {
+        this.setContext(data.context);
+        yield* this.#runAgent(initialQuery, options);
+        return;
+      }
+
       yield data;
     }
   }

@@ -166,12 +166,6 @@ describeWithMockConnection('PerformanceAgent – call tree focus', () => {
 
       assert.deepEqual(responses, [
         {
-          type: AiAgent.ResponseType.USER_QUERY,
-          query: 'test',
-          imageInput: undefined,
-          imageId: undefined,
-        },
-        {
           type: AiAgent.ResponseType.CONTEXT,
           title: 'Analyzing trace',
           details: [
@@ -377,12 +371,7 @@ code
 
       const responses = await Array.fromAsync(agent.run('test', {selected: context}));
       assert.deepEqual(responses, [
-        {
-          type: AiAgent.ResponseType.USER_QUERY,
-          query: 'test',
-          imageInput: undefined,
-          imageId: undefined,
-        },
+
         {
           type: AiAgent.ResponseType.CONTEXT,
           title: 'Analyzing trace',

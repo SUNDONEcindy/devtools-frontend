@@ -9,9 +9,9 @@ import * as Platform from '../../../core/platform/platform.js';
 import * as Root from '../../../core/root/root.js';
 import * as SDK from '../../../core/sdk/sdk.js';
 import * as Logs from '../../logs/logs.js';
+import * as NetworkTimeCalculator from '../../network_time_calculator/network_time_calculator.js';
 import type * as Trace from '../../trace/trace.js';
 import * as Workspace from '../../workspace/workspace.js';
-import {AgentFocus} from '../performance/AIContext.js';
 
 import {
   type AgentOptions,
@@ -19,6 +19,10 @@ import {
   type ContextResponse,
   type RequestOptions,
 } from './AiAgent.js';
+import {FileContext} from './FileAgent.js';
+import {RequestContext} from './NetworkAgent.js';
+import {PerformanceTraceContext} from './PerformanceAgent.js';
+import {NodeContext} from './StylingAgent.js';
 
 const lockedString = i18n.i18n.lockedString;
 /**
@@ -46,7 +50,6 @@ You aim to help developers of all levels, prioritizing teaching web concepts as 
 * Always specify the language for code blocks (e.g., \`\`\`css, \`\`\`javascript).
 * Keep text responses concise and scannable.
 
-* ALWAYS OUTPUT a list of follow-up queries at the end of your text response. The format is SUGGESTIONS: ["suggestion1", "suggestion2", "suggestion3"]. Make sure that the array and the \`SUGGESTIONS: \` text is in the same line. You're also capable of executing the fix for the issue user mentioned. Reflect this in your suggestions.
 * **CRITICAL** NEVER write full Python programs - you should only write individual statements that invoke a single function from the provided library.
 * **CRITICAL** NEVER output text before a function call. Always do a function call first.
 * **CRITICAL** You are a debugging assistant in DevTools. NEVER provide answers to questions of unrelated topics such as legal advice, financial advice, personal opinions, medical advice, religion, race, politics, sexuality, gender, or any other non web-development topics. Answer "Sorry, I can't answer that. I'm best at questions about debugging web pages." to such questions.
@@ -75,14 +78,17 @@ export class ContextSelectionAgent extends AiAgent<never> {
 
   readonly #performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>;
   readonly #onInspectElement?: () => Promise<SDK.DOMModel.DOMNode|null>;
+  readonly #networkTimeCalculator?: NetworkTimeCalculator.NetworkTransferTimeCalculator;
 
   constructor(opts: AgentOptions&{
     performanceRecordAndReload?: () => Promise<Trace.TraceModel.ParsedTrace>,
     onInspectElement?: () => Promise<SDK.DOMModel.DOMNode|null>,
+    networkTimeCalculator?: NetworkTimeCalculator.NetworkTransferTimeCalculator,
   }) {
     super(opts);
     this.#performanceRecordAndReload = opts.performanceRecordAndReload;
     this.#onInspectElement = opts.onInspectElement;
+    this.#networkTimeCalculator = opts.networkTimeCalculator;
 
     this.declareFunction<Record<string, never>>('listNetworkRequests', {
       description: `Gives a list of network requests including URL, status code, and duration.`,
@@ -160,8 +166,9 @@ export class ContextSelectionAgent extends AiAgent<never> {
         });
 
         if (request) {
+          const calculator = this.#networkTimeCalculator ?? new NetworkTimeCalculator.NetworkTransferTimeCalculator();
           return {
-            context: request,
+            context: new RequestContext(request, calculator),
           };
         }
 
@@ -223,7 +230,7 @@ export class ContextSelectionAgent extends AiAgent<never> {
         for (const file of this.#getUISourceCodes()) {
           if (file.fullDisplayName() === params.name) {
             return {
-              context: file,
+              context: new FileContext(file),
             };
           }
         }
@@ -256,7 +263,7 @@ export class ContextSelectionAgent extends AiAgent<never> {
         const result = await this.#performanceRecordAndReload();
 
         return {
-          context: AgentFocus.fromParsedTrace(result),
+          context: PerformanceTraceContext.fromParsedTrace(result),
         };
       }
     });
@@ -284,7 +291,7 @@ export class ContextSelectionAgent extends AiAgent<never> {
         const node = await this.#onInspectElement();
         if (node) {
           return {
-            context: node,
+            context: new NodeContext(node),
           };
         }
         return {

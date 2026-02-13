@@ -734,7 +734,8 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     const conversation = targetConversationType ?
         new AiAssistanceModel.AiConversation.AiConversation(
             targetConversationType, [], undefined, false, this.#aidaClient, this.#changeManager, false,
-            this.#handlePerformanceRecordAndReload.bind(this), this.#handleInspectElement.bind(this)) :
+            this.#handlePerformanceRecordAndReload.bind(this), this.#handleInspectElement.bind(this),
+            NetworkPanel.NetworkPanel.NetworkPanel.instance().networkLogView.timeCalculator()) :
         undefined;
 
     this.#updateConversationState(conversation);
@@ -763,6 +764,7 @@ export class AiAssistancePanel extends UI.Panel.Panel {
               false,
               this.#handlePerformanceRecordAndReload.bind(this),
               this.#handleInspectElement.bind(this),
+              NetworkPanel.NetworkPanel.NetworkPanel.instance().networkLogView.timeCalculator(),
           );
         }
       }
@@ -1230,6 +1232,7 @@ export class AiAssistancePanel extends UI.Panel.Panel {
           false,
           this.#handlePerformanceRecordAndReload.bind(this),
           this.#handleInspectElement.bind(this),
+          NetworkPanel.NetworkPanel.NetworkPanel.instance().networkLogView.timeCalculator(),
       );
     }
     this.#updateConversationState(conversation);
@@ -1358,23 +1361,14 @@ export class AiAssistancePanel extends UI.Panel.Panel {
   }
 
   #handleConversationContextChange = (data: unknown): void => {
-    if (data instanceof Workspace.UISourceCode.UISourceCode) {
-      const context = new AiAssistanceModel.FileAgent.FileContext(data);
-      this.#selectedFile = context;
-      this.#conversation?.setContext(context);
-    } else if (data instanceof SDK.DOMModel.DOMNode) {
-      const context = new AiAssistanceModel.StylingAgent.NodeContext(data);
-      this.#selectedElement = context;
-      this.#conversation?.setContext(context);
-    } else if (data instanceof SDK.NetworkRequest.NetworkRequest) {
-      const calculator = NetworkPanel.NetworkPanel.NetworkPanel.instance().networkLogView.timeCalculator();
-      const context = new AiAssistanceModel.NetworkAgent.RequestContext(data, calculator);
-      this.#selectedRequest = context;
-      this.#conversation?.setContext(context);
-    } else if (data instanceof AiAssistanceModel.AIContext.AgentFocus) {
-      const context = new AiAssistanceModel.PerformanceAgent.PerformanceTraceContext(data);
-      this.#selectedPerformanceTrace = context;
-      this.#conversation?.setContext(context);
+    if (data instanceof AiAssistanceModel.FileAgent.FileContext) {
+      this.#selectedFile = data;
+    } else if (data instanceof AiAssistanceModel.StylingAgent.NodeContext) {
+      this.#selectedElement = data;
+    } else if (data instanceof AiAssistanceModel.NetworkAgent.RequestContext) {
+      this.#selectedRequest = data;
+    } else if (data instanceof AiAssistanceModel.PerformanceAgent.PerformanceTraceContext) {
+      this.#selectedPerformanceTrace = data;
     }
 
     this.#isContextAutoSelectionSuspended = false;
@@ -1586,6 +1580,7 @@ export class AiAssistancePanel extends UI.Panel.Panel {
             commitStep();
             break;
           }
+
           case AiAssistanceModel.AiAgent.ResponseType.ANSWER: {
             systemMessage.rpcId = data.rpcId;
             const lastPart = systemMessage.parts.at(-1);

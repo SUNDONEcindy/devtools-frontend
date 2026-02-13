@@ -142,12 +142,6 @@ describeWithMockConnection('NetworkAgent', () => {
           agent.run('test', {selected: new NetworkAgent.RequestContext(selectedNetworkRequest, calculator)}));
       assert.deepEqual(responses, [
         {
-          type: AiAgent.ResponseType.USER_QUERY,
-          query: 'test',
-          imageInput: undefined,
-          imageId: undefined,
-        },
-        {
           type: AiAgent.ResponseType.CONTEXT,
           title: 'Analyzing network data',
           details: [
