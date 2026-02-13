@@ -3,12 +3,15 @@
 // found in the LICENSE file.
 
 import type * as SDK from '../../core/sdk/sdk.js';
-import {updateHostConfig} from '../../testing/EnvironmentHelpers.js';
+import {
+  describeWithEnvironment,
+  updateHostConfig,
+} from '../../testing/EnvironmentHelpers.js';
 import type * as NetworkTimeCalculator from '../network_time_calculator/network_time_calculator.js';
 
 import * as AiAssistance from './ai_assistance.js';
 
-describe('AiConversation', () => {
+describeWithEnvironment('AiConversation', () => {
   it('should be able to switch agent type based on context', async () => {
     updateHostConfig({devToolsAiAssistanceContextSelectionAgent: {enabled: true}});
 

@@ -201,7 +201,7 @@ describeWithMockConnection('ContextSelectionAgent', function() {
                   {
                     url: 'https://example.com/',
                     statusCode: 200,
-                    duration: 2,
+                    duration: '2.00\xA0s',
                   },
                 ],
               },
@@ -232,6 +232,8 @@ describeWithMockConnection('ContextSelectionAgent', function() {
           null,
       );
       sameOriginRequest.statusCode = 200;
+      sameOriginRequest.setIssueTime(0, 0);
+      sameOriginRequest.endTime = 1;
 
       const crossOriginRequest = SDK.NetworkRequest.NetworkRequest.create(
           'requestId2' as Protocol.Network.RequestId,
@@ -242,6 +244,8 @@ describeWithMockConnection('ContextSelectionAgent', function() {
           null,
       );
       crossOriginRequest.statusCode = 200;
+      crossOriginRequest.setIssueTime(0, 0);
+      crossOriginRequest.endTime = 1;
 
       const networkLog = Logs.NetworkLog.NetworkLog.instance();
       sinon.stub(networkLog, 'requests').returns([sameOriginRequest, crossOriginRequest]);
@@ -270,7 +274,7 @@ describeWithMockConnection('ContextSelectionAgent', function() {
         {
           url: `${origin}/foo`,
           statusCode: 200,
-          duration: -1,
+          duration: '1.00\xA0s',
         },
       ]);
     });

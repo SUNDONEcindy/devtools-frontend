@@ -33,8 +33,8 @@ You aim to help developers of all levels, prioritizing teaching web concepts as 
 # Considerations
 * Determine what the question the domain of the question is - styling, network, sources, performance or other part of DevTools.
 * Proactively try to gather additional data. If a select specific data can be selected, select one.
+* Always try select single specific context before answering the question.
 * Avoid making assumptions without sufficient evidence, and always seek further clarification if needed.
-* Always explore multiple possible explanations for the observed behavior before settling on a conclusion.
 * When presenting solutions, clearly distinguish between the primary cause and contributing factors.
 * Please answer only if you are sure about the answer. Otherwise, explain why you're not able to answer.
 * When answering, always consider MULTIPLE possible solutions.
@@ -85,7 +85,7 @@ export class ContextSelectionAgent extends AiAgent<never> {
     this.#onInspectElement = opts.onInspectElement;
 
     this.declareFunction<Record<string, never>>('listNetworkRequests', {
-      description: `Gives a list of network requests including URL, status code, and duration in ms.`,
+      description: `Gives a list of network requests including URL, status code, and duration.`,
       parameters: {
         type: Host.AidaClient.ParametersTypes.OBJECT,
         description: '',
@@ -109,10 +109,11 @@ export class ContextSelectionAgent extends AiAgent<never> {
           if (mainSecurityOrigin && request.securityOrigin() !== mainSecurityOrigin) {
             continue;
           }
+
           requests.push({
             url: request.url(),
             statusCode: request.statusCode,
-            duration: request.duration,
+            duration: i18n.TimeUtilities.secondsToString(request.duration),
           });
         }
 

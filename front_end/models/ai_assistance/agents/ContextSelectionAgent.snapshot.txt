@@ -31,7 +31,7 @@ Content:
   "function_declarations": [
     {
       "name": "listNetworkRequests",
-      "description": "Gives a list of network requests including URL, status code, and duration in ms.",
+      "description": "Gives a list of network requests including URL, status code, and duration.",
       "parameters": {
         "type": 6,
         "description": "",
