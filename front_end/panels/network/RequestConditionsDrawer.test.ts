@@ -106,7 +106,7 @@ describeWithMockConnection(`RequestConditionsDrawer with individual request thro
       const viewFunction = createViewFunctionStub(Network.RequestConditionsDrawer.AffectedCountWidget);
       const widget = new Network.RequestConditionsDrawer.AffectedCountWidget(undefined, viewFunction);
       widget.condition = SDK.NetworkManager.RequestCondition.createFromSetting({url: '*', enabled: true});
-      widget.drawer = sinon.createStubInstance(Network.RequestConditionsDrawer.RequestConditionsDrawer);
+      widget.lookUpRequestCount = sinon.stub();
       await viewFunction.nextInput;
       renderElementIntoDOM(widget);
 

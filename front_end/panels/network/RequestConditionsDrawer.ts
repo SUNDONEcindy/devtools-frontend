@@ -183,6 +183,109 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
       target);
 };
 
+function renderItem(
+    condition: SDK.NetworkManager.RequestCondition, editable: boolean, index: number,
+    onToggle: (condition: SDK.NetworkManager.RequestCondition) => void,
+    onConditionsChanged: (
+        condition: SDK.NetworkManager.RequestCondition, conditions: SDK.NetworkManager.ThrottlingConditions) => void,
+    onIncreasePriority: (condition: SDK.NetworkManager.RequestCondition) => void,
+    onDecreasePriority: (condition: SDK.NetworkManager.RequestCondition) => void,
+    lookUpRequestCount: (condition: SDK.NetworkManager.RequestCondition) => number): LitTemplate {
+  const {enabled, originalOrUpgradedURLPattern, constructorStringOrWildcardURL, wildcardURL} = condition;
+  const toggle = (e: Event): void => {
+    e.consume(true);
+    onToggle(condition);
+  };
+
+  const moveUp = (e: Event): void => {
+    e.consume(true);
+    onIncreasePriority(condition);
+  };
+
+  const moveDown = (e: Event): void => {
+    e.consume(true);
+    onDecreasePriority(condition);
+  };
+
+  // clang-format off
+  return html`
+    <input class=blocked-url-checkbox
+      @change=${toggle}
+      type=checkbox
+      title=${i18nString(UIStrings.enableThrottlingToggleLabel, {PH1: constructorStringOrWildcardURL})}
+      .checked=${live(enabled)}
+      .disabled=${!editable || !originalOrUpgradedURLPattern}
+      jslog=${VisualLogging.toggle().track({ change: true })}>
+    <devtools-button
+      .iconName=${'arrow-up'}
+      .variant=${Buttons.Button.Variant.ICON}
+      .title=${i18nString(UIStrings.increasePriority, {PH1: constructorStringOrWildcardURL})}
+      .jslogContext=${'decrease-priority'}
+      ?disabled=${!editable || !originalOrUpgradedURLPattern}
+      @click=${moveUp}>
+    </devtools-button>
+    <devtools-button
+      .iconName=${'arrow-down'}
+      .variant=${Buttons.Button.Variant.ICON}
+      .title=${i18nString(UIStrings.decreasePriority, {PH1: constructorStringOrWildcardURL})}
+      .jslogContext=${'increase-priority'}
+      ?disabled=${!editable || !originalOrUpgradedURLPattern}
+      @click=${moveDown}></devtools-button>
+    ${originalOrUpgradedURLPattern ? html`
+      <devtools-tooltip variant=rich jslogcontext=url-pattern id=url-pattern-${index}>
+        <div>hash: ${originalOrUpgradedURLPattern.hash}</div>
+        <div>hostname: ${originalOrUpgradedURLPattern.hostname}</div>
+        <div>password: ${originalOrUpgradedURLPattern.password}</div>
+        <div>pathname: ${originalOrUpgradedURLPattern.pathname}</div>
+        <div>port: ${originalOrUpgradedURLPattern.port}</div>
+        <div>protocol: ${originalOrUpgradedURLPattern.protocol}</div>
+        <div>search: ${originalOrUpgradedURLPattern.search}</div>
+        <div>username: ${originalOrUpgradedURLPattern.username}</div>
+        <hr />
+        ${learnMore()}
+      </devtools-tooltip>` : nothing}
+    ${wildcardURL ? html`
+      <devtools-icon name=warning-filled class="small warning" aria-details=url-pattern-warning-${index}>
+      </devtools-icon>
+      <devtools-tooltip variant=rich jslogcontext=url-pattern-warning id=url-pattern-warning-${index}>
+        ${i18nString(UIStrings.patternWasUpgraded, {PH1: wildcardURL})}
+      </devtools-tooltip>
+      `: nothing}
+    ${!originalOrUpgradedURLPattern ? html`
+      <devtools-icon name=cross-circle-filled class=small aria-details=url-pattern-error-${index}>
+      </devtools-icon>
+      <devtools-tooltip variant=rich jslogcontext=url-pattern-warning id=url-pattern-error-${index}>
+        ${SDK.NetworkManager.RequestURLPattern.isValidPattern(constructorStringOrWildcardURL) ===
+            SDK.NetworkManager.RequestURLPatternValidity.HAS_REGEXP_GROUPS
+            ? i18nString(UIStrings.patternFailedWithRegExpGroups)
+            : i18nString(UIStrings.patternFailedToParse)}
+        ${learnMore()}
+      </devtools-tooltip>`: nothing}
+    <div
+      @click=${toggle}
+      ?disabled=${!editable || !originalOrUpgradedURLPattern}
+      class=blocked-url-label
+      aria-details=url-pattern-${index}>
+        ${constructorStringOrWildcardURL}
+    </div>
+    <devtools-widget
+       class=conditions-selector
+       title=${i18nString(UIStrings.requestConditionsLabel)}
+       .widgetConfig=${UI.Widget.widgetConfig(
+         MobileThrottling.NetworkThrottlingSelector.NetworkThrottlingSelectorWidget, {
+           variant:
+             MobileThrottling.NetworkThrottlingSelector.NetworkThrottlingSelect.Variant.INDIVIDUAL_REQUEST_CONDITIONS,
+           jslogContext: 'request-conditions',
+           disabled: !editable,
+           onConditionsChanged: conditions => onConditionsChanged(condition, conditions),
+           currentConditions: condition.conditions,
+         })}></devtools-widget>
+    <devtools-widget
+      ?disabled=${!editable || !originalOrUpgradedURLPattern}
+      .widgetConfig=${widgetConfig(AffectedCountWidget, {condition, lookUpRequestCount})}></devtools-widget>`;
+  // clang-format on
+}
+
 interface AffectedCountViewInput {
   count: number;
 }
@@ -198,10 +301,19 @@ function matchesUrl(conditions: SDK.NetworkManager.RequestCondition, url: string
 export class AffectedCountWidget extends UI.Widget.Widget {
   readonly #view: AffectedCountView;
   #condition?: SDK.NetworkManager.RequestCondition;
-  #drawer?: RequestConditionsDrawer;
+  #lookUpRequestCount?: (condition: SDK.NetworkManager.RequestCondition) => number;
+
   constructor(target?: HTMLElement, view = AFFECTED_COUNT_DEFAULT_VIEW) {
     super(target, {classes: ['blocked-url-count']});
     this.#view = view;
+  }
+
+  get lookUpRequestCount(): ((condition: SDK.NetworkManager.RequestCondition) => number)|undefined {
+    return this.#lookUpRequestCount;
+  }
+
+  set lookUpRequestCount(val: (condition: SDK.NetworkManager.RequestCondition) => number) {
+    this.#lookUpRequestCount = val;
   }
 
   get condition(): SDK.NetworkManager.RequestCondition|undefined {
@@ -213,24 +325,12 @@ export class AffectedCountWidget extends UI.Widget.Widget {
     this.requestUpdate();
   }
 
-  get drawer(): RequestConditionsDrawer|undefined {
-    return this.#drawer;
-  }
-
-  set drawer(drawer: RequestConditionsDrawer) {
-    this.#drawer = drawer;
-    this.requestUpdate();
-  }
-
   override performUpdate(): void {
-    if (!this.#condition || !this.#drawer) {
+    if (!this.#condition || !this.#lookUpRequestCount) {
       return;
     }
 
-    const count = this.#condition.isBlocking ? this.#drawer.blockedRequestsCount(this.#condition) :
-                                               this.#drawer.throttledRequestsCount(this.#condition);
-
-    this.#view({count}, {}, this.element);
+    this.#view({count: this.#lookUpRequestCount(this.#condition)}, {}, this.element);
   }
 
   override wasShown(): void {
@@ -342,112 +442,38 @@ export class RequestConditionsDrawer extends UI.Widget.VBox implements
 
   updateItem(element: HTMLElement, condition: SDK.NetworkManager.RequestCondition, editable: boolean, index: number):
       void {
-    const toggle = (e: Event): void => {
+    const onToggle = (condition: {enabled: boolean}): void => {
       if (editable) {
-        e.consume(true);
         condition.enabled = !condition.enabled;
       }
     };
-    const onConditionsChanged = (conditions: SDK.NetworkManager.ThrottlingConditions): void => {
-      if (editable) {
-        condition.conditions = conditions;
-      }
-    };
 
-    const {enabled, originalOrUpgradedURLPattern, constructorStringOrWildcardURL, wildcardURL} = condition;
+    const onConditionsChanged =
+        (condition: {conditions: SDK.NetworkManager.ThrottlingConditions},
+         conditions: SDK.NetworkManager.ThrottlingConditions): void => {
+          if (editable) {
+            condition.conditions = conditions;
+          }
+        };
 
-    const moveUp = (e: Event): void => {
+    const onIncreasePriority = (condition: SDK.NetworkManager.RequestCondition): void => {
       if (this.manager.requestConditions.conditionsEnabled) {
         UI.ARIAUtils.LiveAnnouncer.status(i18nString(UIStrings.patternMovedUp));
-        e.consume(true);
         this.manager.requestConditions.increasePriority(condition);
       }
     };
-    const moveDown = (e: Event): void => {
+
+    const onDecreasePriority = (condition: SDK.NetworkManager.RequestCondition): void => {
       if (this.manager.requestConditions.conditionsEnabled) {
         UI.ARIAUtils.LiveAnnouncer.status(i18nString(UIStrings.patternMovedDown));
-        e.consume(true);
         this.manager.requestConditions.decreasePriority(condition);
       }
     };
+
     render(
-        // clang-format off
-        html`
-    <input class=blocked-url-checkbox
-      @change=${toggle}
-      type=checkbox
-      title=${i18nString(UIStrings.enableThrottlingToggleLabel, {PH1: constructorStringOrWildcardURL})}
-      .checked=${live(enabled)}
-      .disabled=${!editable || !originalOrUpgradedURLPattern}
-      jslog=${VisualLogging.toggle().track({ change: true })}>
-    <devtools-button
-      .iconName=${'arrow-up'}
-      .variant=${Buttons.Button.Variant.ICON}
-      .title=${i18nString(UIStrings.increasePriority, {PH1: constructorStringOrWildcardURL})}
-      .jslogContext=${'decrease-priority'}
-      ?disabled=${!editable || !originalOrUpgradedURLPattern}
-      @click=${moveUp}>
-    </devtools-button>
-    <devtools-button
-      .iconName=${'arrow-down'}
-      .variant=${Buttons.Button.Variant.ICON}
-      .title=${i18nString(UIStrings.decreasePriority, {PH1: constructorStringOrWildcardURL})}
-      .jslogContext=${'increase-priority'}
-      ?disabled=${!editable || !originalOrUpgradedURLPattern}
-      @click=${moveDown}></devtools-button>
-    ${originalOrUpgradedURLPattern ? html`
-      <devtools-tooltip variant=rich jslogcontext=url-pattern id=url-pattern-${index}>
-        <div>hash: ${originalOrUpgradedURLPattern.hash}</div>
-        <div>hostname: ${originalOrUpgradedURLPattern.hostname}</div>
-        <div>password: ${originalOrUpgradedURLPattern.password}</div>
-        <div>pathname: ${originalOrUpgradedURLPattern.pathname}</div>
-        <div>port: ${originalOrUpgradedURLPattern.port}</div>
-        <div>protocol: ${originalOrUpgradedURLPattern.protocol}</div>
-        <div>search: ${originalOrUpgradedURLPattern.search}</div>
-        <div>username: ${originalOrUpgradedURLPattern.username}</div>
-        <hr />
-        ${learnMore()}
-      </devtools-tooltip>` : nothing}
-    ${wildcardURL ? html`
-      <devtools-icon name=warning-filled class="small warning" aria-details=url-pattern-warning-${index}>
-      </devtools-icon>
-      <devtools-tooltip variant=rich jslogcontext=url-pattern-warning id=url-pattern-warning-${index}>
-        ${i18nString(UIStrings.patternWasUpgraded, {PH1: wildcardURL})}
-      </devtools-tooltip>
-      `: nothing}
-    ${!originalOrUpgradedURLPattern ? html`
-      <devtools-icon name=cross-circle-filled class=small aria-details=url-pattern-error-${index}>
-      </devtools-icon>
-      <devtools-tooltip variant=rich jslogcontext=url-pattern-warning id=url-pattern-error-${index}>
-        ${SDK.NetworkManager.RequestURLPattern.isValidPattern(constructorStringOrWildcardURL) ===
-            SDK.NetworkManager.RequestURLPatternValidity.HAS_REGEXP_GROUPS
-            ? i18nString(UIStrings.patternFailedWithRegExpGroups)
-            : i18nString(UIStrings.patternFailedToParse)}
-        ${learnMore()}
-      </devtools-tooltip>`: nothing}
-    <div
-      @click=${toggle}
-      ?disabled=${!editable || !originalOrUpgradedURLPattern}
-      class=blocked-url-label
-      aria-details=url-pattern-${index}>
-        ${constructorStringOrWildcardURL}
-    </div>
-    <devtools-widget
-       class=conditions-selector
-       title=${i18nString(UIStrings.requestConditionsLabel)}
-       .widgetConfig=${UI.Widget.widgetConfig(
-         MobileThrottling.NetworkThrottlingSelector.NetworkThrottlingSelectorWidget, {
-           variant:
-             MobileThrottling.NetworkThrottlingSelector.NetworkThrottlingSelect.Variant.INDIVIDUAL_REQUEST_CONDITIONS,
-           jslogContext: 'request-conditions',
-           disabled: !editable,
-           onConditionsChanged,
-           currentConditions: condition.conditions,
-         })}></devtools-widget>
-    <devtools-widget
-      ?disabled=${!editable || !originalOrUpgradedURLPattern}
-      .widgetConfig=${widgetConfig(AffectedCountWidget, {condition, drawer: this})}></devtools-widget>`,
-        // clang-format on
+        renderItem(
+            condition, editable, index, onToggle, onConditionsChanged, onIncreasePriority, onDecreasePriority,
+            this.#getRequestCount.bind(this)),
         element);
   }
 
@@ -546,17 +572,17 @@ export class RequestConditionsDrawer extends UI.Widget.VBox implements
     this.requestUpdate();
   }
 
-  blockedRequestsCount(condition: SDK.NetworkManager.RequestCondition): number {
-    let result = 0;
-    for (const blockedUrl of this.blockedCountForUrl.keys()) {
-      if (matchesUrl(condition, blockedUrl)) {
-        result += (this.blockedCountForUrl.get(blockedUrl) as number);
+  #getRequestCount(condition: SDK.NetworkManager.RequestCondition): number {
+    if (condition.isBlocking) {
+      let result = 0;
+      for (const blockedUrl of this.blockedCountForUrl.keys()) {
+        if (matchesUrl(condition, blockedUrl)) {
+          result += (this.blockedCountForUrl.get(blockedUrl) as number);
+        }
       }
+      return result;
     }
-    return result;
-  }
 
-  throttledRequestsCount(condition: SDK.NetworkManager.RequestCondition): number {
     let result = 0;
     for (const ruleId of condition.ruleIds) {
       result += this.#throttledCount.get(ruleId) ?? 0;
