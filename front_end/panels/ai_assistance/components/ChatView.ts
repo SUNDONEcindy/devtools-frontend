@@ -76,7 +76,6 @@ export interface Props {
   disclaimerText: Platform.UIString.LocalizedString;
   uploadImageInputEnabled?: boolean;
   markdownRenderer: MarkdownLitRenderer;
-  additionalFloatyContext: UI.Floaty.FloatyContextSelection[];
 }
 
 interface ChatWidgetInput extends Props {
@@ -171,7 +170,6 @@ const DEFAULT_VIEW: View = (input, output, target) => {
             conversationType: input.conversationType,
             uploadImageInputEnabled: input.uploadImageInputEnabled ?? false,
             isReadOnly: input.isReadOnly,
-            additionalFloatyContext: input.additionalFloatyContext,
             onContextClick: input.onContextClick,
             onInspectElementClick: input.onInspectElementClick,
             onTextSubmit: input.onTextSubmit,

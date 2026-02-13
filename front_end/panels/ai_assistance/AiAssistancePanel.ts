@@ -13,7 +13,6 @@ import * as SDK from '../../core/sdk/sdk.js';
 import * as AiAssistanceModel from '../../models/ai_assistance/ai_assistance.js';
 import * as Annotations from '../../models/annotations/annotations.js';
 import * as Badges from '../../models/badges/badges.js';
-import * as GreenDev from '../../models/greendev/greendev.js';
 import * as TextUtils from '../../models/text_utils/text_utils.js';
 import type * as Trace from '../../models/trace/trace.js';
 import * as Workspace from '../../models/workspace/workspace.js';
@@ -518,7 +517,6 @@ export class AiAssistancePanel extends UI.Panel.Panel {
   };
   #timelinePanelInstance: TimelinePanel.TimelinePanel.TimelinePanel|null = null;
   #runAbortController = new AbortController();
-  #additionalContextItemsFromFloaty: UI.Floaty.FloatyContextSelection[] = [];
 
   constructor(private view: View = defaultView, {aidaClient, aidaAvailability, syncInfo}: {
     aidaClient: Host.AidaClient.AidaClient,
@@ -571,7 +569,6 @@ export class AiAssistancePanel extends UI.Panel.Panel {
       return {
         state: ViewState.CHAT_VIEW,
         props: {
-          additionalFloatyContext: this.#additionalContextItemsFromFloaty,
           blockedByCrossOrigin: this.#conversation.isBlockedByOrigin,
           isLoading: this.#isLoading,
           messages: this.#messages,
@@ -663,15 +660,6 @@ export class AiAssistancePanel extends UI.Panel.Panel {
       this.#timelinePanelInstance.addEventListener(
           TimelinePanel.TimelinePanel.Events.IS_VIEWING_TRACE, this.requestUpdate, this);
     }
-  }
-
-  #bindFloatyListener(): void {
-    const additionalContexts = UI.Context.Context.instance().flavor(UI.Floaty.FloatyFlavor);
-    if (!additionalContexts) {
-      return;
-    }
-    this.#additionalContextItemsFromFloaty = additionalContexts.selectedContexts;
-    this.requestUpdate();
   }
 
   async #handlePerformanceRecordAndReload(): Promise<Trace.TraceModel.ParsedTrace> {
@@ -826,11 +814,6 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     this.#selectDefaultAgentIfNeeded();
 
     Host.userMetrics.actionTaken(Host.UserMetrics.Action.AiAssistancePanelOpened);
-
-    if (GreenDev.Prototypes.instance().isEnabled('inDevToolsFloaty')) {
-      UI.Context.Context.instance().addFlavorChangeListener(UI.Floaty.FloatyFlavor, this.#bindFloatyListener, this);
-      this.#bindFloatyListener();
-    }
   }
 
   override willHide(): void {
@@ -1469,7 +1452,6 @@ export class AiAssistancePanel extends UI.Panel.Panel {
             text,
             {
               signal,
-              extraContext: this.#additionalContextItemsFromFloaty,
               multimodalInput,
             },
             ),

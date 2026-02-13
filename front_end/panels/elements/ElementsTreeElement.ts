@@ -1702,13 +1702,6 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
     if (this.editing) {
       return false;
     }
-    const handledByFloaty = UI.Floaty.onFloatyClick({
-      type: UI.Floaty.FloatyContextTypes.ELEMENT_NODE_ID,
-      data: {nodeId: this.nodeInternal.id},
-    });
-    if (handledByFloaty) {
-      return false;
-    }
     return super.select(omitFocus, selectedByUser);
   }
 

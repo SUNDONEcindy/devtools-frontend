@@ -10,8 +10,6 @@ import type * as Platform from '../../../core/platform/platform.js';
 import * as SDK from '../../../core/sdk/sdk.js';
 import * as Protocol from '../../../generated/protocol.js';
 import * as AiAssistanceModel from '../../../models/ai_assistance/ai_assistance.js';
-import * as GreenDev from '../../../models/greendev/greendev.js';
-import * as Trace from '../../../models/trace/trace.js';
 import * as Workspace from '../../../models/workspace/workspace.js';
 import * as PanelsCommon from '../../../panels/common/common.js';
 import * as PanelUtils from '../../../panels/utils/utils.js';
@@ -123,7 +121,6 @@ export interface ViewInput {
   inputPlaceholder: Platform.UIString.LocalizedString;
   selectedContext: AiAssistanceModel.AiAgent.ConversationContext<unknown>|null;
   inspectElementToggled: boolean;
-  additionalFloatyContext: UI.Floaty.FloatyContextSelection[];
   disclaimerText: string;
   conversationType: AiAssistanceModel.AiHistoryStorage.ConversationType;
   multimodalInputEnabled: boolean;
@@ -151,22 +148,19 @@ export interface ViewInput {
 
 export type ViewOutput = undefined;
 
-export const
-    DEFAULT_VIEW =
-        (input: ViewInput, output: ViewOutput, target: HTMLElement):
-            void => {
-              const chatInputContainerCls = Lit.Directives.classMap({
-                'chat-input-container': true,
-                'single-line-layout': !input.selectedContext && !input.onContextAdd,
-                disabled: input.isTextInputDisabled,
-              });
+export const DEFAULT_VIEW = (input: ViewInput, _output: ViewOutput, target: HTMLElement): void => {
+  const chatInputContainerCls = Lit.Directives.classMap({
+    'chat-input-container': true,
+    'single-line-layout': !input.selectedContext && !input.onContextAdd,
+    disabled: input.isTextInputDisabled,
+  });
 
-              const renderRelevantDataDisclaimer = (tooltipId: string): Lit.LitTemplate => {
-                const classes = Lit.Directives.classMap({
-                  'chat-input-disclaimer': true,
-                  'hide-divider': !input.isLoading && input.blockedByCrossOrigin,
-                });
-                // clang-format off
+  const renderRelevantDataDisclaimer = (tooltipId: string): Lit.LitTemplate => {
+    const classes = Lit.Directives.classMap({
+      'chat-input-disclaimer': true,
+      'hide-divider': !input.isLoading && input.blockedByCrossOrigin,
+    });
+    // clang-format off
     return html`
       <div class=${classes}>
         <button
@@ -198,10 +192,10 @@ export const
         </div></devtools-tooltip>
       </div>
     `;
-                // clang-format on
-              };
+    // clang-format on
+  };
 
-              // clang-format off
+  // clang-format off
   Lit.render(html`
     <style>${Input.textInputStyles}</style>
     <style>${chatInputStyles}</style>
@@ -226,52 +220,6 @@ export const
       :
       html`
         <form class="input-form" @submit=${input.onSubmit}>
-          ${GreenDev.Prototypes.instance().isEnabled('inDevToolsFloaty') ?
-            html`
-              <ul class="floaty">
-                ${input.additionalFloatyContext.map(c => {
-                  return html`
-                    <li>
-                      <span class="context-item">
-                        ${c instanceof SDK.NetworkRequest.NetworkRequest ? html`${c.url()}` :
-                          c instanceof SDK.DOMModel.DOMNode ? html`
-                            <devtools-widget .widgetConfig=${
-                              UI.Widget.widgetConfig(PanelsCommon.DOMLinkifier.DOMNodeLink, {node: c})}
-                            ></devtools-widget>` :
-                          'insight' in c ? html`${c.insight.title}` :
-                          'event' in c && 'traceStartTime' in c ? html`
-                            ${c.event.name} @ ${i18n.TimeUtilities.formatMicroSecondsAsMillisFixed(Trace.Types.Timing.Micro(c.event.ts - c.traceStartTime))}` :
-                          Lit.nothing}
-                      </span>
-                      <devtools-button
-                        class="floaty-delete-button"
-                        @click=${(e: MouseEvent) => {
-                          e.preventDefault();
-                          UI.Floaty.onFloatyContextDelete(c);
-                        }}
-                        .data=${{
-                          variant: Buttons.Button.Variant.ICON,
-                          iconName: 'cross',
-                          title: 'Delete',
-                          size: Buttons.Button.Size.SMALL,
-                        } as Buttons.Button.ButtonData}
-                      ></devtools-button>
-                    </li>`;
-                })}
-                <li class="open-floaty">
-                  <devtools-button
-                    class="floaty-add-button"
-                    @click=${UI.Floaty.onFloatyOpen}
-                    .data=${{
-                      variant: Buttons.Button.Variant.ICON,
-                      iconName: 'select-element',
-                      title: 'Open context picker',
-                      size: Buttons.Button.Size.SMALL,
-                    } as Buttons.Button.ButtonData}
-                  ></devtools-button>
-                </li>
-              </ul>`
-            : Lit.nothing}
           <div class=${chatInputContainerCls}>
             ${(input.multimodalInputEnabled && input.imageInput && !input.isTextInputDisabled) ?
               html`
@@ -495,8 +443,8 @@ export const
       ${renderRelevantDataDisclaimer(RELEVANT_DATA_LINK_FOOTER_ID)}
     </footer>
   `, target);
-              // clang-format on
-            };
+  // clang-format on
+};
 
 /**
  * ChatInput is a presenter for the input area in the AI Assistance panel.
@@ -508,7 +456,6 @@ export class ChatInput extends UI.Widget.Widget implements SDK.TargetManager.Obs
   inputPlaceholder = '' as Platform.UIString.LocalizedString;
   selectedContext = null as AiAssistanceModel.AiAgent.ConversationContext<unknown>| null;
   inspectElementToggled = false;
-  additionalFloatyContext = [] as UI.Floaty.FloatyContextSelection[];
   disclaimerText = '';
   conversationType = AiAssistanceModel.AiHistoryStorage.ConversationType.STYLING;
   multimodalInputEnabled = false;
@@ -697,7 +644,6 @@ export class ChatInput extends UI.Widget.Widget implements SDK.TargetManager.Obs
           selectedContext: this.selectedContext,
           inspectElementToggled: this.inspectElementToggled,
           isTextInputEmpty: this.#isTextInputEmpty(),
-          additionalFloatyContext: this.additionalFloatyContext,
           disclaimerText: this.disclaimerText,
           conversationType: this.conversationType,
           multimodalInputEnabled: this.multimodalInputEnabled,

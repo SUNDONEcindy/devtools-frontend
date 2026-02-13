@@ -1185,14 +1185,6 @@ export class NetworkRequestNode extends NetworkNode {
   }
 
   override select(suppressSelectedEvent?: boolean): void {
-    const id = this.request()?.requestId();
-    if (id) {
-      const floatyHandled =
-          UI.Floaty.onFloatyClick({type: UI.Floaty.FloatyContextTypes.NETWORK_REQUEST, data: {requestId: id}});
-      if (floatyHandled) {
-        return;
-      }
-    }
     super.select(suppressSelectedEvent);
     this.parentView().dispatchEventToListeners(Events.RequestSelected, this.requestInternal);
   }

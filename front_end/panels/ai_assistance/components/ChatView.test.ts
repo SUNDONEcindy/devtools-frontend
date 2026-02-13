@@ -40,7 +40,6 @@ describeWithEnvironment('ChatView', () => {
       inputPlaceholder: i18n.i18n.lockedString('input placeholder'),
       disclaimerText: i18n.i18n.lockedString('disclaimer text'),
       markdownRenderer: new AiAssistancePanel.MarkdownRendererWithCodeBlock(),
-      additionalFloatyContext: [],
       ...options,
     };
   }

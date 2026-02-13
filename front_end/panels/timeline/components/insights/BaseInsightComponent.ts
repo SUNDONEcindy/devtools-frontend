@@ -8,7 +8,6 @@ import * as i18n from '../../../../core/i18n/i18n.js';
 import * as Root from '../../../../core/root/root.js';
 import * as AIAssistance from '../../../../models/ai_assistance/ai_assistance.js';
 import * as Badges from '../../../../models/badges/badges.js';
-import * as GreenDev from '../../../../models/greendev/greendev.js';
 import type {InsightModel} from '../../../../models/trace/insights/types.js';
 import type * as Trace from '../../../../models/trace/trace.js';
 import * as Buttons from '../../../../ui/components/buttons/buttons.js';
@@ -80,7 +79,7 @@ interface ViewInput {
 
 type View = (input: ViewInput, output: undefined, target: HTMLElement) => void;
 
-const DEFAULT_VIEW: View = (input, output, target) => {
+const DEFAULT_VIEW: View = (input, _output, target) => {
   const {
     internalName,
     model,
@@ -203,7 +202,6 @@ export abstract class BaseInsightComponent<T extends InsightModel> extends UI.Wi
   #model: T|null = null;
   #agentFocus: AIAssistance.AIContext.AgentFocus|null = null;
   #fieldMetrics: Trace.Insights.Common.CrUXFieldMetricResults|null = null;
-  #parsedTrace: Trace.TraceModel.ParsedTrace|null = null;
   #initialOverlays: Trace.Types.Overlays.Overlay[]|null = null;
 
   constructor(element?: HTMLElement, view: View = DEFAULT_VIEW) {
@@ -249,10 +247,6 @@ export abstract class BaseInsightComponent<T extends InsightModel> extends UI.Wi
     return this.#selected;
   }
 
-  set parsedTrace(trace: Trace.TraceModel.ParsedTrace|null) {
-    this.#parsedTrace = trace;
-  }
-
   set model(model: T) {
     this.#model = model;
     this.requestUpdate();
@@ -292,19 +286,6 @@ export abstract class BaseInsightComponent<T extends InsightModel> extends UI.Wi
     if (!this.data.insightSetKey || !this.#model) {
       // Shouldn't happen, but needed to satisfy TS.
       return;
-    }
-
-    if (this.#parsedTrace && GreenDev.Prototypes.instance().isEnabled('inDevToolsFloaty')) {
-      const floatyHandled = UI.Floaty.onFloatyClick({
-        type: UI.Floaty.FloatyContextTypes.PERFORMANCE_INSIGHT,
-        data: {
-          insight: this.#model,
-          trace: this.#parsedTrace,
-        }
-      });
-      if (floatyHandled) {
-        return;
-      }
     }
 
     const focus = UI.Context.Context.instance().flavor(AIAssistance.AIContext.AgentFocus);

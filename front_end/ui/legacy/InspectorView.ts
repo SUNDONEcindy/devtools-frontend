@@ -8,7 +8,6 @@ import * as Host from '../../core/host/host.js';
 import * as i18n from '../../core/i18n/i18n.js';
 import * as Root from '../../core/root/root.js';
 import * as SDK from '../../core/sdk/sdk.js';
-import * as GreenDev from '../../models/greendev/greendev.js';
 import * as Buttons from '../../ui/components/buttons/buttons.js';
 import {createIcon, type Icon} from '../kit/kit.js';
 import * as VisualLogging from '../visual_logging/visual_logging.js';
@@ -20,7 +19,6 @@ import type {Context} from './Context.js';
 import type {ContextMenu} from './ContextMenu.js';
 import {Dialog} from './Dialog.js';
 import {DockController, DockState, Events as DockControllerEvents} from './DockController.js';
-import {Floaty} from './Floaty.js';
 import {GlassPane} from './GlassPane.js';
 import {Infobar, Type as InfobarType} from './Infobar.js';
 import {KeyboardShortcut} from './KeyboardShortcut.js';
@@ -371,10 +369,6 @@ export class InspectorView extends VBox implements ViewLocationResolver {
     this.element.style.setProperty('--devtools-window-top', `${rect.top}px`);
     this.element.style.setProperty('--devtools-window-bottom', `${window.innerHeight - rect.bottom}px`);
     this.element.style.setProperty('--devtools-window-height', `${rect.height}px`);
-
-    if (Floaty.exists()) {
-      Floaty.instance().setDevToolsRect(rect);
-    }
   }
 
   override wasShown(): void {
@@ -385,13 +379,6 @@ export class InspectorView extends VBox implements ViewLocationResolver {
     DockController.instance().addEventListener(
         DockControllerEvents.DOCK_SIDE_CHANGED, this.#applyDrawerOrientationForDockSide, this);
     this.#applyDrawerOrientationForDockSide();
-
-    if (GreenDev.Prototypes.instance().isEnabled('inDevToolsFloaty')) {
-      Floaty.instance({
-        forceNew: true,
-        document: this.element.ownerDocument,
-      });
-    }
   }
 
   override willHide(): void {

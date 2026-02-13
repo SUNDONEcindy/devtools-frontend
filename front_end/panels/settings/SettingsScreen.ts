@@ -637,7 +637,7 @@ const GREENDEV_VIEW: View = (input, _output, target) => {
               <span>${i18nString(UIStrings.greenDevUnstable)}</span>
              </div>
              <div class="settings-experiments-block">
-               ${renderPrototypeCheckboxes(input.settings, ['aiAnnotations', 'inDevToolsFloaty', 'copyToGemini'])}
+               ${renderPrototypeCheckboxes(input.settings, ['aiAnnotations', 'copyToGemini'])}
              </div>
            </devtools-card>
          </div>
@@ -646,7 +646,6 @@ const GREENDEV_VIEW: View = (input, _output, target) => {
 };
 
 const GREENDEV_PROTOTYPE_NAMES: Record<keyof GreenDev.GreenDevSettings, string> = {
-  inDevToolsFloaty: 'In DevTools context picker',
   aiAnnotations: 'AI auto-annotations',
   copyToGemini: 'Copy changes to AI Prompt'
 };
