@@ -125,20 +125,33 @@ export class ComputedStyleModel extends Common.ObjectWrapper.ObjectWrapper<Event
     }
 
     if (!this.computedStylePromise) {
-      this.computedStylePromise = cssModel.getComputedStyle(nodeId).then(verifyOutdated.bind(this, elementNode));
+      this.computedStylePromise = cssModel.getComputedStyle(nodeId).then(style => {
+        return this.#validateNodeStyles(elementNode, style);
+      });
     }
 
     return await this.computedStylePromise;
-
-    function verifyOutdated(
-        this: ComputedStyleModel, elementNode: SDK.DOMModel.DOMNode, style: Map<string, string>|null): ComputedStyle|
-        null {
-      return elementNode === this.elementNode() && style ? new ComputedStyle(elementNode, style) :
-                                                           null as ComputedStyle | null;
-    }
   }
 
-  private async fetchMatchedCascade(): Promise<SDK.CSSMatchedStyles.CSSMatchedStyles|null> {
+  /**
+   * Once we fetch the node's CSS styles, we validate them to ensure that the
+   * active Node didn't change between initiating the request to fetch the
+   * styles and the request returning. If it did, we discard these styles as
+   * outdated.
+   */
+  #validateNodeStyles(node: SDK.DOMModel.DOMNode, styles: Map<string, string>|null): ComputedStyle|null {
+    if (node === this.elementNode() && styles) {
+      return new ComputedStyle(node, styles);
+    }
+    return null;
+  }
+
+  /**
+   * Fetches the CSS cascade for the node, including matched rules, inherited
+   * styles, and pseudo-elements.
+   * This allows determining which properties are active or overridden.
+   */
+  async fetchMatchedCascade(): Promise<SDK.CSSMatchedStyles.CSSMatchedStyles|null> {
     const node = this.node;
     if (!node || !this.cssModel()) {
       return null;
@@ -154,14 +167,6 @@ export class ComputedStyleModel extends Common.ObjectWrapper.ObjectWrapper<Event
       return null;
     }
     return matchedStyles.node() === this.node ? matchedStyles : null;
-  }
-
-  async fetchAllComputedStyleInfo(): Promise<{
-    computedStyle: ComputedStyle | null,
-    matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles|null,
-  }> {
-    const [computedStyle, matchedStyles] = await Promise.all([this.fetchComputedStyle(), this.fetchMatchedCascade()]);
-    return {computedStyle, matchedStyles};
   }
 }
 

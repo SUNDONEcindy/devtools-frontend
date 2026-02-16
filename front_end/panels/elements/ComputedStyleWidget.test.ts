@@ -72,6 +72,9 @@ describeWithMockConnection('ComputedStyleWidget', () => {
       const computedStyleWidget = new Elements.ComputedStyleWidget.ComputedStyleWidget(computedStyleModel);
       renderElementIntoDOM(computedStyleWidget);
 
+      computedStyleWidget.nodeStyle = {node, computedStyle: new Map([['color', 'red']])};
+      computedStyleWidget.matchedStyles = cssMatchedStyles;
+
       return computedStyleWidget;
     }
 

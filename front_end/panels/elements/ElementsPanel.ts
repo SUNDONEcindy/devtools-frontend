@@ -212,7 +212,7 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
   private readonly accessibilityTreeView: AccessibilityTreeView|undefined;
   private breadcrumbs: ElementsComponents.ElementsBreadcrumbs.ElementsBreadcrumbs;
   stylesWidget: StylesSidebarPane;
-  private readonly computedStyleWidget: ComputedStyleWidget;
+  readonly #computedStyleWidget: ComputedStyleWidget;
   private readonly metricsWidget: MetricsSidebarPane;
   private searchResults!: Array<{
     domModel: SDK.DOMModel.DOMModel,
@@ -315,7 +315,12 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
         ComputedStyleWidget, this.evaluateTrackingComputedStyleUpdatesForNode, this);
 
     this.stylesWidget = new StylesSidebarPane(this.#computedStyleModel);
-    this.computedStyleWidget = new ComputedStyleWidget(this.#computedStyleModel);
+    this.#computedStyleWidget = new ComputedStyleWidget(this.#computedStyleModel);
+    this.#computedStyleModel.addEventListener(
+        ComputedStyle.ComputedStyleModel.Events.COMPUTED_STYLE_CHANGED, this.#updateComputedStyles, this);
+    this.#computedStyleModel.addEventListener(
+        ComputedStyle.ComputedStyleModel.Events.CSS_MODEL_CHANGED, this.#updateComputedStyles, this);
+
     this.metricsWidget = new MetricsSidebarPane(this.#computedStyleModel);
 
     Common.Settings.Settings.instance()
@@ -373,6 +378,13 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
     void selectedNode.domModel()?.cssModel()?.trackComputedStyleUpdatesForNode(
         shouldTrackComputedStyleUpdates ? selectedNode.id : undefined);
   }, 100);
+
+  async #updateComputedStyles(): Promise<void> {
+    const computedStyle = await this.#computedStyleModel.fetchComputedStyle();
+    const matchedCascade = await this.#computedStyleModel.fetchMatchedCascade();
+    this.#computedStyleWidget.nodeStyle = computedStyle;
+    this.#computedStyleWidget.matchedStyles = matchedCascade;
+  }
 
   private handleElementExpanded(): void {
     if (Annotations.AnnotationRepository.annotationsEnabled()) {
@@ -1007,7 +1019,7 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
     const computedStylePanesWrapper = new UI.Widget.VBox();
     computedStylePanesWrapper.element.classList.add('style-panes-wrapper');
     computedStylePanesWrapper.element.setAttribute('jslog', `${VisualLogging.pane('computed').track({resize: true})}`);
-    this.computedStyleWidget.show(computedStylePanesWrapper.element);
+    this.#computedStyleWidget.show(computedStylePanesWrapper.element);
 
     const stylesSplitWidget = new UI.SplitWidget.SplitWidget(
         true /* isVertical */, true /* secondIsSidebar */, 'elements.styles.sidebar.width', 100);
@@ -1024,7 +1036,7 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
     });
 
     const showMetricsWidgetInComputedPane = (): void => {
-      this.metricsWidget.show(computedStylePanesWrapper.element, this.computedStyleWidget.element);
+      this.metricsWidget.show(computedStylePanesWrapper.element, this.#computedStyleWidget.element);
       this.stylesWidget.removeEventListener(StylesSidebarPaneEvents.STYLES_UPDATE_COMPLETED, toggleMetricsWidget);
     };
 
@@ -1147,7 +1159,7 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
   }
 
   getComputedStyleWidget(): ComputedStyleWidget {
-    return this.computedStyleWidget;
+    return this.#computedStyleWidget;
   }
 
   private setupStyleTracking(cssModel: SDK.CSSModel.CSSModel): void {

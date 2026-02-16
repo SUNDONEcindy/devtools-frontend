@@ -9,7 +9,7 @@ import type * as Protocol from '../../generated/protocol.js';
 import * as ComputedStyle from '../../models/computed_style/computed_style.js';
 import {raf, renderElementIntoDOM} from '../../testing/DOMHelpers.js';
 import {createTarget, stubNoopSettings, updateHostConfig} from '../../testing/EnvironmentHelpers.js';
-import {expectCall} from '../../testing/ExpectStubCall.js';
+import {expectCall, expectCalled} from '../../testing/ExpectStubCall.js';
 import {
   describeWithMockConnection,
   dispatchEvent,
@@ -213,7 +213,7 @@ describeWithMockConnection('ElementsPanel', () => {
     panel.detach();
   });
 
-  describe('tracking Computed styles', () => {
+  describe('tracking and updating Computed styles', () => {
     const StylesSidebarPane = Elements.StylesSidebarPane.StylesSidebarPane;
     const ComputedStyleModel = ComputedStyle.ComputedStyleModel.ComputedStyleModel;
     const ComputedStyleWidget = Elements.ComputedStyleWidget.ComputedStyleWidget;
@@ -222,12 +222,16 @@ describeWithMockConnection('ElementsPanel', () => {
       get: sinon.SinonSpy,
       set: sinon.SinonSpy,
     };
+    let computedStyleFetchStylesSpy: sinon.SinonStub;
+    let computedStyleFetchCascadeSpy: sinon.SinonStub;
     let panel: Elements.ElementsPanel.ElementsPanel;
     let node: SDK.DOMModel.DOMNode;
     let cssModel: sinon.SinonStubbedInstance<SDK.CSSModel.CSSModel>;
 
     beforeEach(() => {
       computedStyleNodeSpy = sinon.spy(ComputedStyleModel.prototype, 'node', ['get', 'set']);
+      computedStyleFetchStylesSpy = sinon.stub(ComputedStyleModel.prototype, 'fetchComputedStyle').resolves(null);
+      computedStyleFetchCascadeSpy = sinon.stub(ComputedStyleModel.prototype, 'fetchMatchedCascade').resolves(null);
       Common.Debouncer.enableTestOverride();
       panel = Elements.ElementsPanel.ElementsPanel.instance({forceNew: true});
 
@@ -254,6 +258,12 @@ describeWithMockConnection('ElementsPanel', () => {
     it('updates the model when the selected DOM node changes', async () => {
       UI.Context.Context.instance().setFlavor(SDK.DOMModel.DOMNode, node);
       sinon.assert.calledOnceWithExactly(computedStyleNodeSpy.set, node);
+    });
+
+    it('fetches the styles from the computed style model when the dom node changes', async () => {
+      UI.Context.Context.instance().setFlavor(SDK.DOMModel.DOMNode, node);
+      await expectCalled(computedStyleFetchStylesSpy);
+      await expectCalled(computedStyleFetchCascadeSpy);
     });
 
     it('enables tracking when a ComputedStyleWidget is created', async () => {
