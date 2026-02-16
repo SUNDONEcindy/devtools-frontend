@@ -615,18 +615,12 @@ function renderTitle(
 
     case Node.DOCUMENT_NODE: {
       const text = (node as SDK.DOMModel.DOMDocument).documentURL;
-      const linkify = ref(el => {
-        if (el) {
-          el.removeChildren();
-          el.appendChild(Components.Linkifier.Linkifier.linkifyURL(text, {
-            text,
-            preventClick: true,
-            showColumnNumber: false,
-            inlineFrameIndex: 0,
-          }));
-        }
-      });
-      return html`<span>#document (<span ${linkify}></span>)</span>`;
+      return html`<span>#document (<span>${Components.Linkifier.Linkifier.renderLinkifiedUrl(text, {
+        text,
+        preventClick: true,
+        showColumnNumber: false,
+        inlineFrameIndex: 0,
+      })}</span>)</span>`;
     }
 
     case Node.DOCUMENT_FRAGMENT_NODE: {

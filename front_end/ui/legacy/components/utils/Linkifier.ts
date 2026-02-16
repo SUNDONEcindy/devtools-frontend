@@ -621,6 +621,9 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
     return Linkifier.renderLink(linkText, className, linkOptions);
   }
 
+  /**
+   * @deprecated use renderLinkifiedUrl.
+   */
   static linkifyURL(url: Platform.DevToolsPath.UrlString, options?: LinkifyURLOptions): HTMLElement {
     const container = document.createDocumentFragment();
     render(Linkifier.renderLinkifiedUrl(url, options), container);
@@ -714,6 +717,9 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
     // clang-format on
   }
 
+  /**
+   * @deprecated use renderLink.
+   */
   private static createLink(text: string|HTMLElement, className: string, options: CreateLinkOptions = {}):
       {link: HTMLElement, linkInfo: LinkInfo} {
     const container = document.createDocumentFragment();
