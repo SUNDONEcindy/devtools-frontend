@@ -1839,7 +1839,7 @@ describeWithMockConnection('TimelineUIUtils', function() {
       container.appendChild(fragment);
       assert.strictEqual(
           container.innerHTML,
-          'Check out: <button class="devtools-link text-button link-style" title="https://example.com" jslog="Link; context: url; track: click" role="link" tabindex="-1"></button>.');
+          'Check out: <button role="link" class=" devtools-link text-button link-style " title="https://example.com" jslog="Link; context: url; track: click" tabindex="-1"></button>.');
     });
 
     it('should handle URLs anywhere within the string', () => {
@@ -1850,9 +1850,7 @@ describeWithMockConnection('TimelineUIUtils', function() {
       container.appendChild(fragment);
       assert.strictEqual(
           container.innerHTML,
-          `<button class="devtools-link text-button link-style" title="http://example.com" jslog="Link; context: url; track: click" role="link" tabindex="-1"></button>
-at the beginning. <button class="devtools-link text-button link-style" title="http://example.com" jslog="Link; context: url; track: click" role="link" tabindex="-1"></button>
-in the middle or at the end: <button class="devtools-link text-button link-style" title="http://example.com" jslog="Link; context: url; track: click" role="link" tabindex="-1"></button>`
+          `<button role="link" class=" devtools-link text-button link-style " title="http://example.com" jslog="Link; context: url; track: click" tabindex="-1"></button> at the beginning. <button role="link" class=" devtools-link text-button link-style " title="http://example.com" jslog="Link; context: url; track: click" tabindex="-1"></button> in the middle or at the end: <button role="link" class=" devtools-link text-button link-style " title="http://example.com" jslog="Link; context: url; track: click" tabindex="-1"></button>`
               .replace(/\n/g, ' '));
     });
 
@@ -1863,7 +1861,7 @@ in the middle or at the end: <button class="devtools-link text-button link-style
       container.appendChild(fragment);
       assert.strictEqual(
           container.innerHTML,
-          'Node: <button class="devtools-link text-button link-style" jslog="Link; context: url; track: click" role="link" tabindex="-1">ext://node/123</button>   Root Cause: <button class="devtools-link text-button link-style" jslog="Link; context: url; track: click" role="link" tabindex="-1">ext://node/13566</button>');
+          'Node: <button role="link" class=" devtools-link text-button link-style " jslog="Link; context: url; track: click" tabindex="-1">ext://node/123</button>   Root Cause: <button role="link" class=" devtools-link text-button link-style " jslog="Link; context: url; track: click" tabindex="-1">ext://node/13566</button>');
     });
 
     it('does not linkify data URI or www. prefixed text handle a data URI', () => {
