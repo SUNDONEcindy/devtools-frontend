@@ -3,15 +3,16 @@
 // found in the LICENSE file.
 
 import * as Common from '../../core/common/common.js';
-import * as Platform from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import * as Protocol from '../../generated/protocol.js';
 import * as AiAssistanceModel from '../../models/ai_assistance/ai_assistance.js';
+import * as Bindings from '../../models/bindings/bindings.js';
+import * as Workspace from '../../models/workspace/workspace.js';
 import {
   createConsoleViewMessageWithStubDeps,
   createStackTrace,
 } from '../../testing/ConsoleHelpers.js';
-import {renderElementIntoDOM} from '../../testing/DOMHelpers.js';
+import {raf, renderElementIntoDOM} from '../../testing/DOMHelpers.js';
 import {createTarget} from '../../testing/EnvironmentHelpers.js';
 import {describeWithMockConnection} from '../../testing/MockConnection.js';
 import * as Components from '../../ui/legacy/components/utils/utils.js';
@@ -21,8 +22,6 @@ import * as Console from './console.js';
 // The css files aren't exported by the bundle, so we need to import it directly.
 // eslint-disable-next-line @devtools/es-modules-import
 import consoleViewStyles from './consoleView.css.js';
-
-const {urlString} = Platform.DevToolsPath;
 
 describe('ConsoleViewMessage', () => {
   describe('concatErrorDescriptionAndIssueSummary', () => {
@@ -292,21 +291,22 @@ describeWithMockConnection('ConsoleViewMessage', () => {
         }
         return link;
       });
-      linkifier.maybeLinkifyConsoleCallFrame.callsFake((_target, callFrame, options) => {
-        const link = Components.Linkifier.Linkifier.linkifyURL(
-            urlString`${callFrame.url}`, {lineNumber: callFrame.lineNumber, ...options});
-        if (ignoreListFn(callFrame.url)) {
+      const realLinkifier = new Components.Linkifier.Linkifier();
+      linkifier.maybeLinkifyStackTraceFrame.callsFake((target, frame, options) => {
+        const link = realLinkifier.maybeLinkifyStackTraceFrame(target, frame, options);
+        if ((frame.url && ignoreListFn(frame.url)) || (frame.uiSourceCode && ignoreListFn(frame.uiSourceCode.url()))) {
           link.classList.add(IGNORE_LIST_LINK);
         }
         return link;
       });
       const element = message.toMessageElement();  // Trigger rendering.
-      await message.formatErrorStackPromiseForTest();
 
       const wrapperElement = document.createElement('div');
       const shadowElement = UI.UIUtils.createShadowRootWithCoreStyles(wrapperElement, {cssFile: consoleViewStyles});
       shadowElement.appendChild(element);
       renderElementIntoDOM(wrapperElement);
+      await raf();
+      await UI.Widget.Widget.allUpdatesComplete;
       assert.isTrue(element.checkVisibility());
       return element;
     }
@@ -335,14 +335,28 @@ describeWithMockConnection('ConsoleViewMessage', () => {
       '    at JSON.parse (<anonymous>)\n',
     ];
     const EXPANDED_STRUCTURED = [
-      '\nuserNestedFunction @ example.com/script.js:41',
-      '\nuserFunction @ example.com/script.js:11',
-      '\nentry @ example.com/app.js:26',
+      '\nuserNestedFunction @ /script.js:41',
+      '\nuserFunction @ /script.js:11',
+      '\nentry @ /app.js:26',
     ];
     const COLLAPSED_STRUCTURED = [
-      '\nuserNestedFunction @ example.com/script.js:41',
-      '\nuserFunction @ example.com/script.js:11',
+      '\nuserNestedFunction @ /script.js:41',
+      '\nuserFunction @ /script.js:11',
     ];
+
+    beforeEach(() => {
+      const targetManager = SDK.TargetManager.TargetManager.instance();
+      const resourceMapping =
+          new Bindings.ResourceMapping.ResourceMapping(targetManager, Workspace.Workspace.WorkspaceImpl.instance());
+      const ignoreListManager = Workspace.IgnoreListManager.IgnoreListManager.instance({forceNew: true});
+      Bindings.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance({
+        forceNew: true,
+        resourceMapping,
+        targetManager,
+        ignoreListManager,
+        workspace: Workspace.Workspace.WorkspaceImpl.instance(),
+      });
+    });
 
     it('shows everything with no links when nothing is ignore listed', async () => {
       const element = await createConsoleMessageWithIgnoreListing(_ => false);

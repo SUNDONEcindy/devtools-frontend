@@ -136,7 +136,9 @@ devtools_ui_module("unittests") {
     "../../models/issues_manager:bundle",
     "../../models/logs:bundle",
     "../../models/text_utils:bundle",
+    "../../models/workspace:bundle",
     "../../testing",
+    "../../ui/legacy:bundle",
     "../../ui/legacy/components/utils:bundle",
   ]
 }
