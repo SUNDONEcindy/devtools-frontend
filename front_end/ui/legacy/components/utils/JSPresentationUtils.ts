@@ -71,11 +71,6 @@ const UIStrings = {
 const str_ = i18n.i18n.registerUIStrings('ui/legacy/components/utils/JSPresentationUtils.ts', UIStrings);
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
 
-/**
- * Keep consistent with ConsoleViewMessage.MaxLengthForLinks.
- */
-const MAX_LINK_LENGTH = 40;
-
 function populateContextMenu(link: Element, event: Event): void {
   const contextMenu = new UI.ContextMenu.ContextMenu(event);
   event.consume(true);
@@ -193,7 +188,7 @@ function buildStackTraceRows(
         tabStop: Boolean(tabStops),
         inlineFrameIndex: 0,
         revealBreakpoint: previousStackFrameWasBreakpointCondition,
-        maxLength: MAX_LINK_LENGTH,
+        maxLength: UI.UIUtils.MaxLengthForDisplayedURLsInConsole,
       });
       link.setAttribute('jslog', `${VisualLogging.link('stack-trace').track({click: true})}`);
       link.addEventListener('contextmenu', populateContextMenu.bind(null, link));

@@ -1553,6 +1553,7 @@ export function createFileSelectorElement(callback: (arg0: File) => void, accept
 }
 
 export const MaxLengthForDisplayedURLs = 150;
+export const MaxLengthForDisplayedURLsInConsole = 40;
 
 export class MessageDialog {
   static async show(header: string, message: string, where?: Element|Document, jslogContext?: string): Promise<void> {

@@ -72,7 +72,6 @@ import {
   ConsoleTableMessageView,
   ConsoleViewMessage,
   getMessageForElement,
-  MaxLengthForLinks,
 } from './ConsoleViewMessage.js';
 import {ConsoleViewport, type ConsoleViewportElement, type ConsoleViewportProvider} from './ConsoleViewport.js';
 
@@ -549,7 +548,7 @@ export class ConsoleView extends UI.Widget.VBox implements
     // the linkifiers live location change event.
     const throttler = new Common.Throttler.Throttler(100);
     const refilterMessages = (): Promise<void> => throttler.schedule(async () => this.onFilterChanged());
-    this.linkifier = new Components.Linkifier.Linkifier(MaxLengthForLinks);
+    this.linkifier = new Components.Linkifier.Linkifier(UI.UIUtils.MaxLengthForDisplayedURLsInConsole);
     this.linkifier.addEventListener(Components.Linkifier.Events.LIVE_LOCATION_UPDATED, refilterMessages);
 
     this.consoleMessages = [];

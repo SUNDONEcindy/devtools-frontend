@@ -45,7 +45,7 @@ export const DEFAULT_VIEW: View = (input, _output, target) => {
 };
 
 export class NodeStackTraceWidget extends UI.Widget.VBox {
-  readonly #linkifier = new Components.Linkifier.Linkifier(MaxLengthForLinks);
+  readonly #linkifier = new Components.Linkifier.Linkifier(UI.UIUtils.MaxLengthForDisplayedURLsInConsole);
   readonly #view: View;
 
   constructor(view = DEFAULT_VIEW) {
@@ -81,5 +81,3 @@ export class NodeStackTraceWidget extends UI.Widget.VBox {
     this.#view(input, {}, this.contentElement);
   }
 }
-
-export const MaxLengthForLinks = 40;
