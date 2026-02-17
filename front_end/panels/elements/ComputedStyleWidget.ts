@@ -265,7 +265,7 @@ type ComputedStyleData = {
 interface ComputedStyleWidgetInput {
   computedStylesTree: TreeOutline.TreeOutline.TreeOutline<ComputedStyleData>;
   hasMatches: boolean;
-  computedStyleModel: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel;
+  computedStyleModel?: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel;
   showInheritedComputedStylePropertiesSetting: Common.Settings.Setting<boolean>;
   groupComputedStylesSetting: Common.Settings.Setting<boolean>;
   onFilterChanged: (event: CustomEvent<string>) => void;
@@ -298,13 +298,13 @@ export const DEFAULT_VIEW: View = (input, _output, target) => {
     </div>
     ${input.computedStylesTree}
     ${!input.hasMatches ? html`<div class="gray-info-message">${i18nString(UIStrings.noMatchingProperty)}</div>` : ''}
-    <devtools-widget .widgetConfig=${UI.Widget.widgetConfig(PlatformFontsWidget, { sharedModel: input.computedStyleModel})}></devtools-widget>
+    ${input.computedStyleModel ? html`<devtools-widget .widgetConfig=${UI.Widget.widgetConfig(PlatformFontsWidget, { sharedModel: input.computedStyleModel})}></devtools-widget>` : ''}
   `, target);
   // clang-format on
 };
 
 export class ComputedStyleWidget extends UI.Widget.VBox {
-  #computedStyleModel: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel;
+  #computedStyleModel?: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel;
   #nodeStyle: ComputedStyleModule.ComputedStyleModel.ComputedStyle|null = null;
   #matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles|null = null;
   private readonly showInheritedComputedStylePropertiesSetting: Common.Settings.Setting<boolean>;
@@ -318,13 +318,11 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
   readonly #view: View;
   #filterText = '';
 
-  constructor(computedStyleModel: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel) {
+  constructor() {
     super({useShadowDom: true});
     this.#view = DEFAULT_VIEW;
 
     this.contentElement.classList.add('styles-sidebar-computed-style-widget');
-
-    this.#computedStyleModel = computedStyleModel;
 
     this.showInheritedComputedStylePropertiesSetting =
         Common.Settings.Settings.instance().createSetting('show-inherited-computed-style-properties', false);
@@ -343,7 +341,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
         return link;
       }
       return null;
-    }, () => this.#computedStyleModel.node);
+    }, () => this.#computedStyleModel ? this.#computedStyleModel.node : null);
 
     this.#updateView({hasMatches: true});
   }
@@ -398,6 +396,15 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
     this.requestUpdate();
   }
 
+  get computedStyleModel(): ComputedStyleModule.ComputedStyleModel.ComputedStyleModel|undefined {
+    return this.#computedStyleModel;
+  }
+
+  set computedStyleModel(computedStyleModel: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel) {
+    this.#computedStyleModel = computedStyleModel;
+    this.requestUpdate();
+  }
+
   override async performUpdate(): Promise<void> {
     const nodeStyles = this.#nodeStyle;
     const matchedStyles = this.#matchedStyles;
@@ -418,7 +425,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
       matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles): Promise<void> {
     this.imagePreviewPopover.hide();
     this.linkifier.reset();
-    const cssModel = this.#computedStyleModel.cssModel();
+    const cssModel = this.#computedStyleModel?.cssModel();
     if (!cssModel) {
       return;
     }
@@ -461,7 +468,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
       matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles|null): Promise<void> {
     this.imagePreviewPopover.hide();
     this.linkifier.reset();
-    const cssModel = this.#computedStyleModel.cssModel();
+    const cssModel = this.#computedStyleModel?.cssModel();
     if (!nodeStyle || !matchedStyles || !cssModel) {
       this.#updateView({hasMatches: false});
       return;

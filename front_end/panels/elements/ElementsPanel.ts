@@ -315,7 +315,8 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
         ComputedStyleWidget, this.evaluateTrackingComputedStyleUpdatesForNode, this);
 
     this.stylesWidget = new StylesSidebarPane(this.#computedStyleModel);
-    this.#computedStyleWidget = new ComputedStyleWidget(this.#computedStyleModel);
+    this.#computedStyleWidget = new ComputedStyleWidget();
+    this.#computedStyleWidget.computedStyleModel = this.#computedStyleModel;
     this.#computedStyleModel.addEventListener(
         ComputedStyle.ComputedStyleModel.Events.COMPUTED_STYLE_CHANGED, this.#updateComputedStyles, this);
     this.#computedStyleModel.addEventListener(
