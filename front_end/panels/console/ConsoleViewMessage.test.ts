@@ -291,9 +291,9 @@ describeWithMockConnection('ConsoleViewMessage', () => {
         }
         return link;
       });
-      const realLinkifier = new Components.Linkifier.Linkifier();
-      linkifier.maybeLinkifyStackTraceFrame.callsFake((target, frame, options) => {
-        const link = realLinkifier.maybeLinkifyStackTraceFrame(target, frame, options);
+      const originalLinkifyStackTraceFrame = Components.Linkifier.Linkifier.linkifyStackTraceFrame;
+      sinon.stub(Components.Linkifier.Linkifier, 'linkifyStackTraceFrame').callsFake((frame, options) => {
+        const link = originalLinkifyStackTraceFrame(frame, options);
         if ((frame.url && ignoreListFn(frame.url)) || (frame.uiSourceCode && ignoreListFn(frame.uiSourceCode.url()))) {
           link.classList.add(IGNORE_LIST_LINK);
         }

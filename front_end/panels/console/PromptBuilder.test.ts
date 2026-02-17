@@ -17,7 +17,6 @@ import {raf} from '../../testing/DOMHelpers.js';
 import {createTarget} from '../../testing/EnvironmentHelpers.js';
 import {describeWithMockConnection} from '../../testing/MockConnection.js';
 import {MockProtocolBackend} from '../../testing/MockScopeChain.js';
-import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
 
 import * as Console from './console.js';
@@ -324,11 +323,7 @@ export const y = "";
       const rawMessage = new SDK.ConsoleModel.ConsoleMessage(
           runtimeModel, Common.Console.FrontendMessageSource.ConsoleAPI, Protocol.Log.LogEntryLevel.Error,
           ERROR_MESSAGE, messageDetails);
-      const {message, linkifier} = createConsoleViewMessageWithStubDeps(rawMessage);
-      const realLinkifier = new Components.Linkifier.Linkifier();
-      linkifier.maybeLinkifyStackTraceFrame.callsFake((target, frame, options) => {
-        return realLinkifier.maybeLinkifyStackTraceFrame(target, frame, options);
-      });
+      const {message} = createConsoleViewMessageWithStubDeps(rawMessage);
       message.toMessageElement();  // Trigger rendering.
       await raf();
       await UI.Widget.Widget.allUpdatesComplete;
@@ -450,7 +445,8 @@ export const y = "";
       const SCRIPT_ID = script.scriptId;
       const STACK_FRAME = `${SCRIPT_ID}::userNestedFunction::${URL}::${LINE_NUMBER}::15`;
       const stackTrace = createStackTrace(Array(80).fill(STACK_FRAME));
-      const STACK_TRACE = `userNestedFunction @ ${'a'.repeat(100)}.js:1\n`.repeat(7) + 'userNestedFunction @ aaaaaaa';
+      const STACK_TRACE = `userNestedFunction @ ${'a'.repeat(100)}.js:1\n`.repeat(7) +
+          'userNestedFunction @ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
       const messageDetails = {
         type: Protocol.Runtime.ConsoleAPICalledEventType.Log,
         stackTrace,
@@ -462,11 +458,7 @@ export const y = "";
       const rawMessage = new SDK.ConsoleModel.ConsoleMessage(
           runtimeModel, Common.Console.FrontendMessageSource.ConsoleAPI, Protocol.Log.LogEntryLevel.Error,
           ERROR_MESSAGE, messageDetails);
-      const {message, linkifier} = createConsoleViewMessageWithStubDeps(rawMessage);
-      const realLinkifier = new Components.Linkifier.Linkifier();
-      linkifier.maybeLinkifyStackTraceFrame.callsFake((target, frame, options) => {
-        return realLinkifier.maybeLinkifyStackTraceFrame(target, frame, options);
-      });
+      const {message} = createConsoleViewMessageWithStubDeps(rawMessage);
       message.toMessageElement();  // Trigger rendering.
       await raf();
       await UI.Widget.Widget.allUpdatesComplete;

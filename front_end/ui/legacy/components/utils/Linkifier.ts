@@ -347,12 +347,10 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
         callFrame.url as Platform.DevToolsPath.UrlString, callFrame.lineNumber, linkifyOptions);
   }
 
-  maybeLinkifyStackTraceFrame(
-      target: SDK.Target.Target|null, frame: StackTrace.StackTrace.Frame, options?: LinkifyOptions): HTMLElement {
+  static linkifyStackTraceFrame(frame: StackTrace.StackTrace.Frame, options?: LinkifyOptions): HTMLElement {
     const linkifyURLOptions = {
       ...options,
       lineNumber: frame.line,
-      maxLength: this.maxLength,
       columnNumber: frame.column,
       showColumnNumber: Boolean(options?.showColumnNumber),
       className: options?.className,
@@ -364,7 +362,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
     } satisfies LinkifyURLOptions;
     const {className = ''} = linkifyURLOptions;
     const fallbackAnchor = Linkifier.linkifyURL(frame.url as Platform.DevToolsPath.UrlString, linkifyURLOptions);
-    if (!target || target.isDisposed() || !frame.uiSourceCode) {
+    if (!frame.uiSourceCode) {
       return fallbackAnchor;
     }
 
@@ -374,21 +372,18 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
     };
     const {link, linkInfo} = Linkifier.createLink(
         fallbackAnchor?.textContent ? fallbackAnchor.textContent : '', className, createLinkOptions);
-    linkInfo.enableDecorator = this.useLinkDecorator;
     linkInfo.fallback = fallbackAnchor;
     linkInfo.userMetric = options?.userMetric;
 
     const linkDisplayOptions: LinkDisplayOptions = {
       showColumnNumber: linkifyURLOptions.showColumnNumber ?? false,
-      maxLength: linkifyURLOptions.maxLength,
+      maxLength: linkifyURLOptions.maxLength ?? UI.UIUtils.MaxLengthForDisplayedURLs,
       revealBreakpoint: options?.revealBreakpoint,
     };
 
     const uiLocation = frame.uiSourceCode.uiLocation(frame.line, frame.column) ?? null;
     Linkifier.updateAnchorFromUILocation(link, linkDisplayOptions, uiLocation);
 
-    const anchors = (this.anchorsByTarget.get(target) as Element[]);
-    anchors.push(link);
     return link;
   }
 
