@@ -65,6 +65,7 @@ devtools_ui_module("elements") {
     "StylePropertyHighlighter.ts",
     "StylePropertyTreeElement.ts",
     "StylePropertyUtils.ts",
+    "StylesAiCodeCompletionProvider.ts",
     "StylesSidebarPane.ts",
     "TopLayerContainer.ts",
     "WebCustomData.ts",
@@ -193,6 +194,7 @@ devtools_ui_module("unittests") {
     "StylePropertyHighlighter.test.ts",
     "StylePropertyTreeElement.test.ts",
     "StylePropertyUtils.test.ts",
+    "StylesAiCodeCompletionProvider.test.ts",
     "StylesSidebarPane.test.ts",
     "WebCustomData.test.ts",
   ]

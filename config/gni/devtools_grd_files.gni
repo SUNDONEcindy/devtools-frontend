@@ -1592,6 +1592,7 @@ grd_files_unbundled_sources = [
   "front_end/panels/elements/StylePropertyHighlighter.js",
   "front_end/panels/elements/StylePropertyTreeElement.js",
   "front_end/panels/elements/StylePropertyUtils.js",
+  "front_end/panels/elements/StylesAiCodeCompletionProvider.js",
   "front_end/panels/elements/StylesSidebarPane.js",
   "front_end/panels/elements/TopLayerContainer.js",
   "front_end/panels/elements/WebCustomData.js",
