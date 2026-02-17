@@ -17,7 +17,7 @@ import * as TextUtils from '../../../../models/text_utils/text_utils.js';
 import type * as Trace from '../../../../models/trace/trace.js';
 import * as Workspace from '../../../../models/workspace/workspace.js';
 import * as UIHelpers from '../../../helpers/helpers.js';
-import {Directives, html, type LitTemplate, render} from '../../../lit/lit.js';
+import {Directives, html, type LitTemplate, render, type TemplateResult} from '../../../lit/lit.js';
 import * as VisualLogging from '../../../visual_logging/visual_logging.js';
 import * as UI from '../../legacy.js';
 
@@ -562,7 +562,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
     info.icon = icon;
   }
 
-  static renderLinkifiedUrl(url: Platform.DevToolsPath.UrlString, options?: LinkifyURLOptions): LitTemplate {
+  static renderLinkifiedUrl(url: Platform.DevToolsPath.UrlString, options?: LinkifyURLOptions): TemplateResult {
     options = options || {
       showColumnNumber: false,
       inlineFrameIndex: 0,
@@ -639,7 +639,8 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
     return link;
   }
 
-  private static renderLink(text: string|HTMLElement, className: string, options: CreateLinkOptions = {}): LitTemplate {
+  private static renderLink(text: string|HTMLElement, className: string, options: CreateLinkOptions = {}):
+      TemplateResult {
     const {maxLength, title, href, preventClick, tabStop, bypassURLTrimming, jslogContext} = options;
     const classes: Record<string, boolean> = {
       'devtools-link': true,
@@ -666,6 +667,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> im
         if (!link) {
           return;
         }
+        options.onRef?.(link as HTMLElement);
         if (text instanceof HTMLElement) {
           link.appendChild(text);
         } else if (bypassURLTrimming) {
@@ -1153,6 +1155,7 @@ export interface LinkifyURLOptions {
   userMetric?: Host.UserMetrics.Action;
   jslogContext?: string;
   omitOrigin?: boolean;
+  onRef?: (el: HTMLElement) => void;
 }
 
 export interface LinkifyOptions {
@@ -1183,6 +1186,7 @@ interface CreateLinkOptions {
   lineNumber?: number;
   columnNumber?: number;
   userMetric?: Host.UserMetrics.Action;
+  onRef?: (el: HTMLElement) => void;
 }
 
 interface LinkDisplayOptions {
