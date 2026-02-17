@@ -10,7 +10,6 @@ import type * as Platform from '../../../core/platform/platform.js';
 import * as SDK from '../../../core/sdk/sdk.js';
 import * as Protocol from '../../../generated/protocol.js';
 import * as AiAssistanceModel from '../../../models/ai_assistance/ai_assistance.js';
-import * as Workspace from '../../../models/workspace/workspace.js';
 import * as PanelsCommon from '../../../panels/common/common.js';
 import * as PanelUtils from '../../../panels/utils/utils.js';
 import * as Buttons from '../../../ui/components/buttons/buttons.js';
@@ -37,14 +36,6 @@ const UIStrings = {
    * @description The footer disclaimer that links to more information about the AI feature.
    */
   learnAbout: 'Learn about AI in DevTools',
-  /**
-   * @description Label added to the button that remove the currently selected context in AI Assistance panel.
-   */
-  removeContext: 'Remove from context',
-  /**
-   * @description Label added to the button that add selected context from the current panel in AI Assistance panel.
-   */
-  addContext: 'Add selected item as context',
 } as const;
 
 /*
@@ -91,6 +82,30 @@ const UIStringsNotTranslate = {
    * @description Message displayed in toast in case of any failures while uploading an image file as input.
    */
   uploadImageFailureMessage: 'Failed to upload image. Please try again.',
+  /**
+   * @description Label added to the button that add selected context from the current panel in AI Assistance panel.
+   */
+  addContext: 'Add item for context',
+  /**
+   * @description Label added to the button that remove the currently selected element in AI Assistance panel.
+   */
+  removeContextElement: 'Remove element from context',
+  /**
+   * @description Label added to the button that remove the currently selected context in AI Assistance panel.
+   */
+  removeContextRequest: 'Remove request from context',
+  /**
+   * @description Label added to the button that remove the currently selected context in AI Assistance panel.
+   */
+  removeContextFile: 'Remove file from context',
+  /**
+   * @description Label added to the button that remove the currently selected context in AI Assistance panel.
+   */
+  removeContextPerfInsight: 'Remove performance insight from context',
+  /**
+   * @description Label added to the button that remove the currently selected context in AI Assistance panel.
+   */
+  removeContext: 'Remove from context',
 } as const;
 
 const str_ = i18n.i18n.registerUIStrings('panels/ai_assistance/components/ChatInput.ts', UIStrings);
@@ -147,6 +162,23 @@ export interface ViewInput {
 }
 
 export type ViewOutput = undefined;
+
+function getContextRemoveLabel(context: AiAssistanceModel.AiAgent.ConversationContext<unknown>):
+    Platform.UIString.LocalizedString {
+  if (context instanceof AiAssistanceModel.FileAgent.FileContext) {
+    return lockedString(UIStringsNotTranslate.removeContextFile);
+  }
+  if (context instanceof AiAssistanceModel.StylingAgent.NodeContext) {
+    return lockedString(UIStringsNotTranslate.removeContextElement);
+  }
+  if (context instanceof AiAssistanceModel.NetworkAgent.RequestContext) {
+    return lockedString(UIStringsNotTranslate.removeContextRequest);
+  }
+  if (context instanceof AiAssistanceModel.PerformanceAgent.PerformanceTraceContext) {
+    return lockedString(UIStringsNotTranslate.removeContextPerfInsight);
+  }
+  return lockedString(UIStringsNotTranslate.removeContext);
+}
 
 export const DEFAULT_VIEW = (input: ViewInput, _output: ViewOutput, target: HTMLElement): void => {
   const chatInputContainerCls = Lit.Directives.classMap({
@@ -303,20 +335,20 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: ViewOutput, target: HTML
                         }}
                         aria-description=${i18nString(UIStrings.revealContextDescription)}
                       >
-                        ${input.selectedContext.getItem() instanceof SDK.NetworkRequest.NetworkRequest ?
-                          PanelUtils.PanelUtils.getIconForNetworkRequest(input.selectedContext.getItem() as SDK.NetworkRequest.NetworkRequest) :
-                          input.selectedContext.getItem() instanceof Workspace.UISourceCode.UISourceCode ?
-                          PanelUtils.PanelUtils.getIconForSourceFile(input.selectedContext.getItem() as Workspace.UISourceCode.UISourceCode) :
-                          input.selectedContext.getItem() instanceof AiAssistanceModel.AIContext.AgentFocus ?
+                        ${input.selectedContext instanceof AiAssistanceModel.NetworkAgent.RequestContext ?
+                          PanelUtils.PanelUtils.getIconForNetworkRequest(input.selectedContext.getItem()) :
+                          input.selectedContext instanceof  AiAssistanceModel.FileAgent.FileContext ?
+                          PanelUtils.PanelUtils.getIconForSourceFile(input.selectedContext.getItem()) :
+                          input.selectedContext instanceof AiAssistanceModel.PerformanceAgent.PerformanceTraceContext ?
                           html`<devtools-icon name="performance" title="Performance"></devtools-icon>` :
                           Lit.nothing}
                         <span class="title">
-                          ${input.selectedContext.getItem() instanceof SDK.DOMModel.DOMNode ?
+                          ${input.selectedContext instanceof AiAssistanceModel.StylingAgent.NodeContext ?
                             html`
                               <devtools-widget .widgetConfig=${UI.Widget.widgetConfig(PanelsCommon.DOMLinkifier.DOMNodeLink, {
-                                node: input.selectedContext.getItem() as SDK.DOMModel.DOMNode,
+                                node: input.selectedContext.getItem(),
                                 options: {
-                                  hiddenClassList: (input.selectedContext.getItem() as SDK.DOMModel.DOMNode).classNames().filter(
+                                  hiddenClassList: input.selectedContext.getItem().classNames().filter(
                                     className => className.startsWith(AiAssistanceModel.Injected.AI_ASSISTANCE_CSS_CLASS_NAME)),
                                   disabled: input.isTextInputDisabled,
                                 },
@@ -326,8 +358,8 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: ViewOutput, target: HTML
                         </span>
                         ${input.onContextRemoved ? html`
                                   <devtools-button
-                                    title=${i18nString(UIStrings.removeContext)}
-                                    aria-label=${i18nString(UIStrings.removeContext)}
+                                    title=${getContextRemoveLabel(input.selectedContext)}
+                                    aria-label=${getContextRemoveLabel(input.selectedContext)}
                                     class="remove-context"
                                     .iconName=${'cross'}
                                     .size=${Buttons.Button.Size.MICRO}
@@ -339,8 +371,8 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: ViewOutput, target: HTML
                   :
                     input.onContextAdd ? html`
                                   <devtools-button
-                                    title=${i18nString(UIStrings.addContext)}
-                                    aria-label=${i18nString(UIStrings.addContext)}
+                                    title=${lockedString(UIStringsNotTranslate.addContext)}
+                                    aria-label=${lockedString(UIStringsNotTranslate.addContext)}
                                     class="add-context"
                                     .iconName=${'plus'}
                                     .size=${Buttons.Button.Size.SMALL}
@@ -442,7 +474,7 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: ViewOutput, target: HTML
     >
       ${renderRelevantDataDisclaimer(RELEVANT_DATA_LINK_FOOTER_ID)}
     </footer>
-  `, target);
+  `, target,);
   // clang-format on
 };
 
@@ -454,7 +486,7 @@ export class ChatInput extends UI.Widget.Widget implements SDK.TargetManager.Obs
   blockedByCrossOrigin = false;
   isTextInputDisabled = false;
   inputPlaceholder = '' as Platform.UIString.LocalizedString;
-  selectedContext = null as AiAssistanceModel.AiAgent.ConversationContext<unknown>| null;
+  selectedContext: AiAssistanceModel.AiAgent.ConversationContext<unknown>|null = null;
   inspectElementToggled = false;
   disclaimerText = '';
   conversationType = AiAssistanceModel.AiHistoryStorage.ConversationType.STYLING;
