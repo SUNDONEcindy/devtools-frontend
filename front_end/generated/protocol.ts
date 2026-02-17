@@ -850,6 +850,18 @@ export namespace Audits {
     insight?: CookieIssueInsight;
   }
 
+  export const enum PerformanceIssueType {
+    DocumentCookie = 'DocumentCookie',
+  }
+
+  /**
+   * Details for a performance issue.
+   */
+  export interface PerformanceIssueDetails {
+    performanceIssueType: PerformanceIssueType;
+    sourceCodeLocation?: SourceCodeLocation;
+  }
+
   export const enum MixedContentResolutionStatus {
     MixedContentBlocked = 'MixedContentBlocked',
     MixedContentAutomaticallyUpgraded = 'MixedContentAutomaticallyUpgraded',
@@ -1564,6 +1576,7 @@ export namespace Audits {
     ConnectionAllowlistIssue = 'ConnectionAllowlistIssue',
     UserReidentificationIssue = 'UserReidentificationIssue',
     PermissionElementIssue = 'PermissionElementIssue',
+    PerformanceIssue = 'PerformanceIssue',
   }
 
   /**
@@ -1603,6 +1616,7 @@ export namespace Audits {
     connectionAllowlistIssueDetails?: ConnectionAllowlistIssueDetails;
     userReidentificationIssueDetails?: UserReidentificationIssueDetails;
     permissionElementIssueDetails?: PermissionElementIssueDetails;
+    performanceIssueDetails?: PerformanceIssueDetails;
   }
 
   /**

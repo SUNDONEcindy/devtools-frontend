@@ -6628,6 +6628,22 @@ export const NativeFunctions = [
     signatures: [["element","start","end"]]
   },
   {
+    name: "getBoxQuads",
+    signatures: [["?options"]]
+  },
+  {
+    name: "convertQuadFromNode",
+    signatures: [["quad","from","?options"]]
+  },
+  {
+    name: "convertRectFromNode",
+    signatures: [["rect","from","?options"]]
+  },
+  {
+    name: "convertPointFromNode",
+    signatures: [["point","from","?options"]]
+  },
+  {
     name: "MutationObserver",
     signatures: [["callback"]]
   },
@@ -7368,6 +7384,10 @@ export const NativeFunctions = [
   {
     name: "createScriptURL",
     signatures: [["input","...args"]]
+  },
+  {
+    name: "createParserOptions",
+    signatures: [["input"]]
   },
   {
     name: "URLPattern",

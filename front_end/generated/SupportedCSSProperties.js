@@ -1795,6 +1795,7 @@ export const generatedProperties = [
   "inherited": false,
   "keywords": [
    "all",
+   "auto",
    "around",
    "between"
   ],
@@ -3841,6 +3842,7 @@ export const generatedProperties = [
   "inherited": false,
   "keywords": [
    "all",
+   "auto",
    "around",
    "between"
   ],
@@ -4548,12 +4550,12 @@ export const generatedProperties = [
  {
   "inherited": true,
   "keywords": [
+   "none",
    "capitalize",
    "uppercase",
    "lowercase",
    "full-width",
    "full-size-kana",
-   "none",
    "math-auto"
   ],
   "name": "text-transform"
@@ -5559,6 +5561,7 @@ export const generatedPropertyValues = {
  "column-rule-visibility-items": {
   "values": [
    "all",
+   "auto",
    "around",
    "between"
   ]
@@ -6692,6 +6695,7 @@ export const generatedPropertyValues = {
  "row-rule-visibility-items": {
   "values": [
    "all",
+   "auto",
    "around",
    "between"
   ]
@@ -7045,12 +7049,12 @@ export const generatedPropertyValues = {
  },
  "text-transform": {
   "values": [
+   "none",
    "capitalize",
    "uppercase",
    "lowercase",
    "full-width",
    "full-size-kana",
-   "none",
    "math-auto"
   ]
  },
