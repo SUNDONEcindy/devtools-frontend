@@ -14,12 +14,10 @@ import {
   dispatchCopyEvent,
   dispatchKeyDownEvent,
   getCleanTextContentFromElements,
-  getElementWithinComponent,
   renderElementIntoDOM,
 } from '../../../testing/DOMHelpers.js';
 import {
   deinitializeGlobalVars,
-  describeWithEnvironment,
 } from '../../../testing/EnvironmentHelpers.js';
 import {describeWithMockConnection} from '../../../testing/MockConnection.js';
 import {
@@ -32,7 +30,6 @@ import {
   resetRecordedMetrics,
 } from '../../../testing/UserMetricsHelpers.js';
 import * as RenderCoordinator from '../../../ui/components/render_coordinator/render_coordinator.js';
-import * as UI from '../../../ui/legacy/legacy.js';
 import * as NetworkForward from '../forward/forward.js';
 
 import * as NetworkComponents from './components.js';
@@ -93,12 +90,21 @@ const getTextFromRow = (row: HTMLElement) => {
 };
 
 const getRowsFromCategory = (category: HTMLElement) => {
-  const slot = getElementWithinComponent(category, 'slot', HTMLSlotElement);
-  const section = slot.assignedElements()[0];
-  assert.instanceOf(section, HTMLElement);
-  assert.isNotNull(section.shadowRoot);
-  const rows = section.shadowRoot.querySelectorAll('devtools-header-section-row');
-  return Array.from(rows);
+  let section: HTMLElement|null = category.querySelector('devtools-response-header-section');
+  if (!section) {
+    section = category.querySelector('devtools-early-hints-header-section');
+  }
+  if (section?.shadowRoot) {
+    const rows = section.shadowRoot.querySelectorAll('devtools-header-section-row');
+    return Array.from(rows);
+  }
+
+  const widget = category.querySelector('devtools-widget');
+  if (widget?.shadowRoot) {
+    const rows = widget.shadowRoot.querySelectorAll('devtools-header-section-row');
+    return Array.from(rows);
+  }
+  return [];
 };
 
 const getRowsTextFromCategory = (category: HTMLElement) => {
@@ -219,7 +225,11 @@ describeWithMockConnection('RequestHeadersView', () => {
     assert.instanceOf(responseHeadersCategory, HTMLElement);
 
     // Switch to viewing source view
-    responseHeadersCategory.dispatchEvent(new NetworkComponents.RequestHeadersView.ToggleRawHeadersEvent());
+    const checkbox = responseHeadersCategory.querySelector('devtools-checkbox');
+    assert.instanceOf(checkbox, HTMLElement);
+    const input = checkbox.shadowRoot?.querySelector('input');
+    assert.exists(input);
+    dispatchClickEvent(input);
     await RenderCoordinator.done();
 
     const rawHeadersDiv = responseHeadersCategory.querySelector('.raw-headers');
@@ -230,7 +240,7 @@ describeWithMockConnection('RequestHeadersView', () => {
         'HTTP/1.1 200 OK\nage: 0\ncache-control: max-age=600\ncontent-encoding: gzip\ncontent-length: 661');
 
     // Switch to viewing parsed view
-    responseHeadersCategory.dispatchEvent(new NetworkComponents.RequestHeadersView.ToggleRawHeadersEvent());
+    dispatchClickEvent(input);
     await RenderCoordinator.done();
 
     assert.deepEqual(
@@ -255,7 +265,11 @@ describeWithMockConnection('RequestHeadersView', () => {
     assert.instanceOf(responseHeadersCategory, HTMLElement);
 
     // Switch to viewing source view
-    responseHeadersCategory.dispatchEvent(new NetworkComponents.RequestHeadersView.ToggleRawHeadersEvent());
+    const checkbox = responseHeadersCategory.querySelector('devtools-checkbox');
+    assert.instanceOf(checkbox, HTMLElement);
+    const input = checkbox.shadowRoot?.querySelector('input');
+    assert.exists(input);
+    dispatchClickEvent(input);
     await RenderCoordinator.done();
 
     const rawHeadersDiv = responseHeadersCategory.querySelector('.raw-headers');
@@ -362,9 +376,8 @@ describeWithMockConnection('RequestHeadersView', () => {
 
     const responseHeadersCategory = component.shadowRoot.querySelector('[aria-label="Response headers"]');
     assert.instanceOf(responseHeadersCategory, HTMLElement);
-    assert.isNotNull(responseHeadersCategory.shadowRoot);
 
-    const linkElements = responseHeadersCategory.shadowRoot.querySelectorAll('devtools-link');
+    const linkElements = responseHeadersCategory.querySelectorAll('devtools-link');
     assert.lengthOf(linkElements, 2);
 
     assert.instanceOf(linkElements[0], HTMLElement);
@@ -388,9 +401,8 @@ describeWithMockConnection('RequestHeadersView', () => {
 
     const responseHeadersCategory = component.shadowRoot.querySelector('[aria-label="Response headers"]');
     assert.instanceOf(responseHeadersCategory, HTMLElement);
-    assert.isNotNull(responseHeadersCategory.shadowRoot);
 
-    const linkElement = responseHeadersCategory.shadowRoot.querySelector('devtools-link');
+    const linkElement = responseHeadersCategory.querySelector('devtools-link');
     assert.isNull(linkElement);
   });
 
@@ -483,22 +495,15 @@ describeWithMockConnection('RequestHeadersView', () => {
         Host.InspectorFrontendHostAPI.EnumeratedHistogram.ActionTaken,
         Host.UserMetrics.Action.HeaderOverrideFileCreated));
   });
-});
 
-describeWithEnvironment('RequestHeadersView\'s Category', () => {
   it('can be opened and closed with right/left arrow keys', async () => {
-    const component = new NetworkComponents.RequestHeadersView.Category();
-    renderElementIntoDOM(component);
-    component.data = {
-      name: 'general',
-      title: 'General' as Common.UIString.LocalizedString,
-      loggingContext: 'details-general',
-    };
+    component = await renderHeadersComponent(defaultRequest);
     assert.isNotNull(component.shadowRoot);
-    await RenderCoordinator.done();
-
-    const details = getElementWithinComponent(component, 'details', HTMLDetailsElement);
-    const summary = getElementWithinComponent(component, 'summary', HTMLElement);
+    const responseHeadersCategory = component.shadowRoot.querySelector('[aria-label="Response headers"]');
+    assert.instanceOf(responseHeadersCategory, HTMLDetailsElement);
+    const details = responseHeadersCategory;
+    const summary = details.querySelector('summary');
+    assert.instanceOf(summary, HTMLElement);
 
     assert.isTrue(details.hasAttribute('open'));
 
@@ -516,29 +521,5 @@ describeWithEnvironment('RequestHeadersView\'s Category', () => {
 
     dispatchKeyDownEvent(summary, {key: 'ArrowUp'});
     assert.isTrue(details.hasAttribute('open'));
-  });
-
-  it('dispatches an event when its checkbox is toggled', async () => {
-    let eventCounter = 0;
-    const component = new NetworkComponents.RequestHeadersView.Category();
-    renderElementIntoDOM(component);
-    component.data = {
-      name: 'responseHeaders',
-      title: 'Response Headers' as Common.UIString.LocalizedString,
-      headerCount: 3,
-      checked: false,
-      loggingContext: 'details-response-headers',
-    };
-    assert.isNotNull(component.shadowRoot);
-    await RenderCoordinator.done();
-    component.addEventListener(NetworkComponents.RequestHeadersView.ToggleRawHeadersEvent.eventName, () => {
-      eventCounter += 1;
-    });
-    const checkbox = getElementWithinComponent(component, 'devtools-checkbox', UI.UIUtils.CheckboxLabel);
-    const inputElement = checkbox.shadowRoot?.querySelector('input');
-    assert.exists(inputElement);
-
-    dispatchClickEvent(inputElement);
-    assert.strictEqual(eventCounter, 1);
   });
 });

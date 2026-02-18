@@ -195,6 +195,7 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
       // clang-format off
       render(html`
         <style>${requestHeadersViewStyles}</style>
+        <style>${Input.checkboxStyles}</style>
         ${this.#renderGeneralSection()}
         ${this.#renderEarlyHintsHeaders()}
         ${this.#renderResponseHeaders()}
@@ -216,31 +217,22 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
     };
 
     // Disabled until https://crbug.com/1079231 is fixed.
-    // clang-format off
-    return html`
-      <devtools-request-headers-category
-        @togglerawevent=${toggleShowRaw}
-        .data=${{
-        name: 'early-hints-headers',
-        title: i18nString(UIStrings.earlyHintsHeaders),
-        headerCount: this.#request.earlyHintsHeaders.length,
-        checked: undefined,
-        additionalContent: undefined,
-        forceOpen: this.#toReveal?.section === NetworkForward.UIRequestLocation.UIHeaderSection.EARLY_HINTS,
-        loggingContext: 'early-hints-headers',
-      } as CategoryData}
-        aria-label=${i18nString(UIStrings.earlyHintsHeaders)}
-      >
-        ${this.#showResponseHeadersText ?
-        this.#renderRawHeaders(this.#request.responseHeadersText, true) : html`
+    return renderCategory({
+      onToggleRawHeaders: toggleShowRaw,
+      name: 'early-hints-headers',
+      title: i18nString(UIStrings.earlyHintsHeaders),
+      headerCount: this.#request.earlyHintsHeaders.length,
+      checked: undefined,
+      additionalContent: undefined,
+      forceOpen: this.#toReveal?.section === NetworkForward.UIRequestLocation.UIHeaderSection.EARLY_HINTS,
+      loggingContext: 'early-hints-headers',
+      contents: this.#showResponseHeadersText ? this.#renderRawHeaders(this.#request.responseHeadersText, true) : html`
           <devtools-early-hints-header-section .data=${{
-            request: this.#request,
-            toReveal: this.#toReveal,
-          } as ResponseHeaderSectionData}></devtools-early-hints-header-section>
-        `}
-      </devtools-request-headers-category>
-    `;
-    // clang-format on
+        request: this.#request,
+        toReveal: this.#toReveal,
+      } as ResponseHeaderSectionData}></devtools-early-hints-header-section>
+        `
+    });
   }
 
   #renderResponseHeaders(): Lit.LitTemplate {
@@ -253,32 +245,25 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
       void this.render();
     };
 
-    // Disabled until https://crbug.com/1079231 is fixed.
-    // clang-format off
-    return html`
-      <devtools-request-headers-category
-        @togglerawevent=${toggleShowRaw}
-        .data=${{
-          name: 'response-headers',
-          title: i18nString(UIStrings.responseHeaders),
-          headerCount: this.#request.sortedResponseHeaders.length,
-          checked: this.#request.responseHeadersText ? this.#showResponseHeadersText : undefined,
-          additionalContent: this.#renderHeaderOverridesLink(),
-          forceOpen: this.#toReveal?.section === NetworkForward.UIRequestLocation.UIHeaderSection.RESPONSE,
-          loggingContext: 'response-headers',
-        } as CategoryData}
-        aria-label=${i18nString(UIStrings.responseHeaders)}
-      >
-        ${this.#showResponseHeadersText ?
-            this.#renderRawHeaders(this.#request.responseHeadersText, true) : html`
+    return renderCategory({
+      onToggleRawHeaders: toggleShowRaw,
+      name: 'response-headers',
+      title: i18nString(UIStrings.responseHeaders),
+      headerCount: this.#request.sortedResponseHeaders.length,
+      checked: this.#request.responseHeadersText ? this.#showResponseHeadersText : undefined,
+      additionalContent: this.#renderHeaderOverridesLink(),
+      forceOpen: this.#toReveal?.section === NetworkForward.UIRequestLocation.UIHeaderSection.RESPONSE,
+      loggingContext: 'response-headers',
+      contents: this.#showResponseHeadersText ?
+          this.#renderRawHeaders(this.#request.responseHeadersText, true) :
+          html`
           <devtools-response-header-section .data=${{
             request: this.#request,
             toReveal: this.#toReveal,
-          } as ResponseHeaderSectionData} jslog=${VisualLogging.section('response-headers')}></devtools-response-header-section>
-        `}
-      </devtools-request-headers-category>
-    `;
-    // clang-format on
+          } as ResponseHeaderSectionData} jslog=${
+              VisualLogging.section('response-headers')}></devtools-response-header-section>
+        `
+    });
   }
 
   #renderHeaderOverridesLink(): Lit.LitTemplate {
@@ -348,31 +333,22 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
       void this.render();
     };
 
-    // Disabled until https://crbug.com/1079231 is fixed.
-    // clang-format off
-    return html`
-      <devtools-request-headers-category
-        @togglerawevent=${toggleShowRaw}
-        .data=${{
-          name: 'request-headers',
-          title: i18nString(UIStrings.requestHeaders),
-          headerCount: this.#request.requestHeaders().length,
-          checked: requestHeadersText? this.#showRequestHeadersText : undefined,
-          forceOpen: this.#toReveal?.section === NetworkForward.UIRequestLocation.UIHeaderSection.REQUEST,
-          loggingContext: 'request-headers',
-        } as CategoryData}
-        aria-label=${i18nString(UIStrings.requestHeaders)}
-      >
-        ${(this.#showRequestHeadersText && requestHeadersText) ?
-            this.#renderRawHeaders(requestHeadersText, false) : html`
+    return renderCategory({
+      onToggleRawHeaders: toggleShowRaw,
+      name: 'request-headers',
+      title: i18nString(UIStrings.requestHeaders),
+      headerCount: this.#request.requestHeaders().length,
+      checked: requestHeadersText ? this.#showRequestHeadersText : undefined,
+      forceOpen: this.#toReveal?.section === NetworkForward.UIRequestLocation.UIHeaderSection.REQUEST,
+      loggingContext: 'request-headers',
+      contents: (this.#showRequestHeadersText && requestHeadersText) ?
+          this.#renderRawHeaders(requestHeadersText, false) :
+          html`
           <devtools-widget .widgetConfig=${UI.Widget.widgetConfig(RequestHeaderSection, {
             request: this.#request,
             toReveal: this.#toReveal,
-          })} jslog=${VisualLogging.section('request-headers')}></devtools-widget>
-        `}
-      </devtools-request-headers-category>
-    `;
-    // clang-format on
+          })} jslog=${VisualLogging.section('request-headers')}></devtools-widget>`
+    });
   }
 
   #renderRawHeaders(rawHeadersText: string, forResponseHeaders: boolean): Lit.TemplateResult {
@@ -466,19 +442,13 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
 
     const statusText = [this.#request.statusCode, this.#request.getInferredStatusText(), comment].join(' ');
 
-    // Disabled until https://crbug.com/1079231 is fixed.
-    // clang-format off
-    return html`
-      <devtools-request-headers-category
-        .data=${{
-          name: 'general',
-          title: i18nString(UIStrings.general),
-          forceOpen: this.#toReveal?.section === NetworkForward.UIRequestLocation.UIHeaderSection.GENERAL,
-          loggingContext: 'general',
-        } as CategoryData}
-        aria-label=${i18nString(UIStrings.general)}
-      >
-      <div jslog=${VisualLogging.section('general')}>
+    return renderCategory({
+      name: 'general',
+      title: i18nString(UIStrings.general),
+      forceOpen: this.#toReveal?.section === NetworkForward.UIRequestLocation.UIHeaderSection.GENERAL,
+      loggingContext: 'general',
+      // clang-format off
+          contents: html`<div jslog=${VisualLogging.section('general')}>
         ${this.#renderGeneralRow(i18nString(UIStrings.requestUrl), this.#request.url(), 'request-url')}
         ${this.#request.statusCode? this.#renderGeneralRow(i18nString(UIStrings.requestMethod),
             this.#request.requestMethod, 'request-method') : Lit.nothing}
@@ -488,9 +458,7 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
             this.#request.remoteAddress(), 'remote-address') : Lit.nothing}
         ${this.#request.referrerPolicy()? this.#renderGeneralRow(i18nString(UIStrings.referrerPolicy),
             String(this.#request.referrerPolicy()), 'referrer-policy') : Lit.nothing}
-      </div>
-      </devtools-request-headers-category>
-    `;
+      </div>`});
     // clang-format on
   }
 
@@ -522,87 +490,53 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
   }
 }
 
-export class ToggleRawHeadersEvent extends Event {
-  static readonly eventName = 'togglerawevent';
+function renderCategory(data: {
+  name: string,
+  title: Common.UIString.LocalizedString,
+  contents: Lit.LitTemplate,
+  loggingContext: string,
+  headerCount?: number,
+  checked?: boolean,
+  additionalContent?: Lit.LitTemplate,
+  forceOpen?: boolean,
+  onToggleRawHeaders?: () => void,
+}): Lit.LitTemplate {
+  const expandedSetting =
+      Common.Settings.Settings.instance().createSetting('request-info-' + data.name + '-category-expanded', true);
 
-  constructor() {
-    super(ToggleRawHeadersEvent.eventName, {});
-  }
-}
-
-export interface CategoryData {
-  name: string;
-  title: Common.UIString.LocalizedString;
-  headerCount?: number;
-  checked?: boolean;
-  additionalContent?: Lit.LitTemplate;
-  forceOpen?: boolean;
-  loggingContext: string;
-}
-
-export class Category extends HTMLElement {
-  readonly #shadow = this.attachShadow({mode: 'open'});
-  #expandedSetting?: Common.Settings.Setting<boolean>;
-  #title: Common.UIString.LocalizedString = Common.UIString.LocalizedEmptyString;
-  #headerCount?: number = undefined;
-  #checked: boolean|undefined = undefined;
-  #additionalContent: Lit.LitTemplate|undefined = undefined;
-  #forceOpen: boolean|undefined = undefined;
-  #loggingContext = '';
-
-  set data(data: CategoryData) {
-    this.#title = data.title;
-    this.#expandedSetting =
-        Common.Settings.Settings.instance().createSetting('request-info-' + data.name + '-category-expanded', true);
-    this.#headerCount = data.headerCount;
-    this.#checked = data.checked;
-    this.#additionalContent = data.additionalContent;
-    this.#forceOpen = data.forceOpen;
-    this.#loggingContext = data.loggingContext;
-    this.#render();
-  }
-
-  #onCheckboxToggle(): void {
-    this.dispatchEvent(new ToggleRawHeadersEvent());
-  }
-
-  #render(): void {
-    const isOpen = (this.#expandedSetting ? this.#expandedSetting.get() : true) || this.#forceOpen;
-    // Disabled until https://crbug.com/1079231 is fixed.
-    // clang-format off
-    render(html`
-      <style>${requestHeadersViewStyles}</style>
-      <style>${Input.checkboxStyles}</style>
-      <details ?open=${isOpen} @toggle=${this.#onToggle}>
+  const isOpen = (expandedSetting ? expandedSetting.get() : true) || data.forceOpen;
+  // Disabled until https://crbug.com/1079231 is fixed.
+  // clang-format off
+  return html`
+      <details ?open=${isOpen} @toggle=${onToggle} aria-label=${data.title}>
         <summary
           class="header"
-          @keydown=${this.#onSummaryKeyDown}
-          jslog=${VisualLogging.sectionHeader().track({click: true}).context(this.#loggingContext)}
+          @keydown=${onSummaryKeyDown}
+          jslog=${VisualLogging.sectionHeader().track({click: true}).context(data.loggingContext)}
         >
           <div class="header-grid-container">
             <div>
-              ${this.#title}${this.#headerCount !== undefined ?
-                html`<span class="header-count"> (${this.#headerCount})</span>` :
+              ${data.title}${data.headerCount !== undefined ?
+                html`<span class="header-count"> (${data.headerCount})</span>` :
                 Lit.nothing
               }
             </div>
             <div class="hide-when-closed">
-              ${this.#checked !== undefined ? html`
-                <devtools-checkbox .checked=${this.#checked} @change=${this.#onCheckboxToggle}
+              ${data.checked !== undefined ? html`
+                <devtools-checkbox .checked=${data.checked} @change=${data.onToggleRawHeaders}
                          jslog=${VisualLogging.toggle('raw-headers').track({change: true})}>
                   ${i18nString(UIStrings.raw)}
               </devtools-checkbox>` : Lit.nothing}
             </div>
-            <div class="hide-when-closed">${this.#additionalContent}</div>
+            <div class="hide-when-closed">${data.additionalContent}</div>
           </div>
         </summary>
-        <slot></slot>
+        ${data.contents}
       </details>
-    `, this.#shadow, {host: this});
-    // clang-format on
-  }
+    `;
+  // clang-format on
 
-  #onSummaryKeyDown(event: KeyboardEvent): void {
+  function onSummaryKeyDown(event: KeyboardEvent): void {
     if (!event.target) {
       return;
     }
@@ -621,17 +555,15 @@ export class Category extends HTMLElement {
     }
   }
 
-  #onToggle(event: Event): void {
-    this.#expandedSetting?.set((event.target as HTMLDetailsElement).open);
+  function onToggle(event: Event): void {
+    expandedSetting?.set((event.target as HTMLDetailsElement).open);
   }
 }
 
 customElements.define('devtools-request-headers', RequestHeadersView);
-customElements.define('devtools-request-headers-category', Category);
 
 declare global {
   interface HTMLElementTagNameMap {
     'devtools-request-headers': RequestHeadersView;
-    'devtools-request-headers-category': Category;
   }
 }
