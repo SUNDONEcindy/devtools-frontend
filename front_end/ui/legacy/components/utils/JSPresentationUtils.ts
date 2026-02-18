@@ -142,9 +142,8 @@ function buildStackTraceRows(
 
 function renderStackTraceTable(
     container: Element, parent: Element, expandable: boolean,
-    stackTraceRows: Array<StackTraceRegularRow|StackTraceAsyncRow>): HTMLElement[] {
+    stackTraceRows: Array<StackTraceRegularRow|StackTraceAsyncRow>): void {
   container.removeChildren();
-  const links: HTMLElement[] = [];
 
   // The tableSection groups one or more synchronous call frames together.
   // Wherever there is an asynchronous call, a new section is created.
@@ -178,10 +177,7 @@ function renderStackTraceTable(
     } else {
       row.createChild('td', 'function-name').textContent = item.functionName;
       row.createChild('td').textContent = ' @ ';
-      if (item.link) {
-        row.createChild('td', 'link').appendChild(item.link);
-        links.push(item.link);
-      }
+      row.createChild('td', 'link').appendChild(item.link);
     }
   }
 
@@ -214,8 +210,6 @@ function renderStackTraceTable(
     // If we are in a popup, this will trigger a re-layout
     UI.GlassPane.GlassPane.containerMoved(container);
   }, false);
-
-  return links;
 }
 
 export interface Options {
@@ -230,7 +224,7 @@ export interface Options {
 
 interface StackTraceRegularRow {
   functionName: string;
-  link: HTMLElement|null;
+  link: HTMLElement;
 }
 
 interface StackTraceAsyncRow {
@@ -240,7 +234,6 @@ interface StackTraceAsyncRow {
 export class StackTracePreviewContent extends UI.Widget.Widget {
   #stackTrace?: StackTrace.StackTrace.StackTrace;
   #options: Options = {};
-  #links: HTMLElement[] = [];
 
   readonly #table: HTMLElement;
 
@@ -267,11 +260,11 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
 
     const stackTraceRows =
         buildStackTraceRows(this.#stackTrace, this.#options.tabStops, this.#options.showColumnNumber);
-    this.#links = renderStackTraceTable(this.#table, this.element, this.#options.expandable ?? false, stackTraceRows);
+    renderStackTraceTable(this.#table, this.element, this.#options.expandable ?? false, stackTraceRows);
   }
 
   get linkElements(): readonly HTMLElement[] {
-    return this.#links;
+    return [...this.contentElement.querySelectorAll<HTMLElement>('td.link > .devtools-link')];
   }
 
   set options(options: Options) {
