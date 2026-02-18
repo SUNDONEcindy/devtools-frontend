@@ -456,16 +456,20 @@ Time: ${micros(time)}`;
         },
         options.multimodalInput,
         )) {
+      // Add to history if relevant
       if (shouldAddToHistory(data)) {
         void this.addHistoryItem(data);
       }
+      // Always yield the data
+      yield data;
+
+      // If we change the context
+      // requery with the specialized agent.
       if (data.type === ResponseType.CONTEXT_CHANGE) {
         this.setContext(data.context);
         yield* this.#runAgent(initialQuery, options);
         return;
       }
-
-      yield data;
     }
   }
 
