@@ -4426,7 +4426,8 @@ export const generatedProperties = [
   "inherited": true,
   "keywords": [
    "none",
-   "auto"
+   "auto",
+   "all"
   ],
   "name": "text-decoration-skip-ink"
  },
@@ -6976,7 +6977,8 @@ export const generatedPropertyValues = {
  "text-decoration-skip-ink": {
   "values": [
    "none",
-   "auto"
+   "auto",
+   "all"
   ]
  },
  "text-decoration-style": {
