@@ -48,7 +48,8 @@ describeWithMockConnection('JSPresentationUtils', () => {
   it('renders stack trace, and re-renders on update', async () => {
     const {target, debuggerWorkspaceBinding} = setUpEnvironment();
     const stackTrace = await createStackTrace(target, debuggerWorkspaceBinding);
-    const component = new Components.JSPresentationUtils.StackTracePreviewContent(undefined, {tabStops: false});
+    const component = new Components.JSPresentationUtils.StackTracePreviewContent();
+    component.options = {tabStops: false};
     component.stackTrace = stackTrace;
     await component.updateComplete;
 
@@ -69,8 +70,8 @@ describeWithMockConnection('JSPresentationUtils', () => {
     const {target, debuggerWorkspaceBinding} = setUpEnvironment();
     const stackTrace = await createStackTrace(target, debuggerWorkspaceBinding);
 
-    const options = {expandable: true};
-    const component = new Components.JSPresentationUtils.StackTracePreviewContent(undefined, options);
+    const component = new Components.JSPresentationUtils.StackTracePreviewContent();
+    component.options = {expandable: true};
     renderElementIntoDOM(component);
     assert.isFalse(component.hasContent());
     component.stackTrace = stackTrace;

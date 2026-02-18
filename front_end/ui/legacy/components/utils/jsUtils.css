@@ -4,10 +4,6 @@
  * found in the LICENSE file.
  */
 
-:host(.width-constrained) {
-  width: 100%;
-}
-
 .stack-preview-async-description {
   padding: 3px 0 1px;
   font-weight: bold;

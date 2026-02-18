@@ -239,31 +239,17 @@ interface StackTraceAsyncRow {
 
 export class StackTracePreviewContent extends UI.Widget.Widget {
   #stackTrace?: StackTrace.StackTrace.StackTrace;
-  #options: Options;
+  #options: Options = {};
   #links: HTMLElement[] = [];
 
   readonly #table: HTMLElement;
 
-  constructor(element?: HTMLElement, options?: Options) {
-    super(element, {
-      useShadowDom: true,
-      classes: [
-        'monospace',
-        'stack-preview-container',
-        ...(options?.widthConstrained ? ['width-constrained'] : []),
-      ]
-    });
-
-    this.#options = options || {
-      widthConstrained: false,
-    };
+  constructor(element?: HTMLElement) {
+    super(element, {useShadowDom: true, classes: ['monospace', 'stack-preview-container']});
 
     UI.DOMUtilities.appendStyle(this.element.shadowRoot as ShadowRoot, jsUtilsStyles);
 
     this.#table = this.contentElement.createChild('table', 'stack-preview-container');
-    this.#table.classList.toggle('width-constrained', this.#options.widthConstrained ?? false);
-
-    this.performUpdate();
   }
 
   hasContent(): boolean {
@@ -290,6 +276,7 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
 
   set options(options: Options) {
     this.#options = options;
+    this.#table.classList.toggle('width-constrained', this.#options.widthConstrained ?? false);
     this.requestUpdate();
   }
 
