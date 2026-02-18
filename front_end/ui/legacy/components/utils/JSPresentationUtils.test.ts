@@ -16,8 +16,6 @@ import * as Components from './utils.js';
 describeWithMockConnection('JSPresentationUtils', () => {
   function setUpEnvironment() {
     const target = createTarget();
-    const linkifier = new Components.Linkifier.Linkifier(100, false);
-    linkifier.targetAdded(target);
     const workspace = Workspace.Workspace.WorkspaceImpl.instance();
     const targetManager = target.targetManager();
     const resourceMapping = new Bindings.ResourceMapping.ResourceMapping(targetManager, workspace);
@@ -29,7 +27,7 @@ describeWithMockConnection('JSPresentationUtils', () => {
       ignoreListManager,
       workspace,
     });
-    return {target, debuggerWorkspaceBinding, linkifier};
+    return {target, debuggerWorkspaceBinding};
   }
 
   async function createStackTrace(
@@ -48,10 +46,9 @@ describeWithMockConnection('JSPresentationUtils', () => {
   }
 
   it('renders stack trace, and re-renders on update', async () => {
-    const {target, debuggerWorkspaceBinding, linkifier} = setUpEnvironment();
+    const {target, debuggerWorkspaceBinding} = setUpEnvironment();
     const stackTrace = await createStackTrace(target, debuggerWorkspaceBinding);
-    const component =
-        new Components.JSPresentationUtils.StackTracePreviewContent(undefined, target, linkifier, {tabStops: false});
+    const component = new Components.JSPresentationUtils.StackTracePreviewContent(undefined, {tabStops: false});
     component.stackTrace = stackTrace;
     await component.updateComplete;
 
@@ -69,12 +66,11 @@ describeWithMockConnection('JSPresentationUtils', () => {
   });
 
   it('renders expandable stack trace', async () => {
-    const {target, debuggerWorkspaceBinding, linkifier} = setUpEnvironment();
+    const {target, debuggerWorkspaceBinding} = setUpEnvironment();
     const stackTrace = await createStackTrace(target, debuggerWorkspaceBinding);
 
     const options = {expandable: true};
-    const component =
-        new Components.JSPresentationUtils.StackTracePreviewContent(undefined, target, linkifier, options);
+    const component = new Components.JSPresentationUtils.StackTracePreviewContent(undefined, options);
     renderElementIntoDOM(component);
     assert.isFalse(component.hasContent());
     component.stackTrace = stackTrace;

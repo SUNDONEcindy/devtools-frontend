@@ -8,7 +8,6 @@ import * as Protocol from '../../generated/protocol.js';
 import {assertScreenshot, renderElementIntoDOM} from '../../testing/DOMHelpers.js';
 import {setupLocaleHooks} from '../../testing/LocaleHelpers.js';
 import {StubStackTrace} from '../../testing/StackTraceHelpers.js';
-import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
 
 import * as Network from './network.js';
@@ -28,14 +27,11 @@ describe('RequestInitiatorView', () => {
 
     const initiatorGraph = {initiators: new Set<SDK.NetworkRequest.NetworkRequest>(), initiated: new Map()};
 
-    const linkifier = new Components.Linkifier.Linkifier();
-
     Network.RequestInitiatorView.DEFAULT_VIEW(
         {
           initiatorGraph,
           stackTrace: null,
           request,
-          linkifier,
         },
         undefined, component);
 
@@ -54,14 +50,11 @@ describe('RequestInitiatorView', () => {
 
     const initiatorGraph = {initiators: new Set<SDK.NetworkRequest.NetworkRequest>(), initiated: new Map()};
 
-    const linkifier = new Components.Linkifier.Linkifier();
-
     Network.RequestInitiatorView.DEFAULT_VIEW(
         {
           initiatorGraph,
           stackTrace: StubStackTrace.create(['https://example.com/foo.js:foo:10:5']),
           request,
-          linkifier,
         },
         undefined, component);
 
@@ -85,14 +78,11 @@ describe('RequestInitiatorView', () => {
 
     const initiatorGraph = {initiators: new Set([initiator, request]), initiated: new Map()};
 
-    const linkifier = new Components.Linkifier.Linkifier();
-
     Network.RequestInitiatorView.DEFAULT_VIEW(
         {
           initiatorGraph,
           stackTrace: null,
           request,
-          linkifier,
         },
         undefined, component);
 
@@ -115,14 +105,11 @@ describe('RequestInitiatorView', () => {
 
     const initiatorGraph = {initiators: new Set([initiator, request]), initiated: new Map()};
 
-    const linkifier = new Components.Linkifier.Linkifier();
-
     Network.RequestInitiatorView.DEFAULT_VIEW(
         {
           initiatorGraph,
           stackTrace: StubStackTrace.create(['https://example.com/foo.js:foo:10:5']),
           request,
-          linkifier,
         },
         undefined, component);
 

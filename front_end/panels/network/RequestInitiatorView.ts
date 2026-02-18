@@ -39,8 +39,6 @@ export interface ViewInput {
   initiatorGraph: Logs.NetworkLog.InitiatorGraph;
   stackTrace: StackTrace.StackTrace.StackTrace|null;
   request: SDK.NetworkRequest.NetworkRequest;
-  linkifier: Components.Linkifier.Linkifier;
-  target?: SDK.Target.Target;
 }
 
 export const DEFAULT_VIEW = (input: ViewInput, _output: undefined, target: HTMLElement): void => {
@@ -68,8 +66,6 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: undefined, target: HTMLE
         <ul role="group">
           <li role="treeitem">
             <devtools-widget .widgetConfig=${widgetConfig(Components.JSPresentationUtils.StackTracePreviewContent, {
-      target: input.target,
-      linkifier: input.linkifier,
       options: {tabStops: true},
       stackTrace: input.stackTrace,
     })}></devtools-widget>
@@ -165,7 +161,6 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: undefined, target: HTMLE
 type View = typeof DEFAULT_VIEW;
 
 export class RequestInitiatorView extends UI.Widget.VBox {
-  private readonly linkifier: Components.Linkifier.Linkifier;
   private readonly request: SDK.NetworkRequest.NetworkRequest;
   #view: View;
 
@@ -173,7 +168,6 @@ export class RequestInitiatorView extends UI.Widget.VBox {
     super({jslog: `${VisualLogging.pane('initiator').track({resize: true})}`});
 
     this.element.classList.add('request-initiator-view');
-    this.linkifier = new Components.Linkifier.Linkifier();
     this.request = request;
     this.#view = view;
   }
@@ -192,8 +186,7 @@ export class RequestInitiatorView extends UI.Widget.VBox {
     const networkManager = SDK.NetworkManager.NetworkManager.forRequest(request);
     const target = networkManager?.target() ?? targetManager.primaryPageTarget() ?? targetManager.rootTarget();
     let stackTrace: StackTrace.StackTrace.StackTrace|null = null;
-    const preview = new Components.JSPresentationUtils.StackTracePreviewContent(
-        undefined, target ?? undefined, linkifier, {tabStops: focusableLink});
+    const preview = new Components.JSPresentationUtils.StackTracePreviewContent(undefined, {tabStops: focusableLink});
     if (target) {
       stackTrace = await Bindings.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance()
                        .createStackTraceFromProtocolRuntime(initiator.stack, target);
@@ -219,8 +212,6 @@ export class RequestInitiatorView extends UI.Widget.VBox {
       initiatorGraph,
       stackTrace,
       request: this.request,
-      linkifier: this.linkifier,
-      target: target || undefined,
     };
 
     this.#view(viewInput, undefined, this.contentElement);

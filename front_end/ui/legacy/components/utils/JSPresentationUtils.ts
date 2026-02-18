@@ -91,8 +91,6 @@ function populateContextMenu(link: Element, event: Event): void {
 
 function buildStackTraceRows(
     stackTrace: StackTrace.StackTrace.StackTrace,
-    target: SDK.Target.Target|null,
-    linkifier: Linkifier,
     tabStops: boolean|undefined,
     showColumnNumber?: boolean,
     ): Array<StackTraceRegularRow|StackTraceAsyncRow> {
@@ -241,9 +239,6 @@ interface StackTraceAsyncRow {
 
 export class StackTracePreviewContent extends UI.Widget.Widget {
   #stackTrace?: StackTrace.StackTrace.StackTrace;
-  #target?: SDK.Target.Target;
-  #linkifier?: Linkifier;
-  #ownedLinkifier?: Linkifier;
   #options: Options;
   #links: HTMLElement[] = [];
 
@@ -254,15 +249,9 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
    */
   #hasRows = false;
 
-  constructor(element?: HTMLElement, target?: SDK.Target.Target, linkifier?: Linkifier, options?: Options) {
+  constructor(element?: HTMLElement, options?: Options) {
     super(element, {useShadowDom: true});
 
-    this.#target = target;
-    this.#linkifier = linkifier;
-    if (!this.#linkifier) {
-      this.#ownedLinkifier = new Linkifier();
-      this.#linkifier = this.#ownedLinkifier;
-    }
     this.#options = options || {
       widthConstrained: false,
     };
@@ -285,29 +274,18 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
   }
 
   override performUpdate(): void {
-    if (!this.#linkifier || !this.#stackTrace) {
+    if (!this.#stackTrace) {
       return;
     }
 
-    const stackTraceRows = buildStackTraceRows(
-        this.#stackTrace, this.#target ?? null, this.#linkifier, this.#options.tabStops,
-        this.#options.showColumnNumber);
+    const stackTraceRows =
+        buildStackTraceRows(this.#stackTrace, this.#options.tabStops, this.#options.showColumnNumber);
     this.#hasRows = stackTraceRows.length > 0;
     this.#links = renderStackTraceTable(this.#table, this.element, this.#options.expandable ?? false, stackTraceRows);
   }
 
   get linkElements(): readonly HTMLElement[] {
     return this.#links;
-  }
-
-  set target(target: SDK.Target.Target|undefined) {
-    this.#target = target;
-    this.requestUpdate();
-  }
-
-  set linkifier(linkifier: Linkifier) {
-    this.#linkifier = linkifier;
-    this.requestUpdate();
   }
 
   set options(options: Options) {
@@ -322,9 +300,5 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
     this.#stackTrace = stackTrace;
     this.#stackTrace.addEventListener(StackTrace.StackTrace.Events.UPDATED, this.requestUpdate, this);
     this.requestUpdate();
-  }
-
-  override onDetach(): void {
-    this.#ownedLinkifier?.dispose();
   }
 }

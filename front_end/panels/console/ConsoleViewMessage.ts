@@ -705,8 +705,8 @@ export class ConsoleViewMessage implements ConsoleViewportElement {
     const stackTraceElement = contentElement.createChild('div', 'hidden-stack-trace');
     const targetManager = SDK.TargetManager.TargetManager.instance();
     const stackTraceTarget = target ?? targetManager.primaryPageTarget() ?? targetManager.rootTarget();
-    const stackTracePreview = new Components.JSPresentationUtils.StackTracePreviewContent(
-        undefined, stackTraceTarget ?? undefined, this.linkifier, {widthConstrained: true});
+    const stackTracePreview =
+        new Components.JSPresentationUtils.StackTracePreviewContent(undefined, {widthConstrained: true});
     if (stackTraceTarget && stackTrace) {
       const selectableChildIndex = this.selectableChildren.length;
       void Bindings.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance()

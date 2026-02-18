@@ -272,7 +272,6 @@ interface FrameDetailsViewInput {
   frame: SDK.ResourceTreeModel.ResourceTreeFrame;
   target: SDK.Target.Target|null;
   creationStackTrace: StackTrace.StackTrace.StackTrace|null;
-  creationTarget: SDK.Target.Target|null;
   adScriptAncestry: Protocol.Page.AdScriptAncestry|null;
   linkTargetDOMNode: SDK.DOMModel.DOMNode|null;
   permissionsPolicies: Protocol.Page.PermissionsPolicyFeatureState[]|null;
@@ -354,7 +353,7 @@ function renderDocumentSection(input: FrameDetailsViewInput): LitTemplate {
       ${maybeRenderUnreachableURL(input.frame?.unreachableUrl())}
       ${maybeRenderOrigin(input.frame?.securityOrigin)}
       ${renderOwnerElement(input.linkTargetDOMNode)}
-      ${maybeRenderCreationStacktrace(input.creationStackTrace, input.creationTarget)}
+      ${maybeRenderCreationStacktrace(input.creationStackTrace)}
       ${maybeRenderAdStatus(input.frame?.adFrameType(), input.frame?.adFrameStatus())}
       ${maybeRenderCreatorAdScriptAncestry(input.frame?.adFrameType(), input.target, input.adScriptAncestry)}
       <devtools-report-divider></devtools-report-divider>`;
@@ -447,9 +446,8 @@ function renderOwnerElement(linkTargetDOMNode: SDK.DOMModel.DOMNode|null): LitTe
   return nothing;
 }
 
-function maybeRenderCreationStacktrace(
-    stackTrace: StackTrace.StackTrace.StackTrace|null, target: SDK.Target.Target|null): LitTemplate {
-  if (stackTrace && target) {
+function maybeRenderCreationStacktrace(stackTrace: StackTrace.StackTrace.StackTrace|null): LitTemplate {
+  if (stackTrace) {
     // Disabled until https://crbug.com/1079231 is fixed.
     // clang-format off
       return html`
@@ -457,7 +455,7 @@ function maybeRenderCreationStacktrace(
           i18nString(UIStrings.creationStackTrace)}</devtools-report-key>
         <devtools-report-value jslog=${VisualLogging.section('frame-creation-stack-trace')}>
           <devtools-widget .widgetConfig=${UI.Widget.widgetConfig(
-              Components.JSPresentationUtils.StackTracePreviewContent, {target, stackTrace, options: {expandable: true}})}>
+              Components.JSPresentationUtils.StackTracePreviewContent, {stackTrace, options: {expandable: true}})}>
           </devtools-widget>
         </devtools-report-value>
       `;
@@ -844,7 +842,6 @@ export class FrameDetailsReportView extends UI.Widget.Widget {
   #frame?: SDK.ResourceTreeModel.ResourceTreeFrame;
   #target: SDK.Target.Target|null = null;
   #creationStackTrace: StackTrace.StackTrace.StackTrace|null = null;
-  #creationTarget: SDK.Target.Target|null = null;
   #securityIsolationInfo: Protocol.Network.SecurityIsolationStatus|null = null;
   #linkTargetDOMNode: SDK.DOMModel.DOMNode|null = null;
   #trials: Protocol.Page.OriginTrial[]|null = null;
@@ -869,7 +866,6 @@ export class FrameDetailsReportView extends UI.Widget.Widget {
     });
     const {creationStackTrace: rawCreationStackTrace, creationStackTraceTarget: creationTarget} =
         frame.getCreationStackTraceData();
-    this.#creationTarget = creationTarget;
     if (rawCreationStackTrace) {
       void Bindings.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance()
           .createStackTraceFromProtocolRuntime(rawCreationStackTrace, creationTarget)
@@ -924,7 +920,6 @@ export class FrameDetailsReportView extends UI.Widget.Widget {
       frame,
       target: this.#target,
       creationStackTrace: this.#creationStackTrace,
-      creationTarget: this.#creationTarget,
       protocolMonitorExperimentEnabled: this.#protocolMonitorExperimentEnabled,
       permissionsPolicies: this.#permissionsPolicies,
       adScriptAncestry: this.#adScriptAncestry,
