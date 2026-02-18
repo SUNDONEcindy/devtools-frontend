@@ -34,17 +34,15 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as Common from '../../../../core/common/common.js';
 import * as i18n from '../../../../core/i18n/i18n.js';
 import * as SDK from '../../../../core/sdk/sdk.js';
-import type * as Protocol from '../../../../generated/protocol.js';
 import * as StackTrace from '../../../../models/stack_trace/stack_trace.js';
 import * as Workspace from '../../../../models/workspace/workspace.js';
 import * as VisualLogging from '../../../visual_logging/visual_logging.js';
 import * as UI from '../../legacy.js';
 
 import jsUtilsStyles from './jsUtils.css.js';
-import {Events as LinkifierEvents, Linkifier} from './Linkifier.js';
+import {Linkifier} from './Linkifier.js';
 
 const UIStrings = {
   /**
@@ -63,10 +61,6 @@ const UIStrings = {
    * @description A link to rehide frames that are by default hidden.
    */
   showLess: 'Show less',
-  /**
-   * @description Text indicating that source url of a link is currently unknown
-   */
-  unknownSource: 'unknown',
 } as const;
 const str_ = i18n.i18n.registerUIStrings('ui/legacy/components/utils/JSPresentationUtils.ts', UIStrings);
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
@@ -93,70 +87,6 @@ function populateContextMenu(link: Element, event: Event): void {
   }
   contextMenu.appendApplicableItems(event);
   void contextMenu.show();
-}
-
-// TODO(crbug.com/456517732): remove when all usages of runtimeStackTrace are migrated.
-function buildStackTraceRowsForLegacyRuntimeStackTrace(
-    stackTrace: Protocol.Runtime.StackTrace,
-    target: SDK.Target.Target|null,
-    linkifier: Linkifier,
-    tabStops: boolean|undefined,
-    updateCallback?: (arg0: Array<StackTraceRegularRow|StackTraceAsyncRow>) => void,
-    showColumnNumber?: boolean,
-    ): Array<StackTraceRegularRow|StackTraceAsyncRow> {
-  const stackTraceRows: Array<StackTraceRegularRow|StackTraceAsyncRow> = [];
-
-  if (updateCallback) {
-    const throttler = new Common.Throttler.Throttler(100);
-    linkifier.addEventListener(LinkifierEvents.LIVE_LOCATION_UPDATED, () => {
-      void throttler.schedule(async () => updateCallback(stackTraceRows));
-    });
-  }
-
-  function buildStackTraceRowsHelper(
-      stackTrace: Protocol.Runtime.StackTrace,
-      previousCallFrames: Protocol.Runtime.CallFrame[]|undefined = undefined): void {
-    let asyncRow: StackTraceAsyncRow|null = null;
-    if (previousCallFrames) {
-      asyncRow = {
-        asyncDescription: UI.UIUtils.asyncStackTraceLabel(stackTrace.description, previousCallFrames),
-      };
-      stackTraceRows.push(asyncRow);
-    }
-    let previousStackFrameWasBreakpointCondition = false;
-    for (const stackFrame of stackTrace.callFrames) {
-      const functionName = UI.UIUtils.beautifyFunctionName(stackFrame.functionName);
-      const link = linkifier.maybeLinkifyConsoleCallFrame(target, stackFrame, {
-        showColumnNumber,
-        tabStop: Boolean(tabStops),
-        inlineFrameIndex: 0,
-        revealBreakpoint: previousStackFrameWasBreakpointCondition,
-      });
-      if (link) {
-        link.setAttribute('jslog', `${VisualLogging.link('stack-trace').track({click: true})}`);
-        link.addEventListener('contextmenu', populateContextMenu.bind(null, link));
-
-        if (!link.textContent) {
-          link.textContent = i18nString(UIStrings.unknownSource);
-        }
-      }
-      stackTraceRows.push({functionName, link});
-      previousStackFrameWasBreakpointCondition = [
-        SDK.DebuggerModel.COND_BREAKPOINT_SOURCE_URL,
-        SDK.DebuggerModel.LOGPOINT_SOURCE_URL,
-      ].includes(stackFrame.url);
-    }
-  }
-
-  buildStackTraceRowsHelper(stackTrace);
-  let previousCallFrames = stackTrace.callFrames;
-  for (let asyncStackTrace = stackTrace.parent; asyncStackTrace; asyncStackTrace = asyncStackTrace.parent) {
-    if (asyncStackTrace.callFrames.length) {
-      buildStackTraceRowsHelper(asyncStackTrace, previousCallFrames);
-    }
-    previousCallFrames = asyncStackTrace.callFrames;
-  }
-  return stackTraceRows;
 }
 
 function buildStackTraceRows(
@@ -291,8 +221,6 @@ function renderStackTraceTable(
 }
 
 export interface Options {
-  // TODO(crbug.com/456517732): remove when all usages of runtimeStackTrace are migrated.
-  runtimeStackTrace?: Protocol.Runtime.StackTrace;
   tabStops?: boolean;
   // Whether the width of stack trace preview
   // is constrained to its container or whether
@@ -357,30 +285,15 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
   }
 
   override performUpdate(): void {
-    if (!this.#linkifier) {
+    if (!this.#linkifier || !this.#stackTrace) {
       return;
     }
 
-    const {runtimeStackTrace, tabStops} = this.#options;
-
-    if (this.#stackTrace) {
-      const stackTraceRows = buildStackTraceRows(
-          this.#stackTrace, this.#target ?? null, this.#linkifier, tabStops, this.#options.showColumnNumber);
-      this.#hasRows = stackTraceRows.length > 0;
-      this.#links = renderStackTraceTable(this.#table, this.element, this.#options.expandable ?? false, stackTraceRows);
-      return;
-    }
-
-    if (runtimeStackTrace) {
-      // TODO(crbug.com/456517732): remove when all usages of runtimeStackTrace are migrated.
-      const updateCallback =
-          renderStackTraceTable.bind(null, this.#table, this.element, this.#options.expandable ?? false);
-      const stackTraceRows = buildStackTraceRowsForLegacyRuntimeStackTrace(
-          runtimeStackTrace ?? {callFrames: []}, this.#target ?? null, this.#linkifier, tabStops, updateCallback,
-          this.#options.showColumnNumber);
-      this.#hasRows = stackTraceRows.length > 0;
-      this.#links = renderStackTraceTable(this.#table, this.element, this.#options.expandable ?? false, stackTraceRows);
-    }
+    const stackTraceRows = buildStackTraceRows(
+        this.#stackTrace, this.#target ?? null, this.#linkifier, this.#options.tabStops,
+        this.#options.showColumnNumber);
+    this.#hasRows = stackTraceRows.length > 0;
+    this.#links = renderStackTraceTable(this.#table, this.element, this.#options.expandable ?? false, stackTraceRows);
   }
 
   get linkElements(): readonly HTMLElement[] {
