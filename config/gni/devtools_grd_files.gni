@@ -900,6 +900,7 @@ grd_files_unbundled_sources = [
   "front_end/core/common/SettingRegistration.js",
   "front_end/core/common/Settings.js",
   "front_end/core/common/SimpleHistoryManager.js",
+  "front_end/core/common/Srcset.js",
   "front_end/core/common/StringOutputStream.js",
   "front_end/core/common/TextDictionary.js",
   "front_end/core/common/Throttler.js",

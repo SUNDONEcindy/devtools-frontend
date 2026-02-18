@@ -634,64 +634,12 @@ function renderTitle(
   }
 }
 
-const enum SrcsetTokenType {
-  LITERAL = 0,
-  LINK = 1
-}
-
-interface SrcsetToken {
-  type: SrcsetTokenType;
-  value: string;
-}
-
-// FIXME: find a home for this in SDK.
-function parseSrcset(value: string): SrcsetToken[] {
-  const result: SrcsetToken[] = [];
-  let i = 0;
-  while (value.length) {
-    if (i++ > 0) {
-      result.push({value: ' ', type: SrcsetTokenType.LITERAL});
-    }
-    value = value.trim();
-    let url = '';
-    let descriptor = '';
-    const indexOfSpace = value.search(/\s/);
-    if (indexOfSpace === -1) {
-      url = value;
-    } else if (indexOfSpace > 0 && value[indexOfSpace - 1] === ',') {
-      url = value.substring(0, indexOfSpace);
-    } else {
-      url = value.substring(0, indexOfSpace);
-      const indexOfComma = value.indexOf(',', indexOfSpace);
-      if (indexOfComma !== -1) {
-        descriptor = value.substring(indexOfSpace, indexOfComma + 1);
-      } else {
-        descriptor = value.substring(indexOfSpace);
-      }
-    }
-
-    if (url) {
-      if (url.endsWith(',')) {
-        result.push({value: url.substring(0, url.length - 1), type: SrcsetTokenType.LINK});
-        result.push({type: SrcsetTokenType.LITERAL, value: ','});
-      } else {
-        result.push({value: url, type: SrcsetTokenType.LINK});
-      }
-    }
-    if (descriptor) {
-      result.push({type: SrcsetTokenType.LITERAL, value: descriptor});
-    }
-    value = value.substring(url.length + descriptor.length);
-  }
-  return result;
-}
-
-function renderLinkifiedSrcset(tokens: SrcsetToken[], node: SDK.DOMModel.DOMNode): Lit.TemplateResult {
+function renderLinkifiedSrcset(tokens: Common.Srcset.Token[], node: SDK.DOMModel.DOMNode): Lit.TemplateResult {
   return html`${repeat(tokens, token => {
     switch (token.type) {
-      case SrcsetTokenType.LINK:
+      case Common.Srcset.TokenType.URL:
         return renderLinkifiedValue(token.value, node);
-      case SrcsetTokenType.LITERAL:
+      case Common.Srcset.TokenType.LITERAL:
         return token.value;
     }
   })}`;
@@ -849,7 +797,7 @@ function renderAttribute(
                         Boolean(updateRecord?.isAttributeModified(name) && hasText),
                         DOM_UPDATE_ANIMATION_CLASS_NAME)} ${valueRelationRefDirective} ${withEntitiesRef}>
                         ${valueType === ValueType.SRC ? renderLinkifiedValue(value, node) : nothing}
-                        ${valueType === ValueType.SRCSET ? renderLinkifiedSrcset(parseSrcset(value), node) : nothing}
+                        ${valueType === ValueType.SRCSET ? renderLinkifiedSrcset(Common.Srcset.parseSrcset(value), node) : nothing}
                 </span>"` :
                 nothing}</span>`;
   // clang-format on
