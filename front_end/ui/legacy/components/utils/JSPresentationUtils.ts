@@ -250,16 +250,18 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
   #hasRows = false;
 
   constructor(element?: HTMLElement, options?: Options) {
-    super(element, {useShadowDom: true});
+    super(element, {
+      useShadowDom: true,
+      classes: [
+        'monospace',
+        'stack-preview-container',
+        ...(options?.widthConstrained ? ['width-constrained'] : []),
+      ]
+    });
 
     this.#options = options || {
       widthConstrained: false,
     };
-
-    this.element.classList.add('monospace');
-    this.element.classList.add('stack-preview-container');
-    this.element.classList.toggle('width-constrained', this.#options.widthConstrained ?? false);
-    this.element.style.display = 'inline-block';
 
     UI.DOMUtilities.appendStyle(this.element.shadowRoot as ShadowRoot, jsUtilsStyles);
 
