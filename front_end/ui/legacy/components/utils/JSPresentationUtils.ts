@@ -243,11 +243,6 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
   #links: HTMLElement[] = [];
 
   readonly #table: HTMLElement;
-  /**
-   * Updated when we update to define if we have any rows for the StackTrace;
-   * allowing the caller to know if this element is empty or not.
-   */
-  #hasRows = false;
 
   constructor(element?: HTMLElement, options?: Options) {
     super(element, {
@@ -272,7 +267,11 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
   }
 
   hasContent(): boolean {
-    return this.#hasRows;
+    if (!this.#stackTrace) {
+      return false;
+    }
+    const {syncFragment, asyncFragments} = this.#stackTrace;
+    return syncFragment.frames.length > 0 || asyncFragments.some(f => f.frames.length > 0);
   }
 
   override performUpdate(): void {
@@ -282,7 +281,6 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
 
     const stackTraceRows =
         buildStackTraceRows(this.#stackTrace, this.#options.tabStops, this.#options.showColumnNumber);
-    this.#hasRows = stackTraceRows.length > 0;
     this.#links = renderStackTraceTable(this.#table, this.element, this.#options.expandable ?? false, stackTraceRows);
   }
 
