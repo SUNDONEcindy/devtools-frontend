@@ -118,15 +118,17 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
   output.table = tableRef.value;
 };
 
-function buildStackTraceRows(
+function renderStackTraceTable(
+    container: Element,
+    parent: Element,
     stackTrace: StackTrace.StackTrace.StackTrace,
-    tabStops: boolean|undefined,
-    showColumnNumber?: boolean,
-    ): Array<StackTraceRegularRow|StackTraceAsyncRow> {
-  const stackTraceRows: Array<StackTraceRegularRow|StackTraceAsyncRow> = [];
+    options: Options,
+    ): void {
+  container.removeChildren();
 
   function buildStackTraceRowsHelper(fragment: StackTrace.StackTrace.Fragment|StackTrace.StackTrace.AsyncFragment):
-      void {
+      Array<StackTraceRegularRow|StackTraceAsyncRow> {
+    const stackTraceRows: Array<StackTraceRegularRow|StackTraceAsyncRow> = [];
     if ('description' in fragment) {
       stackTraceRows.push({asyncDescription: UI.UIUtils.asyncFragmentLabel(stackTrace, fragment)});
     }
@@ -134,8 +136,8 @@ function buildStackTraceRows(
     for (const frame of fragment.frames) {
       const functionName = UI.UIUtils.beautifyFunctionName(frame.name ?? '');
       const link = Linkifier.linkifyStackTraceFrame(frame, {
-        showColumnNumber,
-        tabStop: Boolean(tabStops),
+        showColumnNumber: Boolean(options.showColumnNumber),
+        tabStop: Boolean(options.tabStops),
         inlineFrameIndex: 0,
         revealBreakpoint: previousStackFrameWasBreakpointCondition,
         maxLength: UI.UIUtils.MaxLengthForDisplayedURLsInConsole,
@@ -149,59 +151,50 @@ function buildStackTraceRows(
         SDK.DebuggerModel.LOGPOINT_SOURCE_URL,
       ].includes(frame.url ?? '');
     }
-  }
 
-  buildStackTraceRowsHelper(stackTrace.syncFragment);
-  for (const asyncFragment of stackTrace.asyncFragments) {
-    if (asyncFragment.frames.length) {
-      buildStackTraceRowsHelper(asyncFragment);
-    }
+    return stackTraceRows;
   }
-  return stackTraceRows;
-}
-
-function renderStackTraceTable(
-    container: Element, parent: Element, expandable: boolean,
-    stackTraceRows: Array<StackTraceRegularRow|StackTraceAsyncRow>): void {
-  container.removeChildren();
 
   // The tableSection groups one or more synchronous call frames together.
   // Wherever there is an asynchronous call, a new section is created.
-  let tableSection: Element|null = null;
   let firstRow = true;
-  for (const item of stackTraceRows) {
-    if (!tableSection || 'asyncDescription' in item) {
-      tableSection = container.createChild('tbody');
+  for (const fragment of [stackTrace.syncFragment, ...stackTrace.asyncFragments]) {
+    if (fragment.frames.length === 0) {
+      continue;
     }
 
-    const row = tableSection.createChild('tr');
-    if (firstRow && expandable) {
-      const button = row.createChild('td').createChild('button', 'arrow-icon-button');
-      button.createChild('span', 'arrow-icon');
-      parent.classList.add('expandable');
-      container.classList.add('expandable');
-      button.addEventListener('click', () => {
-        button.setAttribute('jslog', `${VisualLogging.expand().track({click: true})}`);
-        parent.classList.toggle('expanded');
-        container.classList.toggle('expanded');
-      });
-      firstRow = false;
-    } else {
-      row.createChild('td').textContent = '\n';
-    }
-    if ('asyncDescription' in item) {
-      row.createChild('td', 'stack-preview-async-description').textContent = item.asyncDescription;
-      row.createChild('td');
-      row.createChild('td');
-      row.classList.add('stack-preview-async-row');
-    } else {
-      row.createChild('td', 'function-name').textContent = item.functionName;
-      row.createChild('td').textContent = ' @ ';
-      row.createChild('td', 'link').appendChild(item.link);
+    const stackTraceRows = buildStackTraceRowsHelper(fragment);
+    const tableSection = container.createChild('tbody');
+    for (const item of stackTraceRows) {
+      const row = tableSection.createChild('tr');
+      if (firstRow && options.expandable) {
+        const button = row.createChild('td').createChild('button', 'arrow-icon-button');
+        button.createChild('span', 'arrow-icon');
+        parent.classList.add('expandable');
+        container.classList.add('expandable');
+        button.addEventListener('click', () => {
+          button.setAttribute('jslog', `${VisualLogging.expand().track({click: true})}`);
+          parent.classList.toggle('expanded');
+          container.classList.toggle('expanded');
+        });
+        firstRow = false;
+      } else {
+        row.createChild('td').textContent = '\n';
+      }
+      if ('asyncDescription' in item) {
+        row.createChild('td', 'stack-preview-async-description').textContent = item.asyncDescription;
+        row.createChild('td');
+        row.createChild('td');
+        row.classList.add('stack-preview-async-row');
+      } else {
+        row.createChild('td', 'function-name').textContent = item.functionName;
+        row.createChild('td').textContent = ' @ ';
+        row.createChild('td', 'link').appendChild(item.link);
+      }
     }
   }
 
-  tableSection = container.createChild('tfoot');
+  const tableSection = container.createChild('tfoot');
   const showAllRow = tableSection.createChild('tr', 'show-all-link');
   showAllRow.createChild('td');
   const cell = showAllRow.createChild('td');
@@ -280,9 +273,7 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
         output, this.contentElement);
 
     if (this.#stackTrace && output.table) {
-      const stackTraceRows =
-          buildStackTraceRows(this.#stackTrace, this.#options.tabStops, this.#options.showColumnNumber);
-      renderStackTraceTable(output.table, this.element, this.#options.expandable ?? false, stackTraceRows);
+      renderStackTraceTable(output.table, this.element, this.#stackTrace, this.#options);
     }
   }
 
