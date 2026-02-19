@@ -1,7 +1,6 @@
 // Copyright 2021 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-/* eslint-disable @devtools/no-imperative-dom-api */
 
 /*
  * Copyright (C) 2011 Google Inc.  All rights reserved.
@@ -38,11 +37,14 @@ import * as i18n from '../../../../core/i18n/i18n.js';
 import * as SDK from '../../../../core/sdk/sdk.js';
 import * as StackTrace from '../../../../models/stack_trace/stack_trace.js';
 import * as Workspace from '../../../../models/workspace/workspace.js';
+import {Directives, html, render} from '../../../lit/lit.js';
 import * as VisualLogging from '../../../visual_logging/visual_logging.js';
 import * as UI from '../../legacy.js';
 
 import jsUtilsStyles from './jsUtils.css.js';
 import {Linkifier} from './Linkifier.js';
+
+const {classMap, createRef, ref} = Directives;
 
 const UIStrings = {
   /**
@@ -88,6 +90,33 @@ function populateContextMenu(link: Element, event: Event): void {
   contextMenu.appendApplicableItems(event);
   void contextMenu.show();
 }
+
+export interface ViewInput {
+  stackTrace?: StackTrace.StackTrace.StackTrace;
+  tabStops?: boolean;
+  widthConstrained?: boolean;
+  showColumnNumber?: boolean;
+  expandable?: boolean;
+}
+
+export type View = (input: ViewInput, output: {table?: HTMLElement}, target: HTMLElement) => void;
+
+export const DEFAULT_VIEW: View = (input, output, target) => {
+  const classes = {
+    'stack-preview-container': true,
+    'width-constrained': Boolean(input.widthConstrained),
+  };
+  // TODO(crbug.com/483576322): Remove once fully migrated.
+  const tableRef = createRef<HTMLElement>();
+  // clang-format off
+  render(html`
+    <style>${jsUtilsStyles}</style>
+    <table class=${classMap(classes)} ${ref(tableRef)}>
+    </table>
+  `, target);
+  // clang-format on
+  output.table = tableRef.value;
+};
 
 function buildStackTraceRows(
     stackTrace: StackTrace.StackTrace.StackTrace,
@@ -223,17 +252,14 @@ interface StackTraceAsyncRow {
 }
 
 export class StackTracePreviewContent extends UI.Widget.Widget {
+  readonly #view: View;
+
   #stackTrace?: StackTrace.StackTrace.StackTrace;
   #options: Options = {};
 
-  readonly #table: HTMLElement;
-
-  constructor(element?: HTMLElement) {
+  constructor(element?: HTMLElement, view = DEFAULT_VIEW) {
     super(element, {useShadowDom: true, classes: ['monospace', 'stack-preview-container']});
-
-    UI.DOMUtilities.appendStyle(this.element.shadowRoot as ShadowRoot, jsUtilsStyles);
-
-    this.#table = this.contentElement.createChild('table', 'stack-preview-container');
+    this.#view = view;
   }
 
   hasContent(): boolean {
@@ -245,13 +271,19 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
   }
 
   override performUpdate(): void {
-    if (!this.#stackTrace) {
-      return;
-    }
+    const output: {table?: HTMLElement} = {};
+    this.#view(
+        {
+          stackTrace: this.#stackTrace,
+          ...this.#options,
+        },
+        output, this.contentElement);
 
-    const stackTraceRows =
-        buildStackTraceRows(this.#stackTrace, this.#options.tabStops, this.#options.showColumnNumber);
-    renderStackTraceTable(this.#table, this.element, this.#options.expandable ?? false, stackTraceRows);
+    if (this.#stackTrace && output.table) {
+      const stackTraceRows =
+          buildStackTraceRows(this.#stackTrace, this.#options.tabStops, this.#options.showColumnNumber);
+      renderStackTraceTable(output.table, this.element, this.#options.expandable ?? false, stackTraceRows);
+    }
   }
 
   get linkElements(): readonly HTMLElement[] {
@@ -260,7 +292,6 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
 
   set options(options: Options) {
     this.#options = options;
-    this.#table.classList.toggle('width-constrained', this.#options.widthConstrained ?? false);
     this.requestUpdate();
   }
 
