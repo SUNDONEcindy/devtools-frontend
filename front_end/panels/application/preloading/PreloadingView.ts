@@ -374,6 +374,7 @@ export class PreloadingAttemptView extends UI.Widget.VBox {
   private readonly preloadingDetails =
       new PreloadingComponents.PreloadingDetailsReportView.PreloadingDetailsReportView();
   private readonly ruleSetSelector: PreloadingRuleSetSelector;
+  private clearButton: UI.Toolbar.ToolbarButton;
 
   constructor(model: SDK.PreloadingModel.PreloadingModel) {
     super({
@@ -415,6 +416,23 @@ export class PreloadingAttemptView extends UI.Widget.VBox {
 
     const toolbar = vbox.contentElement.createChild('devtools-toolbar', 'preloading-toolbar');
     toolbar.setAttribute('jslog', `${VisualLogging.toolbar()}`);
+
+    // Clear button first (leftmost)
+    this.clearButton =
+        new UI.Toolbar.ToolbarButton('Clear speculative loads', 'clear', undefined, 'clear-speculative-loads');
+    this.clearButton.addEventListener(UI.Toolbar.ToolbarButton.Events.CLICK, () => {
+      const model =
+          SDK.TargetManager.TargetManager.instance().scopeTarget()?.model(SDK.PreloadingModel.PreloadingModel);
+      if (!model) {
+        return;
+      }
+
+      model.reset();
+      this.ruleSetSelector.select(null);
+    });
+    toolbar.appendToolbarItem(this.clearButton);
+
+    // Rule set dropdown
     this.ruleSetSelector = new PreloadingRuleSetSelector(() => this.render());
     toolbar.appendToolbarItem(this.ruleSetSelector.item());
 

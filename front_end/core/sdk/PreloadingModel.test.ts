@@ -942,4 +942,86 @@ describeWithMockConnection('PreloadingModel', () => {
       },
     ]);
   });
+
+  it('reset() clears all rule sets and preloading attempts', async () => {
+    const target = createTarget();
+    const model = target.model(SDK.PreloadingModel.PreloadingModel);
+    assert.exists(model);
+
+    const loaderId = getMainFrame(target).loaderId;
+
+    // Add a rule set
+    dispatchEvent(target, 'Preload.ruleSetUpdated', {
+      ruleSet: {
+        id: 'ruleSetId:1' as Protocol.Preload.RuleSetId,
+        loaderId,
+        sourceText: `
+{
+  "prefetch":[
+    {
+      "source": "list",
+      "urls": ["/subresource.js"]
+    }
+  ]
+}
+`,
+      },
+    });
+
+    // Add preloading attempt sources
+    dispatchEvent(target, 'Preload.preloadingAttemptSourcesUpdated', {
+      loaderId,
+      preloadingAttemptSources: [
+        {
+          key: {
+            loaderId,
+            action: Protocol.Preload.SpeculationAction.Prefetch,
+            url: 'https://example.com/subresource.js',
+          },
+          ruleSetIds: ['ruleSetId:1'] as Protocol.Preload.RuleSetId[],
+          nodeIds: [1] as Protocol.DOM.BackendNodeId[],
+        },
+      ],
+    });
+
+    // Verify data exists
+    assert.lengthOf(model.getAllRuleSets(), 1);
+    assert.lengthOf(model.getRepresentativePreloadingAttempts(null), 1);
+
+    // Call reset
+    model.reset();
+
+    // Verify data is cleared
+    assert.deepEqual(model.getAllRuleSets(), []);
+    assert.deepEqual(model.getRepresentativePreloadingAttempts(null), []);
+
+    // Verify new events after reset are picked up (loaderId re-inferred via ruleSetUpdated)
+    dispatchEvent(target, 'Preload.ruleSetUpdated', {
+      ruleSet: {
+        id: 'ruleSetId:1' as Protocol.Preload.RuleSetId,
+        loaderId,
+        sourceText: '{"prefetch":[{"source":"list","urls":["/new-page.js"]}]}',
+      },
+    });
+
+    dispatchEvent(target, 'Preload.preloadingAttemptSourcesUpdated', {
+      loaderId,
+      preloadingAttemptSources: [
+        {
+          key: {
+            loaderId,
+            action: Protocol.Preload.SpeculationAction.Prefetch,
+            url: 'https://example.com/new-page.js',
+          },
+          ruleSetIds: ['ruleSetId:1'] as Protocol.Preload.RuleSetId[],
+          nodeIds: [1] as Protocol.DOM.BackendNodeId[],
+        },
+      ],
+    });
+
+    assert.lengthOf(model.getAllRuleSets(), 1);
+    assert.lengthOf(model.getRepresentativePreloadingAttempts(null), 1);
+    assert.strictEqual(
+        model.getRepresentativePreloadingAttempts(null)[0].value.key.url, 'https://example.com/new-page.js');
+  });
 });

@@ -1064,6 +1064,142 @@ describeWithMockConnection('PreloadingAttemptView', () => {
     assert.strictEqual(buttons[0].textContent?.trim(), 'Inspect');
     assert.strictEqual(buttons[0].shadowRoot?.querySelector('button')?.getAttribute('disabled'), '');
   });
+
+  it('clear button resets model and clears grid', async () => {
+    const emulator = new NavigationEmulator();
+    await emulator.openDevTools();
+    const view = createAttemptView(emulator.primaryTarget);
+
+    await emulator.navigateAndDispatchEvents('');
+    await emulator.addSpecRules(`
+{
+  "prefetch": [
+    {
+      "source": "list",
+      "urls": ["/subresource.js"]
+    }
+  ]
+}
+`);
+    dispatchEvent(emulator.primaryTarget, 'Preload.preloadingAttemptSourcesUpdated', {
+      loaderId: 'loaderId:1' as Protocol.Network.LoaderId,
+      preloadingAttemptSources: [
+        {
+          key: {
+            loaderId: 'loaderId:1' as Protocol.Network.LoaderId,
+            action: Protocol.Preload.SpeculationAction.Prefetch,
+            url: 'https://example.com/subresource.js',
+          },
+          ruleSetIds: ['ruleSetId:0.2'] as Protocol.Preload.RuleSetId[],
+          nodeIds: [2] as Protocol.DOM.BackendNodeId[],
+        },
+      ],
+    });
+
+    await RenderCoordinator.done();
+
+    const preloadingGridComponent = view.getPreloadingGridForTest();
+
+    // Verify data exists
+    assertGridWidgetContents(
+        preloadingGridComponent.contentElement,
+        ['URL', 'Action', 'Rule set', 'Status'],
+        [
+          ['/subresource.js', 'Prefetch', 'example.com/', 'Running'],
+        ],
+    );
+
+    // Click clear button
+    const clearButton =
+        view.contentElement.querySelector<HTMLElement>('devtools-button[aria-label="Clear speculative loads"]');
+    assert.exists(clearButton);
+    clearButton.click();
+    await RenderCoordinator.done();
+
+    // Grid should be empty after reset
+    assertGridWidgetContents(
+        preloadingGridComponent.contentElement,
+        ['URL', 'Action', 'Rule set', 'Status'],
+        [],
+    );
+  });
+
+  it('clear button resets model and new events repopulate', async () => {
+    const emulator = new NavigationEmulator();
+    await emulator.openDevTools();
+    const view = createAttemptView(emulator.primaryTarget);
+
+    await emulator.navigateAndDispatchEvents('');
+    await emulator.addSpecRules(`
+{
+  "prefetch": [
+    {
+      "source": "list",
+      "urls": ["/subresource.js"]
+    }
+  ]
+}
+`);
+    dispatchEvent(emulator.primaryTarget, 'Preload.preloadingAttemptSourcesUpdated', {
+      loaderId: 'loaderId:1' as Protocol.Network.LoaderId,
+      preloadingAttemptSources: [
+        {
+          key: {
+            loaderId: 'loaderId:1' as Protocol.Network.LoaderId,
+            action: Protocol.Preload.SpeculationAction.Prefetch,
+            url: 'https://example.com/subresource.js',
+          },
+          ruleSetIds: ['ruleSetId:0.2'] as Protocol.Preload.RuleSetId[],
+          nodeIds: [2] as Protocol.DOM.BackendNodeId[],
+        },
+      ],
+    });
+
+    await RenderCoordinator.done();
+
+    // Click clear button
+    const clearButton =
+        view.contentElement.querySelector<HTMLElement>('devtools-button[aria-label="Clear speculative loads"]');
+    assert.exists(clearButton);
+    clearButton.click();
+    await RenderCoordinator.done();
+
+    // New events arrive after reset - ruleSetUpdated re-infers loaderId
+    dispatchEvent(emulator.primaryTarget, 'Preload.ruleSetUpdated', {
+      ruleSet: {
+        id: 'ruleSetId:0.3' as Protocol.Preload.RuleSetId,
+        loaderId: 'loaderId:1' as Protocol.Network.LoaderId,
+        sourceText: '{"prerender":[{"source":"list","urls":["/newpage.html"]}]}',
+      },
+    });
+    dispatchEvent(emulator.primaryTarget, 'Preload.preloadingAttemptSourcesUpdated', {
+      loaderId: 'loaderId:1' as Protocol.Network.LoaderId,
+      preloadingAttemptSources: [
+        {
+          key: {
+            loaderId: 'loaderId:1' as Protocol.Network.LoaderId,
+            action: Protocol.Preload.SpeculationAction.Prerender,
+            url: 'https://example.com/newpage.html',
+          },
+          ruleSetIds: ['ruleSetId:0.3'] as Protocol.Preload.RuleSetId[],
+          nodeIds: [2] as Protocol.DOM.BackendNodeId[],
+        },
+      ],
+    });
+
+    await RenderCoordinator.done();
+
+    const preloadingGridComponent = view.getPreloadingGridForTest();
+
+    // New attempt should be visible
+    assertGridWidgetContents(
+        preloadingGridComponent.contentElement,
+        ['URL', 'Action', 'Rule set', 'Status'],
+        [
+          ['/newpage.html', 'Prerender', 'example.com/', 'Not triggered'],
+        ],
+    );
+  });
 });
 
 describeWithMockConnection('PreloadingSummaryView', () => {

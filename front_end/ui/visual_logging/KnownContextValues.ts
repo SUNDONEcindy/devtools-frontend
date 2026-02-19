@@ -765,6 +765,7 @@ export const knownContextValues = new Set([
   'clear-palette',
   'clear-replace-input',
   'clear-search-input',
+  'clear-speculative-loads',
   'clear-storage',
   'clear-storage-cache-storage',
   'clear-storage-cookies',
