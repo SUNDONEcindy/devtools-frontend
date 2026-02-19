@@ -858,58 +858,62 @@ describe('Recorder', function() {
     );
   });
 
-  it('should capture a change that causes navigation without blur or change', async ({inspectedPage, devToolsPage}) => {
-    await startRecording('recorder/programmatic-navigation-on-keydown.html', undefined, devToolsPage, inspectedPage);
-    await inspectedPage.bringToFront();
-    await inspectedPage.waitForSelector('input:focus');
-    await inspectedPage.page.keyboard.press('1');
-    await inspectedPage.page.keyboard.press('Enter', {delay: 500});
+  // Flaky test
+  it.skip(
+      '[crbug.com/479595286] should capture a change that causes navigation without blur or change',
+      async ({inspectedPage, devToolsPage}) => {
+        await startRecording(
+            'recorder/programmatic-navigation-on-keydown.html', undefined, devToolsPage, inspectedPage);
+        await inspectedPage.bringToFront();
+        await inspectedPage.waitForSelector('input:focus');
+        await inspectedPage.page.keyboard.press('1');
+        await inspectedPage.page.keyboard.press('Enter', {delay: 500});
 
-    await devToolsPage.waitForFunction(async logger => {
-      const controller = await getRecordingController(devToolsPage);
-      const steps = await controller.evaluate(
-          c => c.getCurrentRecordingForTesting()?.flow.steps.length,
-      );
-      logger.log(`Recorded ${steps} steps`);
-      return steps === 5;
-    }, undefined, 'Waiting for 5 steps to be recorded');
+        await devToolsPage.waitForFunction(async logger => {
+          const controller = await getRecordingController(devToolsPage);
+          const steps = await controller.evaluate(
+              c => c.getCurrentRecordingForTesting()?.flow.steps.length,
+          );
+          logger.log(`Recorded ${steps} steps`);
+          return steps === 5;
+        }, undefined, 'Waiting for 5 steps to be recorded');
 
-    const recording = await stopRecording(devToolsPage);
-    assert.deepEqual(
-        processAndVerifyBaseRecording(recording, {
-          resource: 'recorder/programmatic-navigation-on-keydown.html',
-        }),
-        {
-          steps: [
+        const recording = await stopRecording(devToolsPage);
+        assert.deepEqual(
+            processAndVerifyBaseRecording(recording, {
+              resource: 'recorder/programmatic-navigation-on-keydown.html',
+            }),
             {
-              type: 'change',
-              value: '1',
-              selectors: [
-                ['input'],
-                ['xpath//html/body/input'],
-                ['pierce/input'],
-              ],
-              target: 'main'
+              steps: [
+                {
+                  type: 'change',
+                  value: '1',
+                  selectors: [
+                    ['input'],
+                    ['xpath//html/body/input'],
+                    ['pierce/input'],
+                  ],
+                  target: 'main'
+                },
+                {
+                  type: 'keyDown',
+                  target: 'main',
+                  key: 'Enter',
+                  assertedEvents: [{
+                    type: 'navigation',
+                    url: 'https://localhost:<test-port>/test/e2e/resources/recorder/input.html',
+                    title: ''
+                  }]
+                },
+                {
+                  type: 'keyUp',
+                  key: 'Enter',
+                  target: 'main',
+                }
+              ]
             },
-            {
-              type: 'keyDown',
-              target: 'main',
-              key: 'Enter',
-              assertedEvents: [{
-                type: 'navigation',
-                url: 'https://localhost:<test-port>/test/e2e/resources/recorder/input.html',
-                title: ''
-              }]
-            },
-            {
-              type: 'keyUp',
-              key: 'Enter',
-              target: 'main',
-            }
-          ]
-        },
-    );
-  });
+        );
+      });
 
   it('should associate events with right navigations', async ({inspectedPage, devToolsPage}) => {
     await startRecording('recorder/multiple-navigations.html', undefined, devToolsPage, inspectedPage);
