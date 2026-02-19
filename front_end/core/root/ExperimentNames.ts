@@ -23,6 +23,7 @@ export enum ExperimentName {
   USE_SOURCE_MAP_SCOPES = 'use-source-map-scopes',
   TIMELINE_SHOW_POST_MESSAGE_EVENTS = 'timeline-show-postmessage-events',
   TIMELINE_DEBUG_MODE = 'timeline-debug-mode',
+  DURABLE_MESSAGES = 'durable-messages',
   // Adding or removing an entry from this enum?
   // You will need to update:
   // 1. DevToolsExperiments enum in host/UserMetrics.ts

@@ -1377,6 +1377,7 @@ export const knownContextValues = new Set([
   'drjones.sources-panel-context.performance',
   'drjones.sources-panel-context.script',
   'drop',
+  'durable-messages',
   'duration',
   'durationchange',
   'dynamic-local-setting',
