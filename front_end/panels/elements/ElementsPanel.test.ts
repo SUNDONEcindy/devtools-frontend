@@ -11,6 +11,7 @@ import {raf, renderElementIntoDOM} from '../../testing/DOMHelpers.js';
 import {createTarget, stubNoopSettings, updateHostConfig} from '../../testing/EnvironmentHelpers.js';
 import {expectCall, expectCalled} from '../../testing/ExpectStubCall.js';
 import {
+  clearMockConnectionResponseHandler,
   describeWithMockConnection,
   dispatchEvent,
   setMockConnectionResponseHandler
@@ -107,6 +108,114 @@ describeWithMockConnection('ElementsPanel', () => {
     assert.exists(selectedTreeElement);
     assert.isTrue(selectedTreeElement.expanded);
     panel.detach();
+  });
+
+  it('restores the focused node after reload when it becomes available later', async () => {
+    const clock = sinon.useFakeTimers();
+    try {
+      let includeDivInDocument = true;
+
+      const documentResponse = (includeDiv: boolean): Protocol.DOM.GetDocumentResponse => ({
+        root: {
+          nodeId: 1 as Protocol.DOM.NodeId,
+          backendNodeId: 2 as Protocol.DOM.BackendNodeId,
+          nodeType: Node.DOCUMENT_NODE,
+          nodeName: '#document',
+          childNodeCount: 1,
+          children: [{
+            nodeId: 4 as Protocol.DOM.NodeId,
+            parentId: 1 as Protocol.DOM.NodeId,
+            backendNodeId: 5 as Protocol.DOM.BackendNodeId,
+            nodeType: Node.ELEMENT_NODE,
+            nodeName: 'HTML',
+            childNodeCount: 1,
+            children: [{
+              nodeId: 6 as Protocol.DOM.NodeId,
+              parentId: 4 as Protocol.DOM.NodeId,
+              backendNodeId: 7 as Protocol.DOM.BackendNodeId,
+              nodeType: Node.ELEMENT_NODE,
+              nodeName: 'BODY',
+              childNodeCount: includeDiv ? 1 : 0,
+              children: includeDiv ? [{
+                nodeId: 8 as Protocol.DOM.NodeId,
+                parentId: 6 as Protocol.DOM.NodeId,
+                backendNodeId: 9 as Protocol.DOM.BackendNodeId,
+                nodeType: Node.ELEMENT_NODE,
+                nodeName: 'DIV',
+                childNodeCount: 0,
+                attributes: ['id', 'target'],
+              } as Protocol.DOM.Node] :
+                                     [],
+            } as Protocol.DOM.Node],
+          } as Protocol.DOM.Node],
+        },
+      } as Protocol.DOM.GetDocumentResponse);
+
+      clearMockConnectionResponseHandler('DOM.getDocument');
+      setMockConnectionResponseHandler('DOM.getDocument', () => documentResponse(includeDivInDocument));
+      setMockConnectionResponseHandler('DOM.pushNodeByPathToFrontend', () => ({
+                                                                         nodeId: 8 as Protocol.DOM.NodeId,
+                                                                       }));
+
+      SDK.TargetManager.TargetManager.instance().setScopeTarget(target);
+      const model = target.model(SDK.DOMModel.DOMModel);
+      assert.exists(model);
+
+      const panel = Elements.ElementsPanel.ElementsPanel.instance({forceNew: true});
+      panel.markAsRoot();
+      renderElementIntoDOM(panel);
+
+      await model.requestDocument();
+
+      const inspectedDocument = model.existingDocument();
+      assert.exists(inspectedDocument);
+      const body = inspectedDocument.body;
+      assert.exists(body);
+      const bodyChildren = body.children();
+      assert.exists(bodyChildren);
+      const div = bodyChildren[0];
+      assert.exists(div);
+
+      panel.selectDOMNode(div, true);
+      assert.strictEqual(panel.selectedDOMNode()?.nodeName(), 'DIV');
+
+      // Simulate a reload where the selected node appears later.
+      includeDivInDocument = false;
+      dispatchEvent(target, 'DOM.documentUpdated');
+
+      // Wait for the new document to arrive.
+      await model.requestDocument();
+      await clock.tickAsync(0);
+
+      assert.strictEqual(panel.selectedDOMNode()?.nodeName(), 'BODY');
+
+      // Insert the node later and let the retry logic pick it up.
+      await clock.tickAsync(300);
+      dispatchEvent(target, 'DOM.childNodeInserted', {
+        parentNodeId: 6 as Protocol.DOM.NodeId,
+        previousNodeId: 0 as Protocol.DOM.NodeId,
+        node: {
+          nodeId: 8 as Protocol.DOM.NodeId,
+          parentId: 6 as Protocol.DOM.NodeId,
+          backendNodeId: 9 as Protocol.DOM.BackendNodeId,
+          nodeType: Node.ELEMENT_NODE,
+          nodeName: 'DIV',
+          childNodeCount: 0,
+          attributes: ['id', 'target'],
+        } as Protocol.DOM.Node,
+      });
+
+      await clock.tickAsync(600);
+
+      assert.strictEqual(panel.selectedDOMNode()?.nodeName(), 'DIV');
+      panel.detach();
+
+      // Ensure all pending tasks triggered via the fake timers have a chance to
+      // complete before the test ends.
+      await clock.runAllAsync();
+    } finally {
+      clock.restore();
+    }
   });
 
   it('searches in in scope models', () => {
