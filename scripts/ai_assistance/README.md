@@ -41,6 +41,7 @@ npm run auto-run -- --label title-change --example-urls <example-url-1> <example
 
 * `elements`: tests the entrypoint via right clicking on an element in the Elements panel.
 * `elements-multimodal`: tests the multimodal support for Elements entrypoint by providing screenshot input with the prompt.
+* `performance`: tests the etrypoint via asking the model about the whole performance trace.
 * `performance-main-thread`: tests the entrypoint via right clicking on an event in the Performance panel main thread.
 * `performance-insights`: tests the entrypoint via the "Ask AI" button shown on an individual Insight in the Performance panel sidebar.
 * `network`: tests the entrypoint via a left click on a request in the Network panel.
