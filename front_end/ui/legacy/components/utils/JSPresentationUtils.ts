@@ -96,17 +96,10 @@ function buildStackTraceRows(
     ): Array<StackTraceRegularRow|StackTraceAsyncRow> {
   const stackTraceRows: Array<StackTraceRegularRow|StackTraceAsyncRow> = [];
 
-  function buildStackTraceRowsHelper(
-      fragment: StackTrace.StackTrace.Fragment|StackTrace.StackTrace.AsyncFragment,
-      previousFragment: StackTrace.StackTrace.Fragment|undefined = undefined): void {
-    let asyncRow: StackTraceAsyncRow|null = null;
-    const isAsync = 'description' in fragment;
-    if (previousFragment && isAsync) {
-      asyncRow = {
-        asyncDescription: UI.UIUtils.asyncStackTraceLabel(
-            fragment.description, previousFragment.frames.map(f => ({functionName: f.name ?? ''}))),
-      };
-      stackTraceRows.push(asyncRow);
+  function buildStackTraceRowsHelper(fragment: StackTrace.StackTrace.Fragment|StackTrace.StackTrace.AsyncFragment):
+      void {
+    if ('description' in fragment) {
+      stackTraceRows.push({asyncDescription: UI.UIUtils.asyncFragmentLabel(stackTrace, fragment)});
     }
     let previousStackFrameWasBreakpointCondition = false;
     for (const frame of fragment.frames) {
@@ -130,12 +123,10 @@ function buildStackTraceRows(
   }
 
   buildStackTraceRowsHelper(stackTrace.syncFragment);
-  let previousFragment = stackTrace.syncFragment;
   for (const asyncFragment of stackTrace.asyncFragments) {
     if (asyncFragment.frames.length) {
-      buildStackTraceRowsHelper(asyncFragment, previousFragment);
+      buildStackTraceRowsHelper(asyncFragment);
     }
-    previousFragment = asyncFragment;
   }
   return stackTraceRows;
 }

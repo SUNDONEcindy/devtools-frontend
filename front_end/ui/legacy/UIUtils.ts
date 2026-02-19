@@ -41,6 +41,7 @@ import * as Host from '../../core/host/host.js';
 import * as i18n from '../../core/i18n/i18n.js';
 import * as Platform from '../../core/platform/platform.js';
 import * as Geometry from '../../models/geometry/geometry.js';
+import type * as StackTrace from '../../models/stack_trace/stack_trace.js';
 import * as Buttons from '../components/buttons/buttons.js';
 import {Icon, type IconData} from '../kit/kit.js';
 import * as Lit from '../lit/lit.js';
@@ -628,23 +629,39 @@ export function anotherProfilerActiveLabel(): string {
   return i18nString(UIStrings.anotherProfilerIsAlreadyActive);
 }
 
-export function asyncStackTraceLabel(
-    description: string|undefined, previousCallFrames: Array<{functionName: string}>): string {
-  if (description) {
-    if (description === 'Promise.resolve') {
-      return i18nString(UIStrings.promiseResolvedAsync);
-    }
-    if (description === 'Promise.reject') {
-      return i18nString(UIStrings.promiseRejectedAsync);
-    }
-    if (description === 'await' && previousCallFrames.length !== 0) {
-      const lastPreviousFrame = previousCallFrames[previousCallFrames.length - 1];
-      const lastPreviousFrameName = beautifyFunctionName(lastPreviousFrame.functionName);
-      description = `await in ${lastPreviousFrameName}`;
-    }
-    return description;
+export function asyncFragmentLabel(
+    stackTrace: StackTrace.StackTrace.StackTrace|StackTrace.StackTrace.DebuggableStackTrace,
+    asyncFragment: StackTrace.StackTrace.AsyncFragment): string {
+  const description = asyncFragment.description;
+  if (!description) {
+    return i18nString(UIStrings.asyncCall);
   }
-  return i18nString(UIStrings.asyncCall);
+
+  if (description === 'Promise.resolve') {
+    return i18nString(UIStrings.promiseResolvedAsync);
+  }
+  if (description === 'Promise.reject') {
+    return i18nString(UIStrings.promiseRejectedAsync);
+  }
+
+  if (description === 'await') {
+    const asyncFragments = stackTrace.asyncFragments;
+    const index = asyncFragments.indexOf(asyncFragment);
+    let previousFragment: StackTrace.StackTrace.Fragment|undefined;
+
+    if (index === 0) {
+      previousFragment = stackTrace.syncFragment;
+    } else if (index > 0) {
+      previousFragment = asyncFragments[index - 1];
+    }
+
+    const lastPreviousFrame = previousFragment?.frames.at(-1);
+    if (lastPreviousFrame) {
+      const lastPreviousFrameName = beautifyFunctionName(lastPreviousFrame.name || '');
+      return `await in ${lastPreviousFrameName}`;
+    }
+  }
+  return description;
 }
 
 export function addPlatformClass(element: HTMLElement): void {

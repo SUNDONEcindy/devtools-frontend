@@ -253,14 +253,11 @@ export class CallStackSidebarPane extends UI.View.SimpleView implements UI.Conte
 
     let {maxAsyncStackChainDepth} = this;
     let hasMore = false;
-    let previousFragment: StackTrace.StackTrace.Fragment = this.#stackTrace.syncFragment;
     for (const asyncFragment of this.#stackTrace.asyncFragments) {
-      items.push(Item.createForAsyncHeader(asyncFragment, previousFragment));
+      items.push(Item.createForAsyncHeader(this.#stackTrace, asyncFragment));
       for (const frame of asyncFragment.frames) {
         items.push(Item.createForFrame(frame));
       }
-
-      previousFragment = asyncFragment;
 
       if (--maxAsyncStackChainDepth <= 0) {
         hasMore = asyncFragment !== this.#stackTrace.asyncFragments.at(-1);
@@ -546,9 +543,8 @@ export class Item {
   }
 
   static createForAsyncHeader(
-      fragment: StackTrace.StackTrace.AsyncFragment, previousFragment: StackTrace.StackTrace.Fragment): Item {
-    const description = UI.UIUtils.asyncStackTraceLabel(
-        fragment.description, previousFragment.frames.map(f => ({functionName: f.name ?? ''})));
+      stackTrace: StackTrace.StackTrace.StackTrace, fragment: StackTrace.StackTrace.AsyncFragment): Item {
+    const description = UI.UIUtils.asyncFragmentLabel(stackTrace, fragment);
     const item = new Item(description);
     item.isAsyncHeader = true;
     return item;
