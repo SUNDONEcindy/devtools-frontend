@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import * as Common from '../../../core/common/common.js';
-import * as Host from '../../../core/host/host.js';
-import * as Platform from '../../../core/platform/platform.js';
-import * as SDK from '../../../core/sdk/sdk.js';
-import * as Protocol from '../../../generated/protocol.js';
-import * as Persistence from '../../../models/persistence/persistence.js';
+import * as Common from '../../core/common/common.js';
+import * as Host from '../../core/host/host.js';
+import * as Platform from '../../core/platform/platform.js';
+import * as SDK from '../../core/sdk/sdk.js';
+import * as Protocol from '../../generated/protocol.js';
+import * as Persistence from '../../models/persistence/persistence.js';
 import {
   assertScreenshot,
   dispatchClickEvent,
@@ -15,24 +15,25 @@ import {
   dispatchKeyDownEvent,
   getCleanTextContentFromElements,
   renderElementIntoDOM,
-} from '../../../testing/DOMHelpers.js';
+} from '../../testing/DOMHelpers.js';
 import {
   deinitializeGlobalVars,
-} from '../../../testing/EnvironmentHelpers.js';
-import {describeWithMockConnection} from '../../../testing/MockConnection.js';
+} from '../../testing/EnvironmentHelpers.js';
+import {describeWithMockConnection} from '../../testing/MockConnection.js';
 import {
   createWorkspaceProject,
   setUpEnvironment,
-} from '../../../testing/OverridesHelpers.js';
-import {createFileSystemUISourceCode} from '../../../testing/UISourceCodeHelpers.js';
+} from '../../testing/OverridesHelpers.js';
+import {createFileSystemUISourceCode} from '../../testing/UISourceCodeHelpers.js';
 import {
   recordedMetricsContain,
   resetRecordedMetrics,
-} from '../../../testing/UserMetricsHelpers.js';
-import * as RenderCoordinator from '../../../ui/components/render_coordinator/render_coordinator.js';
-import * as NetworkForward from '../forward/forward.js';
+} from '../../testing/UserMetricsHelpers.js';
+import * as RenderCoordinator from '../../ui/components/render_coordinator/render_coordinator.js';
 
-import * as NetworkComponents from './components.js';
+import type * as NetworkComponents from './components/components.js';
+import * as NetworkForward from './forward/forward.js';
+import * as Network from './network.js';
 
 const {urlString} = Platform.DevToolsPath;
 const defaultRequest = {
@@ -73,7 +74,7 @@ const defaultRequest = {
 
 async function renderHeadersComponent(request: SDK.NetworkRequest.NetworkRequest) {
   Object.setPrototypeOf(request, SDK.NetworkRequest.NetworkRequest.prototype);
-  const component = new NetworkComponents.RequestHeadersView.RequestHeadersView(request);
+  const component = new Network.RequestHeadersView.RequestHeadersView(request);
   renderElementIntoDOM(component);
   component.wasShown();
   await RenderCoordinator.done();
@@ -120,7 +121,7 @@ const getRowHighlightStatus = (container: HTMLElement) => {
 };
 
 describeWithMockConnection('RequestHeadersView', () => {
-  let component: NetworkComponents.RequestHeadersView.RequestHeadersView|null|undefined = null;
+  let component: Network.RequestHeadersView.RequestHeadersView|null|undefined = null;
 
   beforeEach(() => {
     setUpEnvironment();

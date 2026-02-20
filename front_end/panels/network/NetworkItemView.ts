@@ -22,6 +22,7 @@ import * as NetworkComponents from './components/components.js';
 import {EventSourceMessagesView} from './EventSourceMessagesView.js';
 import {RequestCookiesView} from './RequestCookiesView.js';
 import {RequestDeviceBoundSessionsView} from './RequestDeviceBoundSessionsView.js';
+import * as RequestHeadersView from './RequestHeadersView.js';
 import {RequestInitiatorView} from './RequestInitiatorView.js';
 import {RequestPayloadView} from './RequestPayloadView.js';
 import {RequestPreviewView} from './RequestPreviewView.js';
@@ -148,7 +149,7 @@ const requestToPreviewView = new WeakMap<SDK.NetworkRequest.NetworkRequest, Requ
 export class NetworkItemView extends UI.TabbedPane.TabbedPane {
   #request: SDK.NetworkRequest.NetworkRequest;
   readonly #resourceViewTabSetting: Common.Settings.Setting<NetworkForward.UIRequestLocation.UIRequestTabs>;
-  readonly #headersViewComponent: NetworkComponents.RequestHeadersView.RequestHeadersView|undefined;
+  readonly #headersViewComponent: RequestHeadersView.RequestHeadersView|undefined;
   #payloadView: RequestPayloadView|null = null;
   readonly #responseView: RequestResponseView|undefined;
   #cookiesView: RequestCookiesView|null = null;
@@ -174,7 +175,7 @@ export class NetworkItemView extends UI.TabbedPane.TabbedPane {
           i18nString(UIStrings.headers));
     } else {
       this.#firstTab = NetworkForward.UIRequestLocation.UIRequestTabs.HEADERS_COMPONENT;
-      this.#headersViewComponent = new NetworkComponents.RequestHeadersView.RequestHeadersView(request);
+      this.#headersViewComponent = new RequestHeadersView.RequestHeadersView(request);
       this.appendTab(
           NetworkForward.UIRequestLocation.UIRequestTabs.HEADERS_COMPONENT, i18nString(UIStrings.headers),
           LegacyWrapper.LegacyWrapper.legacyWrapper(UI.Widget.VBox, this.#headersViewComponent),
@@ -426,7 +427,7 @@ export class NetworkItemView extends UI.TabbedPane.TabbedPane {
     this.#headersViewComponent?.revealHeader(section, header);
   }
 
-  getHeadersViewComponent(): NetworkComponents.RequestHeadersView.RequestHeadersView|undefined {
+  getHeadersViewComponent(): RequestHeadersView.RequestHeadersView|undefined {
     return this.#headersViewComponent;
   }
 }

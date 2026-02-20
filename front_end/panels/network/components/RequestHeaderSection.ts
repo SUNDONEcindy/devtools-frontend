@@ -14,6 +14,9 @@ import * as NetworkForward from '../forward/forward.js';
 
 import {EditingAllowedStatus, type HeaderDescriptor} from './HeaderSectionRow.js';
 import requestHeaderSectionStyles from './RequestHeaderSection.css.js';
+import requestHeadersViewStyles from './RequestHeadersView.css.js';
+
+export {requestHeadersViewStyles};
 
 const {render, html} = Lit;
 

@@ -2,31 +2,26 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 /* eslint-disable @devtools/no-lit-render-outside-of-view */
-import '../../../ui/kit/kit.js';
+import '../../ui/kit/kit.js';
 
-import * as Common from '../../../core/common/common.js';
-import * as Host from '../../../core/host/host.js';
-import * as i18n from '../../../core/i18n/i18n.js';
-import * as Platform from '../../../core/platform/platform.js';
-import * as SDK from '../../../core/sdk/sdk.js';
-import * as Persistence from '../../../models/persistence/persistence.js';
-import * as Workspace from '../../../models/workspace/workspace.js';
-import * as NetworkForward from '../../../panels/network/forward/forward.js';
-import * as Buttons from '../../../ui/components/buttons/buttons.js';
-import * as Input from '../../../ui/components/input/input.js';
-import * as LegacyWrapper from '../../../ui/components/legacy_wrapper/legacy_wrapper.js';
-import * as RenderCoordinator from '../../../ui/components/render_coordinator/render_coordinator.js';
-import * as UI from '../../../ui/legacy/legacy.js';
-import * as Lit from '../../../ui/lit/lit.js';
-import * as VisualLogging from '../../../ui/visual_logging/visual_logging.js';
-import * as Sources from '../../sources/sources.js';
+import * as Common from '../../core/common/common.js';
+import * as Host from '../../core/host/host.js';
+import * as i18n from '../../core/i18n/i18n.js';
+import * as Platform from '../../core/platform/platform.js';
+import * as SDK from '../../core/sdk/sdk.js';
+import * as Persistence from '../../models/persistence/persistence.js';
+import * as Workspace from '../../models/workspace/workspace.js';
+import * as NetworkForward from '../../panels/network/forward/forward.js';
+import * as Buttons from '../../ui/components/buttons/buttons.js';
+import * as Input from '../../ui/components/input/input.js';
+import * as LegacyWrapper from '../../ui/components/legacy_wrapper/legacy_wrapper.js';
+import * as RenderCoordinator from '../../ui/components/render_coordinator/render_coordinator.js';
+import * as UI from '../../ui/legacy/legacy.js';
+import * as Lit from '../../ui/lit/lit.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
+import * as Sources from '../sources/sources.js';
 
-import {RequestHeaderSection} from './RequestHeaderSection.js';
-import requestHeadersViewStyles from './RequestHeadersView.css.js';
-import {
-  RESPONSE_HEADER_SECTION_DATA_KEY,
-  type ResponseHeaderSectionData,
-} from './ResponseHeaderSection.js';
+import * as NetworkComponents from './components/components.js';
 
 const RAW_HEADER_CUTOFF = 3000;
 const {render, html} = Lit;
@@ -105,7 +100,7 @@ const UIStrings = {
    */
   statusCode: 'Status Code',
 } as const;
-const str_ = i18n.i18n.registerUIStrings('panels/network/components/RequestHeadersView.ts', UIStrings);
+const str_ = i18n.i18n.registerUIStrings('panels/network/RequestHeadersView.ts', UIStrings);
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
 
 export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableComponent {
@@ -146,7 +141,7 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
   }
 
   #resetAndRefreshHeadersView(): void {
-    this.#request.deleteAssociatedData(RESPONSE_HEADER_SECTION_DATA_KEY);
+    this.#request.deleteAssociatedData(NetworkComponents.ResponseHeaderSection.RESPONSE_HEADER_SECTION_DATA_KEY);
     void this.render();
   }
 
@@ -194,7 +189,7 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
       // Disabled until https://crbug.com/1079231 is fixed.
       // clang-format off
       render(html`
-        <style>${requestHeadersViewStyles}</style>
+        <style>${NetworkComponents.RequestHeaderSection.requestHeadersViewStyles}</style>
         <style>${Input.checkboxStyles}</style>
         ${this.#renderGeneralSection()}
         ${this.#renderEarlyHintsHeaders()}
@@ -230,7 +225,7 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
           <devtools-early-hints-header-section .data=${{
         request: this.#request,
         toReveal: this.#toReveal,
-      } as ResponseHeaderSectionData}></devtools-early-hints-header-section>
+      } as NetworkComponents.ResponseHeaderSection.ResponseHeaderSectionData}></devtools-early-hints-header-section>
         `
     });
   }
@@ -260,7 +255,7 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
           <devtools-response-header-section .data=${{
             request: this.#request,
             toReveal: this.#toReveal,
-          } as ResponseHeaderSectionData} jslog=${
+          } as NetworkComponents.ResponseHeaderSection.ResponseHeaderSectionData} jslog=${
               VisualLogging.section('response-headers')}></devtools-response-header-section>
         `
     });
@@ -344,10 +339,11 @@ export class RequestHeadersView extends LegacyWrapper.LegacyWrapper.WrappableCom
       contents: (this.#showRequestHeadersText && requestHeadersText) ?
           this.#renderRawHeaders(requestHeadersText, false) :
           html`
-          <devtools-widget .widgetConfig=${UI.Widget.widgetConfig(RequestHeaderSection, {
-            request: this.#request,
-            toReveal: this.#toReveal,
-          })} jslog=${VisualLogging.section('request-headers')}></devtools-widget>`
+          <devtools-widget .widgetConfig=${
+              UI.Widget.widgetConfig(NetworkComponents.RequestHeaderSection.RequestHeaderSection, {
+                request: this.#request,
+                toReveal: this.#toReveal,
+              })} jslog=${VisualLogging.section('request-headers')}></devtools-widget>`
     });
   }
 
