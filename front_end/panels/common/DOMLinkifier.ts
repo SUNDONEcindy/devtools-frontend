@@ -12,7 +12,7 @@ import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 
 import domLinkifierStyles from './domLinkifier.css.js';
 
-const {classMap} = Directives;
+const {classMap, ifDefined} = Directives;
 
 const UIStrings = {
   /**
@@ -33,6 +33,7 @@ export interface Options {
   isDynamicLink?: boolean;
   hiddenClassList?: string[];
   disabled?: boolean;
+  ariaDescription?: string;
 }
 
 interface ViewInput {
@@ -43,6 +44,7 @@ interface ViewInput {
   id?: string;
   classes: string[];
   pseudo?: string;
+  ariaDescription?: string;
   onClick: () => void;
   onMouseOver: () => void;
   onMouseLeave: () => void;
@@ -59,6 +61,7 @@ const DEFAULT_VIEW: View = (input, _output, target: HTMLElement) => {
             'dynamic-link': Boolean(input.dynamic),
             disabled: Boolean(input.disabled)
           })}"
+          aria-description=${ifDefined(input.ariaDescription)}
           jslog=${VisualLogging.link('node').track({click: true, keydown: 'Enter'})}
           tabindex=${input.preventKeyboardFocus ? -1 : 0}
           @click=${input.onClick}
@@ -112,6 +115,7 @@ export class DOMNodeLink extends UI.Widget.Widget {
       textContent: undefined,
       isDynamicLink: false,
       disabled: false,
+      ariaDescription: undefined,
     };
     const viewInput: ViewInput = {
       dynamic: options.isDynamicLink,
@@ -129,6 +133,7 @@ export class DOMNodeLink extends UI.Widget.Widget {
       onMouseLeave: () => {
         SDK.OverlayModel.OverlayModel.hideDOMNodeHighlight();
       },
+      ariaDescription: options.ariaDescription,
     };
     if (!this.#node) {
       this.#view(viewInput, {}, this.contentElement);

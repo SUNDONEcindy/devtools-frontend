@@ -218,8 +218,7 @@
   gap: var(--sys-size-3);
   align-items: center;
 
-  .resource-link,
-  .resource-task {
+  .resource-link {
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -250,6 +249,10 @@
 
     &.has-picker-behavior {
       overflow: visible;
+
+      .title {
+        overflow: visible;
+      }
     }
 
     &:focus-visible {
@@ -302,8 +305,7 @@
     }
   }
 
-  .resource-link.disabled,
-  .resource-task.disabled {
+  .resource-link.disabled {
     color: var(--sys-color-state-disabled);
     border-color: var(--sys-color-neutral-outline);
     pointer-events: none;
