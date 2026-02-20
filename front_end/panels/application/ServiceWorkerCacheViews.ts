@@ -11,7 +11,6 @@ import * as Platform from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import type * as Protocol from '../../generated/protocol.js';
 import * as TextUtils from '../../models/text_utils/text_utils.js';
-import * as LegacyWrapper from '../../ui/components/legacy_wrapper/legacy_wrapper.js';
 import * as DataGrid from '../../ui/legacy/components/data_grid/data_grid.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
@@ -541,10 +540,9 @@ export class RequestView extends UI.Widget.VBox {
     this.resourceViewTabSetting =
         Common.Settings.Settings.instance().createSetting('cache-storage-view-tab', 'preview');
 
-    this.tabbedPane.appendTab(
-        'headers', i18nString(UIStrings.headers),
-        LegacyWrapper.LegacyWrapper.legacyWrapper(
-            UI.Widget.VBox, new Network.RequestHeadersView.RequestHeadersView(request)));
+    const requestHeadersView = new Network.RequestHeadersView.RequestHeadersView();
+    requestHeadersView.request = request;
+    this.tabbedPane.appendTab('headers', i18nString(UIStrings.headers), requestHeadersView);
     this.tabbedPane.appendTab(
         'preview', i18nString(UIStrings.preview), new Network.RequestPreviewView.RequestPreviewView(request));
     this.tabbedPane.show(this.element);
