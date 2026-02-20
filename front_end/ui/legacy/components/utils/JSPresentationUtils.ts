@@ -97,6 +97,11 @@ export interface ViewInput {
   widthConstrained?: boolean;
   showColumnNumber?: boolean;
   expandable?: boolean;
+  expanded?: boolean;
+  showIgnoreListed?: boolean;
+  onExpand: () => void;
+  onShowMore: () => void;
+  onShowLess: () => void;
 }
 
 export type View = (input: ViewInput, output: {table?: HTMLElement}, target: HTMLElement) => void;
@@ -105,6 +110,9 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
   const classes = {
     'stack-preview-container': true,
     'width-constrained': Boolean(input.widthConstrained),
+    expandable: Boolean(input.expandable),
+    expanded: Boolean(input.expanded),
+    'show-hidden-rows': Boolean(input.showIgnoreListed),
   };
   // TODO(crbug.com/483576322): Remove once fully migrated.
   const tableRef = createRef<HTMLElement>();
@@ -120,11 +128,14 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
 
 function renderStackTraceTable(
     container: Element,
-    parent: Element,
-    stackTrace: StackTrace.StackTrace.StackTrace,
-    options: Options,
+    options: ViewInput,
     ): void {
   container.removeChildren();
+
+  if (!options.stackTrace) {
+    return;
+  }
+  const {stackTrace} = options;
 
   function buildStackTraceRowsHelper(fragment: StackTrace.StackTrace.Fragment|StackTrace.StackTrace.AsyncFragment):
       Array<StackTraceRegularRow|StackTraceAsyncRow> {
@@ -170,13 +181,8 @@ function renderStackTraceTable(
       if (firstRow && options.expandable) {
         const button = row.createChild('td').createChild('button', 'arrow-icon-button');
         button.createChild('span', 'arrow-icon');
-        parent.classList.add('expandable');
-        container.classList.add('expandable');
-        button.addEventListener('click', () => {
-          button.setAttribute('jslog', `${VisualLogging.expand().track({click: true})}`);
-          parent.classList.toggle('expanded');
-          container.classList.toggle('expanded');
-        });
+        button.setAttribute('jslog', `${VisualLogging.expand().track({click: true})}`);
+        button.addEventListener('click', options.onExpand);
         firstRow = false;
       } else {
         row.createChild('td').textContent = '\n';
@@ -204,12 +210,7 @@ function renderStackTraceTable(
   // invisible and it may be confusing if it is copied to the clipboard.
   showAllLink.createChild('span', 'css-inserted-text')
       .setAttribute('data-inserted-text', i18nString(UIStrings.showMoreFrames));
-  showAllLink.addEventListener('click', () => {
-    container.classList.add('show-hidden-rows');
-    parent.classList.add('show-hidden-rows');
-    // If we are in a popup, this will trigger a re-layout
-    UI.GlassPane.GlassPane.containerMoved(container);
-  }, false);
+  showAllLink.addEventListener('click', options.onShowMore);
   const showLessRow = tableSection.createChild('tr', 'show-less-link');
   showLessRow.createChild('td');
   const showLesscell = showLessRow.createChild('td');
@@ -217,12 +218,7 @@ function renderStackTraceTable(
   const showLessLink = showLesscell.createChild('span', 'link');
   showLessLink.createChild('span', 'css-inserted-text')
       .setAttribute('data-inserted-text', i18nString(UIStrings.showLess));
-  showLessLink.addEventListener('click', () => {
-    container.classList.remove('show-hidden-rows');
-    parent.classList.remove('show-hidden-rows');
-    // If we are in a popup, this will trigger a re-layout
-    UI.GlassPane.GlassPane.containerMoved(container);
-  }, false);
+  showLessLink.addEventListener('click', options.onShowLess);
 }
 
 export interface Options {
@@ -249,6 +245,8 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
 
   #stackTrace?: StackTrace.StackTrace.StackTrace;
   #options: Options = {};
+  #expanded = false;
+  #showIgnoreListed = false;
 
   constructor(element?: HTMLElement, view = DEFAULT_VIEW) {
     super(element, {useShadowDom: true, classes: ['monospace', 'stack-preview-container']});
@@ -264,16 +262,24 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
   }
 
   override performUpdate(): void {
-    const output: {table?: HTMLElement} = {};
-    this.#view(
-        {
-          stackTrace: this.#stackTrace,
-          ...this.#options,
-        },
-        output, this.contentElement);
+    this.element.classList.toggle('expandable', this.#options.expandable);
+    this.element.classList.toggle('expanded', this.#expanded);
+    this.element.classList.toggle('show-hidden-rows', this.#showIgnoreListed);
 
-    if (this.#stackTrace && output.table) {
-      renderStackTraceTable(output.table, this.element, this.#stackTrace, this.#options);
+    const input: ViewInput = {
+      stackTrace: this.#stackTrace,
+      ...this.#options,
+      expanded: this.#expanded,
+      showIgnoreListed: this.#showIgnoreListed,
+      onExpand: this.#onExpand.bind(this),
+      onShowMore: this.#onShowMoreLess.bind(this, true),
+      onShowLess: this.#onShowMoreLess.bind(this, false),
+    };
+    const output: {table?: HTMLElement} = {};
+    this.#view(input, output, this.contentElement);
+
+    if (output.table) {
+      renderStackTraceTable(output.table, input);
     }
   }
 
@@ -292,6 +298,19 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
     }
     this.#stackTrace = stackTrace;
     this.#stackTrace.addEventListener(StackTrace.StackTrace.Events.UPDATED, this.requestUpdate, this);
+    this.requestUpdate();
+  }
+
+  #onShowMoreLess(more: boolean): void {
+    this.#showIgnoreListed = more;
+    this.requestUpdate();
+
+    // If we are in a popup, this will trigger a re-layout
+    void this.updateComplete.then(() => UI.GlassPane.GlassPane.containerMoved(this.contentElement));
+  }
+
+  #onExpand(): void {
+    this.#expanded = !this.#expanded;
     this.requestUpdate();
   }
 }
