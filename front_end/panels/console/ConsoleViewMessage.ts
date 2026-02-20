@@ -252,9 +252,9 @@ export const concatErrorDescriptionAndIssueSummary = (description: string, issue
   return description;
 };
 
-// This value reflects the 18px min-height of .console-message, plus the
-// 1px border of .console-message-wrapper. Keep in sync with consoleView.css.
-const defaultConsoleRowHeight = 19;
+// This value reflects the 18px min-height of .console-message.
+// Keep in sync with consoleView.css.
+const defaultConsoleRowHeight = 18;
 
 const parameterToRemoteObject = (runtimeModel: SDK.RuntimeModel.RuntimeModel|null):
     (parameter?: SDK.RemoteObject.RemoteObject|Protocol.Runtime.RemoteObject|string) => SDK.RemoteObject.RemoteObject =>
