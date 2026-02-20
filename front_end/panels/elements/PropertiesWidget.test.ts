@@ -137,4 +137,54 @@ describeWithMockConnection('PropertiesWidget', () => {
       arguments: sinon.match([{objectId: '2'}]),
     }));
   });
+
+  describe('regex filter toggle', () => {
+    it('passes isRegex=false to the view by default', async () => {
+      SDK.TargetManager.TargetManager.instance().setScopeTarget(target);
+      const model = target.model(SDK.DOMModel.DOMModel);
+      assert.exists(model);
+
+      const node = new SDK.DOMModel.DOMNode(model);
+      sinon.stub(node, 'resolveToObject').withArgs('properties-sidebar-pane').resolves({
+        getAllProperties: () => ({}),
+        getOwnProperties: () => ({}),
+        arrayLength: () => 0,
+      } as unknown as SDK.RemoteObject.RemoteObject);
+      UI.Context.Context.instance().setFlavor(SDK.DOMModel.DOMNode, node);
+
+      const viewFunction = createViewFunctionStub(Elements.PropertiesWidget.PropertiesWidget);
+      view = new Elements.PropertiesWidget.PropertiesWidget(viewFunction);
+      renderElementIntoDOM(view);
+      await viewFunction.nextInput;
+      await UI.Widget.Widget.allUpdatesComplete;
+
+      assert.isFalse(viewFunction.input.isRegex);
+    });
+
+    it('toggles isRegex when onRegexToggled is called', async () => {
+      SDK.TargetManager.TargetManager.instance().setScopeTarget(target);
+      const model = target.model(SDK.DOMModel.DOMModel);
+      assert.exists(model);
+
+      const node = new SDK.DOMModel.DOMNode(model);
+      sinon.stub(node, 'resolveToObject').withArgs('properties-sidebar-pane').resolves({
+        getAllProperties: () => ({}),
+        getOwnProperties: () => ({}),
+        arrayLength: () => 0,
+      } as unknown as SDK.RemoteObject.RemoteObject);
+      UI.Context.Context.instance().setFlavor(SDK.DOMModel.DOMNode, node);
+
+      const viewFunction = createViewFunctionStub(Elements.PropertiesWidget.PropertiesWidget);
+      view = new Elements.PropertiesWidget.PropertiesWidget(viewFunction);
+      renderElementIntoDOM(view);
+      await viewFunction.nextInput;
+      await UI.Widget.Widget.allUpdatesComplete;
+
+      assert.isFalse(viewFunction.input.isRegex);
+      viewFunction.input.onRegexToggled();
+      assert.isTrue(viewFunction.input.isRegex);
+      viewFunction.input.onRegexToggled();
+      assert.isFalse(viewFunction.input.isRegex);
+    });
+  });
 });

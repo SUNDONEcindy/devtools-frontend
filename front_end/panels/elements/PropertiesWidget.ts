@@ -73,6 +73,8 @@ const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
 
 interface PropertiesWidgetInput {
   onFilterChanged: (e: CustomEvent<string>) => void;
+  onRegexToggled: () => void;
+  isRegex: boolean;
   treeOutlineElement: HTMLElement;
   displayNoMatchingPropertyMessage: boolean;
 }
@@ -85,7 +87,13 @@ export const DEFAULT_VIEW: View = (input, _output, target) => {
     <div jslog=${VisualLogging.pane('element-properties').track({resize: true})}>
       <div class="hbox properties-widget-toolbar">
         <devtools-toolbar class="styles-pane-toolbar" role="presentation">
-          <devtools-toolbar-input type="filter" @change=${input.onFilterChanged} style="flex-grow:1; flex-shrink:1"></devtools-toolbar-input>
+          <devtools-toolbar-input
+            type="filter"
+            ?regex=${true}
+            @change=${input.onFilterChanged}
+            @regextoggle=${input.onRegexToggled}
+            style="flex-grow:1; flex-shrink:1"
+          ></devtools-toolbar-input>
           <devtools-checkbox title=${i18nString(UIStrings.showAllTooltip)} ${bindToSetting(getShowAllPropertiesSetting())}>
             ${i18nString(UIStrings.showAll)}
           </devtools-checkbox>
@@ -110,6 +118,8 @@ export class PropertiesWidget extends UI.Widget.VBox {
   private lastRequestedNode?: SDK.DOMModel.DOMNode;
   readonly #view: View;
   #displayNoMatchingPropertyMessage = false;
+  #isRegex = false;
+  #filterText = '';
 
   constructor(view: View = DEFAULT_VIEW) {
     super({useShadowDom: true});
@@ -140,9 +150,31 @@ export class PropertiesWidget extends UI.Widget.VBox {
     void this.performUpdate();
   }
 
+  #buildFilterRegex(text: string): RegExp|null {
+    if (!text) {
+      return null;
+    }
+    if (this.#isRegex) {
+      try {
+        return new RegExp(text, 'i');
+      } catch {
+        // Invalid regex: fall through to plain-text matching.
+      }
+    }
+    return new RegExp(Platform.StringUtilities.escapeForRegExp(text), 'i');
+  }
+
   private onFilterChanged(event: CustomEvent<string>): void {
-    this.filterRegex = event.detail ? new RegExp(Platform.StringUtilities.escapeForRegExp(event.detail), 'i') : null;
+    this.#filterText = event.detail;
+    this.filterRegex = this.#buildFilterRegex(event.detail);
     this.filterAndScheduleUpdate();
+  }
+
+  private onRegexToggled(): void {
+    this.#isRegex = !this.#isRegex;
+    this.filterRegex = this.#buildFilterRegex(this.#filterText);
+    this.internalFilterProperties();
+    this.#renderView();
   }
 
   private filterAndScheduleUpdate(): void {
@@ -195,9 +227,15 @@ export class PropertiesWidget extends UI.Widget.VBox {
           treeElement, await root.populateChildrenIfNeeded(), true /* skipProto */, true /* skipGettersAndSetters */);
       this.internalFilterProperties();
     }
+    this.#renderView();
+  }
+
+  #renderView(): void {
     this.#view(
         {
           onFilterChanged: this.onFilterChanged.bind(this),
+          onRegexToggled: this.onRegexToggled.bind(this),
+          isRegex: this.#isRegex,
           treeOutlineElement: this.treeOutline.element,
           displayNoMatchingPropertyMessage: this.#displayNoMatchingPropertyMessage,
         },

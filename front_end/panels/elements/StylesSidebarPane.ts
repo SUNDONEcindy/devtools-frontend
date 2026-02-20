@@ -184,6 +184,8 @@ export class StylesSidebarPane extends Common.ObjectWrapper.eventMixin<EventType
   private userOperation = false;
   isEditingStyle = false;
   #filterRegex: RegExp|null = null;
+  #isRegex = false;
+  #filterText = '';
   private isActivePropertyHighlighted = false;
   private initialUpdateCompleted = false;
   hasMatchedStyles = false;
@@ -486,9 +488,28 @@ export class StylesSidebarPane extends Common.ObjectWrapper.eventMixin<EventType
     }
   }
 
+  #buildFilterRegex(text: string): RegExp|null {
+    if (!text) {
+      return null;
+    }
+    if (this.#isRegex) {
+      try {
+        return new RegExp(text, 'i');
+      } catch {
+        // Invalid regex: fall through to plain-text matching.
+      }
+    }
+    return new RegExp(Platform.StringUtilities.escapeForRegExp(text), 'i');
+  }
+
   private onFilterChanged(event: Common.EventTarget.EventTargetEvent<string>): void {
-    const regex = event.data ? new RegExp(Platform.StringUtilities.escapeForRegExp(event.data), 'i') : null;
-    this.setFilter(regex);
+    this.#filterText = event.data;
+    this.setFilter(this.#buildFilterRegex(event.data));
+  }
+
+  private onRegexToggled(): void {
+    this.#isRegex = !this.#isRegex;
+    this.setFilter(this.#buildFilterRegex(this.#filterText));
   }
 
   setFilter(regex: RegExp|null): void {
@@ -1392,7 +1413,9 @@ export class StylesSidebarPane extends Common.ObjectWrapper.eventMixin<EventType
     const hbox = container.createChild('div', 'hbox styles-sidebar-pane-toolbar');
     const toolbar = hbox.createChild('devtools-toolbar', 'styles-pane-toolbar');
     toolbar.role = 'presentation';
-    const filterInput = new UI.Toolbar.ToolbarFilter(undefined, 1, 1, undefined, undefined, false);
+    const filterInput = new UI.Toolbar.ToolbarFilter(
+        undefined, 1, 1, undefined, undefined, false, undefined, undefined, /* showRegexToggle=*/ true,
+        this.onRegexToggled.bind(this));
     filterInput.addEventListener(UI.Toolbar.ToolbarInput.Event.TEXT_CHANGED, this.onFilterChanged, this);
     toolbar.appendToolbarItem(filterInput);
     void toolbar.appendItemsAtLocation('styles-sidebarpane-toolbar');

@@ -270,6 +270,7 @@ interface ComputedStyleWidgetInput {
   groupComputedStylesSetting: Common.Settings.Setting<boolean>;
   onFilterChanged: (event: CustomEvent<string>) => void;
   filterText: string;
+  onRegexToggled: () => void;
 }
 
 type View = (input: ComputedStyleWidgetInput, output: null, target: HTMLElement) => void;
@@ -283,8 +284,10 @@ export const DEFAULT_VIEW: View = (input, _output, target) => {
         <devtools-toolbar-input
           type="filter"
           autofocus
+          ?regex=${true}
           value=${input.filterText}
           @change=${input.onFilterChanged}
+          @regextoggle=${input.onRegexToggled}
         ></devtools-toolbar-input>
         <devtools-checkbox
           title=${i18nString(UIStrings.showAll)}
@@ -317,6 +320,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
   #treeData?: TreeOutline.TreeOutline.TreeOutlineData<ComputedStyleData>;
   readonly #view: View;
   #filterText = '';
+  #isRegex = false;
 
   constructor() {
     super({useShadowDom: true});
@@ -374,6 +378,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
           groupComputedStylesSetting: this.groupComputedStylesSetting,
           onFilterChanged: this.onFilterChanged.bind(this),
           filterText: this.#filterText,
+          onRegexToggled: this.onRegexToggled.bind(this),
         },
         null, this.contentElement);
   }
@@ -654,10 +659,28 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
     return result;
   }
 
+  #buildFilterRegex(text: string): RegExp|null {
+    if (!text) {
+      return null;
+    }
+    if (this.#isRegex) {
+      try {
+        return new RegExp(text, 'i');
+      } catch {
+        // Invalid regex: fall through to plain-text matching.
+      }
+    }
+    return new RegExp(Platform.StringUtilities.escapeForRegExp(text), 'i');
+  }
+
+  private async onRegexToggled(): Promise<void> {
+    this.#isRegex = !this.#isRegex;
+    await this.filterComputedStyles(this.#buildFilterRegex(this.#filterText));
+  }
+
   private async onFilterChanged(event: CustomEvent<string>): Promise<void> {
     this.#filterText = event.detail;
-    await this.filterComputedStyles(
-        event.detail ? new RegExp(Platform.StringUtilities.escapeForRegExp(event.detail), 'i') : null);
+    await this.filterComputedStyles(this.#buildFilterRegex(event.detail));
 
     if (event.detail && this.#computedStylesTree.data && this.#computedStylesTree.data.tree) {
       UI.ARIAUtils.LiveAnnouncer.alert(i18nString(
