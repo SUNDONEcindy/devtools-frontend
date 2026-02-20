@@ -37,7 +37,7 @@ import * as i18n from '../../../../core/i18n/i18n.js';
 import * as SDK from '../../../../core/sdk/sdk.js';
 import * as StackTrace from '../../../../models/stack_trace/stack_trace.js';
 import * as Workspace from '../../../../models/workspace/workspace.js';
-import {Directives, html, nothing, render} from '../../../lit/lit.js';
+import {Directives, html, nothing, render, type TemplateResult} from '../../../lit/lit.js';
 import * as VisualLogging from '../../../visual_logging/visual_logging.js';
 import * as UI from '../../legacy.js';
 
@@ -107,6 +107,20 @@ export interface ViewInput {
 export type View = (input: ViewInput, output: object, target: HTMLElement) => void;
 
 export const DEFAULT_VIEW: View = (input, output, target) => {
+  let renderExpandButton = Boolean(input.expandable);
+  const maybeRenderExpandButton = (): TemplateResult => {
+    // clang-format off
+    const result = html`
+      ${renderExpandButton ? html`
+        <button class="arrow-icon-button" jslog=${VisualLogging.expand().track({click: true})} @click=${input.onExpand}>
+          <span class="arrow-icon"></span>
+        </button>
+      ` : '\n'}`;
+    // clang-format on
+    renderExpandButton = false;
+    return result;
+  };
+
   const classes = {
     'stack-preview-container': true,
     'width-constrained': Boolean(input.widthConstrained),
@@ -114,12 +128,50 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
     expanded: Boolean(input.expanded),
     'show-hidden-rows': Boolean(input.showIgnoreListed),
   };
+  const {stackTrace} = input;
   // clang-format off
   render(html`
     <style>${jsUtilsStyles}</style>
     <table class=${classMap(classes)}>
-      ${renderStackTraceTable(input)}
-      ${input.stackTrace ? html`
+      ${stackTrace ? html`
+        ${[stackTrace.syncFragment, ...stackTrace.asyncFragments].map(fragment => html`
+          <tbody>
+            ${'description' in fragment ? html`
+              <tr class="stack-preview-async-row">
+                <td>${maybeRenderExpandButton()}</td>
+                <td class="stack-preview-async-description">
+                  ${UI.UIUtils.asyncFragmentLabel(stackTrace, fragment as StackTrace.StackTrace.AsyncFragment)}
+                </td>
+                <td></td>
+                <td></td>
+              </tr>
+            ` : nothing}
+            ${fragment.frames.map((frame, i) => {
+              const previousStackFrameWasBreakpointCondition = i > 0 && [
+                SDK.DebuggerModel.COND_BREAKPOINT_SOURCE_URL,
+                SDK.DebuggerModel.LOGPOINT_SOURCE_URL,
+              ].includes(fragment.frames[i - 1].url ?? '');
+              const link = Linkifier.linkifyStackTraceFrame(frame, {
+                showColumnNumber: Boolean(input.showColumnNumber),
+                tabStop: Boolean(input.tabStops),
+                inlineFrameIndex: 0,
+                revealBreakpoint: previousStackFrameWasBreakpointCondition,
+                maxLength: UI.UIUtils.MaxLengthForDisplayedURLsInConsole,
+              });
+              link.setAttribute('jslog', `${VisualLogging.link('stack-trace').track({click: true})}`);
+              link.addEventListener('contextmenu', populateContextMenu.bind(null, link));
+              return html`
+                <tr>
+                  <td>${maybeRenderExpandButton()}</td>
+                  <td class="function-name">
+                    ${UI.UIUtils.beautifyFunctionName(frame.name ?? '')}
+                  </td>
+                  <td> @ </td>
+                  <td class="link">${link}</td>
+                </tr>
+            `;})}
+          </tbody>
+        `)}
         <tfoot>
           <tr class="show-all-link">
             <td></td>
@@ -144,80 +196,6 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
   // clang-format on
 };
 
-function renderStackTraceTable(options: ViewInput): DocumentFragment {
-  const container = document.createDocumentFragment();
-
-  if (!options.stackTrace) {
-    return container;
-  }
-  const {stackTrace} = options;
-
-  function buildStackTraceRowsHelper(fragment: StackTrace.StackTrace.Fragment|StackTrace.StackTrace.AsyncFragment):
-      Array<StackTraceRegularRow|StackTraceAsyncRow> {
-    const stackTraceRows: Array<StackTraceRegularRow|StackTraceAsyncRow> = [];
-    if ('description' in fragment) {
-      stackTraceRows.push({asyncDescription: UI.UIUtils.asyncFragmentLabel(stackTrace, fragment)});
-    }
-    let previousStackFrameWasBreakpointCondition = false;
-    for (const frame of fragment.frames) {
-      const functionName = UI.UIUtils.beautifyFunctionName(frame.name ?? '');
-      const link = Linkifier.linkifyStackTraceFrame(frame, {
-        showColumnNumber: Boolean(options.showColumnNumber),
-        tabStop: Boolean(options.tabStops),
-        inlineFrameIndex: 0,
-        revealBreakpoint: previousStackFrameWasBreakpointCondition,
-        maxLength: UI.UIUtils.MaxLengthForDisplayedURLsInConsole,
-      });
-      link.setAttribute('jslog', `${VisualLogging.link('stack-trace').track({click: true})}`);
-      link.addEventListener('contextmenu', populateContextMenu.bind(null, link));
-
-      stackTraceRows.push({functionName, link});
-      previousStackFrameWasBreakpointCondition = [
-        SDK.DebuggerModel.COND_BREAKPOINT_SOURCE_URL,
-        SDK.DebuggerModel.LOGPOINT_SOURCE_URL,
-      ].includes(frame.url ?? '');
-    }
-
-    return stackTraceRows;
-  }
-
-  // The tableSection groups one or more synchronous call frames together.
-  // Wherever there is an asynchronous call, a new section is created.
-  let firstRow = true;
-  for (const fragment of [stackTrace.syncFragment, ...stackTrace.asyncFragments]) {
-    if (fragment.frames.length === 0) {
-      continue;
-    }
-
-    const stackTraceRows = buildStackTraceRowsHelper(fragment);
-    const tableSection = container.createChild('tbody');
-    for (const item of stackTraceRows) {
-      const row = tableSection.createChild('tr');
-      if (firstRow && options.expandable) {
-        const button = row.createChild('td').createChild('button', 'arrow-icon-button');
-        button.createChild('span', 'arrow-icon');
-        button.setAttribute('jslog', `${VisualLogging.expand().track({click: true})}`);
-        button.addEventListener('click', options.onExpand);
-        firstRow = false;
-      } else {
-        row.createChild('td').textContent = '\n';
-      }
-      if ('asyncDescription' in item) {
-        row.createChild('td', 'stack-preview-async-description').textContent = item.asyncDescription;
-        row.createChild('td');
-        row.createChild('td');
-        row.classList.add('stack-preview-async-row');
-      } else {
-        row.createChild('td', 'function-name').textContent = item.functionName;
-        row.createChild('td').textContent = ' @ ';
-        row.createChild('td', 'link').appendChild(item.link);
-      }
-    }
-  }
-
-  return container;
-}
-
 export interface Options {
   tabStops?: boolean;
   // Whether the width of stack trace preview
@@ -226,15 +204,6 @@ export interface Options {
   widthConstrained?: boolean;
   showColumnNumber?: boolean;
   expandable?: boolean;
-}
-
-interface StackTraceRegularRow {
-  functionName: string;
-  link: HTMLElement;
-}
-
-interface StackTraceAsyncRow {
-  asyncDescription: string;
 }
 
 export class StackTracePreviewContent extends UI.Widget.Widget {
