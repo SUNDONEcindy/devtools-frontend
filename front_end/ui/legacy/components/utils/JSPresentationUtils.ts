@@ -44,7 +44,7 @@ import * as UI from '../../legacy.js';
 import jsUtilsStyles from './jsUtils.css.js';
 import {Linkifier} from './Linkifier.js';
 
-const {classMap, createRef, ref} = Directives;
+const {classMap} = Directives;
 
 const UIStrings = {
   /**
@@ -104,7 +104,7 @@ export interface ViewInput {
   onShowLess: () => void;
 }
 
-export type View = (input: ViewInput, output: {table?: HTMLElement}, target: HTMLElement) => void;
+export type View = (input: ViewInput, output: object, target: HTMLElement) => void;
 
 export const DEFAULT_VIEW: View = (input, output, target) => {
   const classes = {
@@ -114,26 +114,21 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
     expanded: Boolean(input.expanded),
     'show-hidden-rows': Boolean(input.showIgnoreListed),
   };
-  // TODO(crbug.com/483576322): Remove once fully migrated.
-  const tableRef = createRef<HTMLElement>();
   // clang-format off
   render(html`
     <style>${jsUtilsStyles}</style>
-    <table class=${classMap(classes)} ${ref(tableRef)}>
+    <table class=${classMap(classes)}>
+      ${renderStackTraceTable(input)}
     </table>
   `, target);
   // clang-format on
-  output.table = tableRef.value;
 };
 
-function renderStackTraceTable(
-    container: Element,
-    options: ViewInput,
-    ): void {
-  container.removeChildren();
+function renderStackTraceTable(options: ViewInput): DocumentFragment {
+  const container = document.createDocumentFragment();
 
   if (!options.stackTrace) {
-    return;
+    return container;
   }
   const {stackTrace} = options;
 
@@ -219,6 +214,8 @@ function renderStackTraceTable(
   showLessLink.createChild('span', 'css-inserted-text')
       .setAttribute('data-inserted-text', i18nString(UIStrings.showLess));
   showLessLink.addEventListener('click', options.onShowLess);
+
+  return container;
 }
 
 export interface Options {
@@ -275,12 +272,7 @@ export class StackTracePreviewContent extends UI.Widget.Widget {
       onShowMore: this.#onShowMoreLess.bind(this, true),
       onShowLess: this.#onShowMoreLess.bind(this, false),
     };
-    const output: {table?: HTMLElement} = {};
-    this.#view(input, output, this.contentElement);
-
-    if (output.table) {
-      renderStackTraceTable(output.table, input);
-    }
+    this.#view(input, {}, this.contentElement);
   }
 
   get linkElements(): readonly HTMLElement[] {
