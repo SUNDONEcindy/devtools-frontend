@@ -37,7 +37,7 @@ import * as i18n from '../../../../core/i18n/i18n.js';
 import * as SDK from '../../../../core/sdk/sdk.js';
 import * as StackTrace from '../../../../models/stack_trace/stack_trace.js';
 import * as Workspace from '../../../../models/workspace/workspace.js';
-import {Directives, html, render} from '../../../lit/lit.js';
+import {Directives, html, nothing, render} from '../../../lit/lit.js';
 import * as VisualLogging from '../../../visual_logging/visual_logging.js';
 import * as UI from '../../legacy.js';
 
@@ -119,6 +119,26 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
     <style>${jsUtilsStyles}</style>
     <table class=${classMap(classes)}>
       ${renderStackTraceTable(input)}
+      ${input.stackTrace ? html`
+        <tfoot>
+          <tr class="show-all-link">
+            <td></td>
+            <td colspan="3">
+              <span class="link" @click=${input.onShowMore}>
+                <span class="css-inserted-text" data-inserted-text=${i18nString(UIStrings.showMoreFrames)}></span>
+              </span>
+            </td>
+          </tr>
+          <tr class="show-less-link">
+            <td></td>
+            <td colspan="3">
+              <span class="link" @click=${input.onShowLess}>
+                <span class="css-inserted-text" data-inserted-text=${i18nString(UIStrings.showLess)}></span>
+              </span>
+            </td>
+          </tr>
+        </tfoot>
+      ` : nothing}
     </table>
   `, target);
   // clang-format on
@@ -194,26 +214,6 @@ function renderStackTraceTable(options: ViewInput): DocumentFragment {
       }
     }
   }
-
-  const tableSection = container.createChild('tfoot');
-  const showAllRow = tableSection.createChild('tr', 'show-all-link');
-  showAllRow.createChild('td');
-  const cell = showAllRow.createChild('td');
-  cell.colSpan = 4;
-  const showAllLink = cell.createChild('span', 'link');
-  // Don't directly put the text of the link in the DOM, as it will likely be
-  // invisible and it may be confusing if it is copied to the clipboard.
-  showAllLink.createChild('span', 'css-inserted-text')
-      .setAttribute('data-inserted-text', i18nString(UIStrings.showMoreFrames));
-  showAllLink.addEventListener('click', options.onShowMore);
-  const showLessRow = tableSection.createChild('tr', 'show-less-link');
-  showLessRow.createChild('td');
-  const showLesscell = showLessRow.createChild('td');
-  showLesscell.colSpan = 4;
-  const showLessLink = showLesscell.createChild('span', 'link');
-  showLessLink.createChild('span', 'css-inserted-text')
-      .setAttribute('data-inserted-text', i18nString(UIStrings.showLess));
-  showLessLink.addEventListener('click', options.onShowLess);
 
   return container;
 }
