@@ -11896,6 +11896,8 @@ export namespace Network {
   export interface EnableRequest {
     /**
      * Buffer size in bytes to use when preserving network payloads (XHRs, etc).
+     * This is the maximum number of bytes that will be collected by this
+     * DevTools session.
      */
     maxTotalBufferSize?: integer;
     /**
