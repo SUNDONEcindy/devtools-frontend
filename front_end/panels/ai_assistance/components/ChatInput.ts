@@ -202,7 +202,8 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: ViewOutput, target: HTML
           jslog=${VisualLogging.link('open-ai-settings').track({
             click: true,
           })}
-          @click=${() => {
+          @click=${(ev: Event) => {
+            ev.preventDefault();
             void UI.ViewManager.ViewManager.instance().showView('chrome-ai');
           }}
         >${lockedString('Relevant data')}</button>&nbsp;${lockedString('is sent to Google')}

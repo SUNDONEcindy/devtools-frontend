@@ -1426,8 +1426,6 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     // Cancel any previous in-flight conversation.
     this.#cancel();
     const signal = this.#runAbortController.signal;
-    const context = this.#getConversationContext(this.#conversation.type);
-    this.#conversation.setContext(context);
 
     // If a different context is provided, it must be from the same origin.
     if (this.#conversation.isBlockedByOrigin) {
