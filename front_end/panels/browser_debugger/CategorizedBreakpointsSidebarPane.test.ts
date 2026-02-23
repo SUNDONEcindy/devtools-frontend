@@ -231,5 +231,82 @@ describeWithMockConnection('CategorizedBreakpointsSidebarPane', () => {
       await assertScreenshot('browser_debugger/categorized_breakpoint_sidebar_pane_expand.png');
     });
 
+    it('filters breakpoints case-insensitively on both category and breakpoint names', async () => {
+      const target = document.createElement('div');
+      renderElementIntoDOM(target, {includeCommonStyles: true});
+      BrowserDebugger.CategorizedBreakpointsSidebarPane.DEFAULT_VIEW(
+          {
+            onFilterChanged: function(): void {
+              throw new Error('Function not implemented.');
+            },
+            onBreakpointChange: function(): void {
+              throw new Error('Function not implemented.');
+            },
+            onItemSelected: function(): void {},
+            onSpaceKeyDown: function(): void {},
+            filterText: 'AnImAtIoN',
+            highlightedItem: null,
+            categories,
+            sortedCategoryNames: categories.keys().toArray().toSorted(),
+            userExpandedCategories: new Set(),
+          },
+          {
+            userExpandedCategories: new Set(),
+          },
+          target);
+      await assertScreenshot('browser_debugger/categorized_breakpoint_sidebar_pane_filter_animation.png');
+    });
+
+    it('filters on category name case-insensitively and shows all breakpoints in it', async () => {
+      const target = document.createElement('div');
+      renderElementIntoDOM(target, {includeCommonStyles: true});
+      BrowserDebugger.CategorizedBreakpointsSidebarPane.DEFAULT_VIEW(
+          {
+            onFilterChanged: function(): void {
+              throw new Error('Function not implemented.');
+            },
+            onBreakpointChange: function(): void {
+              throw new Error('Function not implemented.');
+            },
+            onItemSelected: function(): void {},
+            onSpaceKeyDown: function(): void {},
+            filterText: 'cAnVaS',
+            highlightedItem: null,
+            categories,
+            sortedCategoryNames: categories.keys().toArray().toSorted(),
+            userExpandedCategories: new Set(),
+          },
+          {
+            userExpandedCategories: new Set(),
+          },
+          target);
+      await assertScreenshot('browser_debugger/categorized_breakpoint_sidebar_pane_filter_category.png');
+    });
+
+    it('filters breakpoints by name when category name does not match', async () => {
+      const target = document.createElement('div');
+      renderElementIntoDOM(target, {includeCommonStyles: true});
+      BrowserDebugger.CategorizedBreakpointsSidebarPane.DEFAULT_VIEW(
+          {
+            onFilterChanged: function(): void {
+              throw new Error('Function not implemented.');
+            },
+            onBreakpointChange: function(): void {
+              throw new Error('Function not implemented.');
+            },
+            onItemSelected: function(): void {},
+            onSpaceKeyDown: function(): void {},
+            filterText: 'bnim',
+            highlightedItem: null,
+            categories,
+            sortedCategoryNames: categories.keys().toArray().toSorted(),
+            userExpandedCategories: new Set(),
+          },
+          {
+            userExpandedCategories: new Set(),
+          },
+          target);
+      await assertScreenshot('browser_debugger/categorized_breakpoint_sidebar_pane_filter_breakpoint_only.png');
+    });
   });
 });

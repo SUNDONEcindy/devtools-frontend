@@ -150,12 +150,20 @@ export const DEFAULT_VIEW = (input: ViewInput, output: ViewOutput, target: HTMLE
   const shouldExpandCategory = (breakpoints: SDK.CategorizedBreakpoint.CategorizedBreakpoint[]): boolean =>
       Boolean(input.filterText) || (input.highlightedItem && breakpoints.includes(input.highlightedItem)) ||
       breakpoints.some(breakpoint => breakpoint.enabled());
-  const filter = (breakpoint: SDK.CategorizedBreakpoint.CategorizedBreakpoint): boolean => !input.filterText ||
-      Boolean(Sources.CategorizedBreakpointL10n.getLocalizedBreakpointName(breakpoint.name).match(input.filterText)) ||
+  const filterRegex =
+      input.filterText ? new RegExp(Platform.StringUtilities.escapeForRegExp(input.filterText), 'i') : null;
+  const filter = (breakpoint: SDK.CategorizedBreakpoint.CategorizedBreakpoint): boolean => !filterRegex ||
+      Boolean(Sources.CategorizedBreakpointL10n.getLocalizedBreakpointName(breakpoint.name).match(filterRegex)) ||
       breakpoint === input.highlightedItem;
   const filteredCategories =
       input.sortedCategoryNames.values()
-          .map(category => [category, input.categories.get(category)?.filter(filter)])
+          .map(category => {
+            const breakpoints = input.categories.get(category);
+            if (filterRegex && getLocalizedCategory(category).match(filterRegex)) {
+              return [category, breakpoints];
+            }
+            return [category, breakpoints?.filter(filter)];
+          })
           .filter(
               (filteredCategory): filteredCategory is
                   [SDK.CategorizedBreakpoint.Category, SDK.CategorizedBreakpoint.CategorizedBreakpoint[]] =>
