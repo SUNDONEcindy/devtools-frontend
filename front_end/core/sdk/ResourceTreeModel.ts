@@ -646,13 +646,11 @@ export class ResourceTreeFrame {
   #childFrames = new Set<ResourceTreeFrame>();
   resourcesMap = new Map<Platform.DevToolsPath.UrlString, Resource>();
   backForwardCacheDetails: {
-    restoredFromCache: boolean|undefined,
     explanations: Protocol.Page.BackForwardCacheNotRestoredExplanation[],
-    explanationsTree: Protocol.Page.BackForwardCacheNotRestoredExplanationTree|undefined,
+    restoredFromCache?: boolean,
+    explanationsTree?: Protocol.Page.BackForwardCacheNotRestoredExplanationTree,
   } = {
-    restoredFromCache: undefined,
     explanations: [],
-    explanationsTree: undefined,
   };
 
   constructor(
@@ -725,9 +723,7 @@ export class ResourceTreeFrame {
     this.#crossOriginIsolatedContextType = framePayload.crossOriginIsolatedContextType;
     this.#gatedAPIFeatures = framePayload.gatedAPIFeatures;
     this.backForwardCacheDetails = {
-      restoredFromCache: undefined,
       explanations: [],
-      explanationsTree: undefined,
     };
 
     const mainResource = this.resourcesMap.get(this.#url);

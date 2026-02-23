@@ -206,12 +206,10 @@ export class MockProtocolBackend {
     const payload: Protocol.Debugger.CallFrame = {
       callFrameId: '0' as Protocol.Debugger.CallFrameId,
       functionName: 'test',
-      functionLocation: undefined,
       location: innerScope.startLocation,
       url: scriptObject.sourceURL,
       scopeChain,
       this: {type: 'object'} as Protocol.Runtime.RemoteObject,
-      returnValue: undefined,
       canBeRestarted: false,
     };
 

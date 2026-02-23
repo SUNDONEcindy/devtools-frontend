@@ -278,8 +278,13 @@ export class PageResourceLoader extends Common.ObjectWrapper.ObjectWrapper<Event
       throw new Error('Invalid initiator');
     }
     const key = PageResourceLoader.makeKey(url, initiator);
-    const pageResource:
-        PageResource = {success: null, size: null, duration: null, errorMessage: undefined, url, initiator};
+    const pageResource: PageResource = {
+      success: null,
+      size: null,
+      duration: null,
+      url,
+      initiator,
+    };
     this.#pageResources.set(key, pageResource);
     this.dispatchEventToListeners(Events.UPDATE);
     const startTime = performance.now();
@@ -340,8 +345,10 @@ export class PageResourceLoader extends Common.ObjectWrapper.ObjectWrapper<Event
             return {
               success: false,
               content: '',
-              errorDescription:
-                  {statusCode: 0, netError: undefined, netErrorName: undefined, message: e.message, urlValid: undefined}
+              errorDescription: {
+                statusCode: 0,
+                message: e.message,
+              }
             };
           }
         }
@@ -399,7 +406,6 @@ export class PageResourceLoader extends Common.ObjectWrapper.ObjectWrapper<Event
       netError: number|undefined,
       netErrorName: string|undefined,
       message: string,
-      urlValid: undefined,
     },
   }> {
     const networkManager = (target.model(NetworkManager) as NetworkManager);
@@ -420,7 +426,6 @@ export class PageResourceLoader extends Common.ObjectWrapper.ObjectWrapper<Event
           message: Host.ResourceLoader.netErrorToMessage(
                        resource.netError, resource.httpStatusCode, resource.netErrorName) ||
               '',
-          urlValid: undefined,
         },
       };
     } finally {

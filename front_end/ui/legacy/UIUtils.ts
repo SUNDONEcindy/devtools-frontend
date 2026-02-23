@@ -1808,10 +1808,7 @@ function focusChanged(event: Event): void {
 export function createShadowRootWithCoreStyles(element: Element, options: {
   cssFile?: CSSInJS[]|CSSInJS,
   delegatesFocus?: boolean,
-} = {
-  delegatesFocus: undefined,
-  cssFile: undefined,
-}): ShadowRoot {
+} = {}): ShadowRoot {
   const {cssFile, delegatesFocus} = options;
 
   const shadowRoot = element.attachShadow({mode: 'open', delegatesFocus});

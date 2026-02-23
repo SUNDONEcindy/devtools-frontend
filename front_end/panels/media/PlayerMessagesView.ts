@@ -134,7 +134,7 @@ class MessageLevelSelector implements UI.SoftDropDown.Delegate<SelectableLevel> 
       overwrite: true,
       stringValue: '',
       value: MessageLevelBitfield.DEFAULT,
-      selectable: undefined,
+
     });
 
     this.items.insert(this.items.length, {
@@ -142,7 +142,7 @@ class MessageLevelSelector implements UI.SoftDropDown.Delegate<SelectableLevel> 
       overwrite: true,
       stringValue: '',
       value: MessageLevelBitfield.ALL,
-      selectable: undefined,
+
     });
 
     this.items.insert(this.items.length, {
@@ -150,7 +150,7 @@ class MessageLevelSelector implements UI.SoftDropDown.Delegate<SelectableLevel> 
       overwrite: false,
       stringValue: 'error',
       value: MessageLevelBitfield.ERROR,
-      selectable: undefined,
+
     });
 
     this.items.insert(this.items.length, {
@@ -158,7 +158,6 @@ class MessageLevelSelector implements UI.SoftDropDown.Delegate<SelectableLevel> 
       overwrite: false,
       stringValue: 'warning',
       value: MessageLevelBitfield.WARNING,
-      selectable: undefined,
     });
 
     this.items.insert(this.items.length, {
@@ -166,7 +165,6 @@ class MessageLevelSelector implements UI.SoftDropDown.Delegate<SelectableLevel> 
       overwrite: false,
       stringValue: 'info',
       value: MessageLevelBitfield.INFO,
-      selectable: undefined,
     });
 
     this.items.insert(this.items.length, {
@@ -174,7 +172,7 @@ class MessageLevelSelector implements UI.SoftDropDown.Delegate<SelectableLevel> 
       overwrite: false,
       stringValue: 'debug',
       value: MessageLevelBitfield.DEBUG,
-      selectable: undefined,
+
     });
   }
 

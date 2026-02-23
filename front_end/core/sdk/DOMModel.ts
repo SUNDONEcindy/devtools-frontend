@@ -1075,17 +1075,20 @@ export class DOMNode extends Common.ObjectWrapper.ObjectWrapper<DOMNodeEventType
   }
 
   highlight(mode?: string): void {
-    this.#domModel.overlayModel().highlightInOverlay({node: this, selectorList: undefined}, mode);
+    this.#domModel.overlayModel().highlightInOverlay({node: this}, mode);
   }
 
   highlightForTwoSeconds(): void {
-    this.#domModel.overlayModel().highlightInOverlayForTwoSeconds({node: this, selectorList: undefined});
+    this.#domModel.overlayModel().highlightInOverlayForTwoSeconds({node: this});
   }
 
   async resolveToObject(objectGroup?: string, executionContextId?: Protocol.Runtime.ExecutionContextId):
       Promise<RemoteObject|null> {
-    const {object} = await this.#agent.invoke_resolveNode(
-        {nodeId: this.id, backendNodeId: undefined, executionContextId, objectGroup});
+    const {object} = await this.#agent.invoke_resolveNode({
+      nodeId: this.id,
+      executionContextId,
+      objectGroup,
+    });
     return object && this.#domModel.runtimeModelInternal.createRemoteObject(object) || null;
   }
 

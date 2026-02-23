@@ -733,7 +733,6 @@ export class SecurityPanel extends UI.Panel.Panel implements SDK.TargetManager.S
         securityState,
         securityDetails: request.securityDetails(),
         loadedFromCache: request.cached(),
-        originView: undefined,
       };
       this.origins.set(origin, newOriginState);
 

@@ -20,7 +20,7 @@ interface CallbackWithDebugInfo {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   resolve: (response: {result: CommandResult<any>}|{error: CDPError}) => void;
   method: string;
-  sessionId: string|undefined;
+  sessionId?: string;
 }
 
 type Callback = (error: MessageError|null, arg1: Object|null) => void;
@@ -56,7 +56,7 @@ export class DevToolsCDPConnection implements CDPConnection {
     this.#observers.delete(observer);
   }
 
-  send<T extends Command>(method: T, params: CommandParams<T>, sessionId: string|undefined):
+  send<T extends Command>(method: T, params: CommandParams<T>, sessionId?: string):
       Promise<{result: CommandResult<T>}|{error: CDPError}> {
     const messageId = ++this.#lastMessageId;
     const messageObject: Partial<CDPCommandRequest<T>> = {

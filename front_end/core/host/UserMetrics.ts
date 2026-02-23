@@ -101,7 +101,7 @@ export class UserMetrics {
         EnumeratedHistogram.IssuesPanelOpenedFrom, issueOpener, IssueOpener.MAX_VALUE);
   }
 
-  issuesPanelIssueExpanded(issueExpandedCategory: string|undefined): void {
+  issuesPanelIssueExpanded(issueExpandedCategory?: string): void {
     if (issueExpandedCategory === undefined) {
       return;
     }

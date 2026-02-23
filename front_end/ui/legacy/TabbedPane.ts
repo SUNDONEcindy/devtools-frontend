@@ -303,7 +303,7 @@ export class TabbedPane extends Common.ObjectWrapper.eventMixin<EventTypes, type
       this.hideTabElement(tab);
     }
 
-    const eventData: EventData = {prevTabId: undefined, tabId: id, view: tab.view, isUserGesture: userGesture};
+    const eventData: EventData = {tabId: id, view: tab.view, isUserGesture: userGesture};
     this.dispatchEventToListeners(Events.TabClosed, eventData);
     return true;
   }
@@ -1026,7 +1026,7 @@ export class TabbedPane extends Common.ObjectWrapper.eventMixin<EventTypes, type
     }
     this.#tabs.splice(index, 0, tab);
 
-    const eventData: EventData = {prevTabId: undefined, tabId: tab.id, view: tab.view, isUserGesture: undefined};
+    const eventData: EventData = {tabId: tab.id, view: tab.view};
     this.dispatchEventToListeners(Events.TabOrderChanged, eventData);
   }
 

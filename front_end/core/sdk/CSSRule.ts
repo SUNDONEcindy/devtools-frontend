@@ -31,8 +31,8 @@ export class CSSRule {
   constructor(cssModel: CSSModel, payload: {
     style: Protocol.CSS.CSSStyle,
     origin: Protocol.CSS.StyleSheetOrigin,
-    originTreeScopeNodeId: Protocol.DOM.BackendNodeId|undefined,
     header: CSSStyleSheetHeader|null,
+    originTreeScopeNodeId?: Protocol.DOM.BackendNodeId,
   }) {
     this.header = payload.header;
     this.cssModelInternal = cssModel;
@@ -137,10 +137,10 @@ export class CSSStyleRule extends CSSRule {
   }
 
   static createDummyRule(cssModel: CSSModel, selectorText: string): CSSStyleRule {
-    const dummyPayload = {
+    const dummyPayload: Protocol.CSS.CSSRule = {
       selectorList: {
         text: '',
-        selectors: [{text: selectorText, value: undefined}],
+        selectors: [{text: selectorText}],
       },
       style: {
         styleSheetId: '0' as Protocol.DOM.StyleSheetId,
@@ -150,7 +150,7 @@ export class CSSStyleRule extends CSSRule {
       },
       origin: Protocol.CSS.StyleSheetOrigin.Inspector,
     };
-    return new CSSStyleRule(cssModel, (dummyPayload as Protocol.CSS.CSSRule));
+    return new CSSStyleRule(cssModel, dummyPayload);
   }
 
   private reinitializeSelectors(selectorList: Protocol.CSS.SelectorList): void {
@@ -236,7 +236,6 @@ export class CSSPropertyRule extends CSSRule {
       origin: payload.origin,
       style: payload.style,
       header: styleSheetHeaderForRule(cssModel, payload),
-      originTreeScopeNodeId: undefined,
     });
     this.#name = new CSSValue(payload.propertyName);
   }
@@ -277,7 +276,6 @@ export class CSSAtRule extends CSSRule {
       origin: payload.origin,
       style: payload.style,
       header: styleSheetHeaderForRule(cssModel, payload),
-      originTreeScopeNodeId: undefined
     });
     this.#name = payload.name ? new CSSValue(payload.name) : null;
     this.#type = payload.type;
@@ -323,7 +321,6 @@ export class CSSKeyframeRule extends CSSRule {
       origin: payload.origin,
       style: payload.style,
       header: styleSheetHeaderForRule(cssModel, payload),
-      originTreeScopeNodeId: undefined
     });
     this.reinitializeKey(payload.keyText);
     this.#parentRuleName = parentRuleName;
@@ -379,7 +376,6 @@ export class CSSPositionTryRule extends CSSRule {
       origin: payload.origin,
       style: payload.style,
       header: styleSheetHeaderForRule(cssModel, payload),
-      originTreeScopeNodeId: undefined
     });
     this.#name = new CSSValue(payload.name);
     this.#active = payload.active;
@@ -413,7 +409,6 @@ export class CSSFunctionRule extends CSSRule {
       origin: payload.origin,
       style: {cssProperties: [], shorthandEntries: []},
       header: styleSheetHeaderForRule(cssModel, payload),
-      originTreeScopeNodeId: undefined
     });
     this.#name = new CSSValue(payload.name);
     this.#parameters = payload.parameters.map(({name}) => name);

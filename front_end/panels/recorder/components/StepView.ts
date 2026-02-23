@@ -519,7 +519,6 @@ export class StepView extends UI.Widget.Widget {
     builtInConverters: [],
     extensionConverters: [],
     isSelected: false,
-    recorderSettings: undefined,
     actions: [],
 
     stepEdited: this.#stepEdited.bind(this),

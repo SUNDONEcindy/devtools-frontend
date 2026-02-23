@@ -76,11 +76,11 @@ export class ImagePreview {
       originalImageURL: Platform.DevToolsPath.UrlString,
       showDimensions: boolean,
       options: {
-        precomputedFeatures: (PrecomputedFeatures|undefined),
-        imageAltText: (string|undefined),
         align: Align,
+        precomputedFeatures?: PrecomputedFeatures,
+        imageAltText?: string,
         hideFileData?: boolean,
-      }|undefined = {precomputedFeatures: undefined, imageAltText: undefined, align: Align.CENTER},
+      } = {align: Align.CENTER},
       ): Promise<HTMLDivElement|null> {
     const {precomputedFeatures, imageAltText, align} = options;
 

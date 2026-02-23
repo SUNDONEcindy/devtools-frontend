@@ -311,7 +311,7 @@ export class DevicesSettingsTab extends UI.Widget.VBox implements
 
     const ua = uaStringFields.createChild('div', 'hbox');
     ua.appendChild(editor.createInput('user-agent', 'text', i18nString(UIStrings.userAgentString), () => {
-      return {valid: true, errorMessage: undefined};
+      return {valid: true};
     }));
     const uaTypeOptions = [
       EmulationModel.DeviceModeModel.UA.MOBILE,
@@ -320,7 +320,7 @@ export class DevicesSettingsTab extends UI.Widget.VBox implements
       EmulationModel.DeviceModeModel.UA.DESKTOP_TOUCH,
     ];
     const uaType = editor.createSelect('ua-type', uaTypeOptions, () => {
-      return {valid: true, errorMessage: undefined};
+      return {valid: true};
     }, i18nString(UIStrings.userAgentType));
     uaType.classList.add('device-edit-fixed');
     ua.appendChild(uaType);

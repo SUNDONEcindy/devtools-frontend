@@ -524,7 +524,7 @@ export class RequestConditionsDrawer extends UI.Widget.VBox implements
     const validator =
         (_item: SDK.NetworkManager.RequestCondition, _index: number, input: UI.ListWidget.EditorControl): {
           valid: boolean,
-          errorMessage: Common.UIString.LocalizedString|undefined,
+          errorMessage?: Common.UIString.LocalizedString,
         } => {
           if (!input.value) {
             return {errorMessage: i18nString(UIStrings.patternInputCannotBeEmpty), valid: false};
@@ -539,7 +539,7 @@ export class RequestConditionsDrawer extends UI.Widget.VBox implements
             case SDK.NetworkManager.RequestURLPatternValidity.HAS_REGEXP_GROUPS:
               return {errorMessage: i18nString(UIStrings.patternFailedWithRegExpGroups), valid: false};
           }
-          return {valid: true, errorMessage: undefined};
+          return {valid: true};
         };
     const urlInput = editor.createInput('url', 'text', '', validator);
     label.htmlFor = urlInput.id = 'editor-url-input';

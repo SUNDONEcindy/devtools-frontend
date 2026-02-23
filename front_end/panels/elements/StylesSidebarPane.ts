@@ -1572,7 +1572,6 @@ export class SectionBlock {
     UI.UIUtils.createTextChild(separatorElement, i18nString(UIStrings.inheritedFromSPseudoOf, {PH1: pseudoTypeString}));
     const link = PanelsCommon.DOMLinkifier.Linkifier.instance().linkify(node, {
       preventKeyboardFocus: true,
-      tooltip: undefined,
     });
     separatorElement.appendChild(link);
     return new SectionBlock(separatorElement);
@@ -1625,7 +1624,6 @@ export class SectionBlock {
     UI.UIUtils.createTextChild(separatorElement, i18nString(UIStrings.inheritedFroms));
     const link = PanelsCommon.DOMLinkifier.Linkifier.instance().linkify(node, {
       preventKeyboardFocus: true,
-      tooltip: undefined,
     });
     separatorElement.appendChild(link);
     return new SectionBlock(separatorElement);
@@ -1931,14 +1929,6 @@ export class CSSPropertyPrompt extends UI.TextPrompt.TextPrompt {
     if (!this.isEditingName && !results.length && query.length > 1 && '!important'.startsWith(lowerQuery)) {
       results.push({
         text: '!important',
-        title: undefined,
-        subtitle: undefined,
-        priority: undefined,
-        isSecondary: undefined,
-        subtitleRenderer: undefined,
-        selectionRange: undefined,
-        hideGhostText: undefined,
-        iconElement: undefined,
       });
     }
     const userEnteredText = query.replace('-', '');
@@ -2014,14 +2004,6 @@ export class CSSPropertyPrompt extends UI.TextPrompt.TextPrompt {
       const index = completion.toLowerCase().indexOf(lowerQuery);
       const result: CompletionResult = {
         text: completion,
-        title: undefined,
-        subtitle: undefined,
-        priority: undefined,
-        isSecondary: undefined,
-        subtitleRenderer: undefined,
-        selectionRange: undefined,
-        hideGhostText: undefined,
-        iconElement: undefined,
         isCSSVariableColor: false,
       };
       if (variable) {

@@ -506,14 +506,7 @@ export class PerformanceMonitorImpl extends UI.Widget.HBox implements
     const themeSupport = ThemeSupport.ThemeSupport.instance();
     const elementForStyles = this.contentElement;
 
-    const defaults = {
-      color: undefined,
-      format: undefined,
-      currentMax: undefined,
-      max: undefined,
-      smooth: undefined,
-      stacked: undefined,
-    };
+    const defaults: Partial<ChartInfo> = {};
 
     return [
       {
@@ -543,7 +536,6 @@ export class PerformanceMonitorImpl extends UI.Widget.HBox implements
         stacked: true,
         color: themeSupport.getComputedValue('--override-color-perf-monitor-cpu', elementForStyles),
         max: 1,
-        currentMax: undefined,
       },
       {
         ...defaults,

@@ -308,7 +308,6 @@ async function renderPreviewElement(
     const previewOpts = {
       imageAltText:
           LegacyComponents.ImagePreview.ImagePreview.defaultAltTextForImageURL(url as Platform.DevToolsPath.UrlString),
-      precomputedFeatures: undefined,
       align: LegacyComponents.ImagePreview.Align.START,
       hideFileData: true,
     };

@@ -437,7 +437,6 @@ export const DEFAULT_DEVTOOLS_SETTINGS: DevtoolsSettings = {
     veLogsTestMode: true,
   },
   dockingMode: 'right',
-  panel: undefined
 };
 
 /**

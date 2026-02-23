@@ -315,14 +315,14 @@ export class AXNodePropertyTreeElement extends UI.TreeOutline.TreeElement {
   appendRelatedNode(relatedNode: Protocol.Accessibility.AXRelatedNode, _index: number): void {
     const deferredNode =
         new SDK.DOMModel.DeferredDOMNode(this.axNode.accessibilityModel().target(), relatedNode.backendDOMNodeId);
-    const nodeTreeElement = new AXRelatedNodeSourceTreeElement({deferredNode, idref: undefined}, relatedNode);
+    const nodeTreeElement = new AXRelatedNodeSourceTreeElement({deferredNode}, relatedNode);
     this.appendChild(nodeTreeElement);
   }
 
   appendRelatedNodeInline(relatedNode: Protocol.Accessibility.AXRelatedNode): void {
     const deferredNode =
         new SDK.DOMModel.DeferredDOMNode(this.axNode.accessibilityModel().target(), relatedNode.backendDOMNodeId);
-    const linkedNode = new AXRelatedNodeElement({deferredNode, idref: undefined});
+    const linkedNode = new AXRelatedNodeElement({deferredNode});
     this.listItemElement.appendChild(linkedNode.render());
   }
 
@@ -440,9 +440,9 @@ export class AXValueSourceTreeElement extends AXNodePropertyTreeElement {
       if (matchingNode) {
         this.appendRelatedNodeWithIdref(matchingNode, idref);
       } else if (idrefs.length === 1) {
-        this.listItemElement.appendChild(new AXRelatedNodeElement({deferredNode: undefined, idref}).render());
+        this.listItemElement.appendChild(new AXRelatedNodeElement({idref}).render());
       } else {
-        this.appendChild(new AXRelatedNodeSourceTreeElement({deferredNode: undefined, idref}));
+        this.appendChild(new AXRelatedNodeSourceTreeElement({idref}));
       }
     }
   }
@@ -591,8 +591,9 @@ export class AXRelatedNodeElement {
         if (!node) {
           return;
         }
-        valueElement.appendChild(PanelsCommon.DOMLinkifier.Linkifier.instance().linkify(
-            node, {tooltip: undefined, preventKeyboardFocus: true}));
+        valueElement.appendChild(PanelsCommon.DOMLinkifier.Linkifier.instance().linkify(node, {
+          preventKeyboardFocus: true,
+        }));
       });
     } else if (this.idref) {
       element.classList.add('invalid');

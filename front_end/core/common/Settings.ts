@@ -401,7 +401,7 @@ export class Setting<V> {
     return '' as Platform.UIString.LocalizedString;
   }
 
-  setTitleFunction(titleFunction: (() => Platform.UIString.LocalizedString)|undefined): void {
+  setTitleFunction(titleFunction?: (() => Platform.UIString.LocalizedString)): void {
     if (titleFunction) {
       this.#titleFunction = titleFunction;
     }
@@ -625,7 +625,7 @@ export class Setting<V> {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class RegExpSetting extends Setting<any> {
-  #regexFlags: string|undefined;
+  #regexFlags?: string;
   #regex?: RegExp|null;
 
   constructor(

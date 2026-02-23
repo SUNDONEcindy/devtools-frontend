@@ -144,7 +144,6 @@ export class CookieModel extends SDKModel<EventTypes> {
     this.#cookieToBlockedReasons.clear();
     await Promise.all(cookies.map(cookie => networkAgent.invoke_deleteCookies({
       name: cookie.name(),
-      url: undefined,
       domain: cookie.domain(),
       path: cookie.path(),
       partitionKey: cookie.partitionKey(),

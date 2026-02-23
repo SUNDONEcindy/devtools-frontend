@@ -166,8 +166,7 @@ export class SettingsScreen extends UI.Widget.VBox implements UI.View.ViewLocati
     return settingsScreen;
   }
 
-  static async showSettingsScreen(
-      options: ShowSettingsScreenOptions|undefined = {name: undefined, focusTabHeader: undefined}): Promise<void> {
+  static async showSettingsScreen(options: ShowSettingsScreenOptions = {}): Promise<void> {
     const {name, focusTabHeader} = options;
     const settingsScreen = SettingsScreen.revealSettingsScreen();
 

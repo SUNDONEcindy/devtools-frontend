@@ -38,7 +38,7 @@ export function sanitizedTestId(rawTestId: string): SanitizedTestId {
 }
 
 interface SinkData {
-  url: string|undefined;
+  url?: string;
   authToken?: string;
 }
 let resolvedSinkData: SinkData|undefined = undefined;

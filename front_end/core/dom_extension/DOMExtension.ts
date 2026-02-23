@@ -52,7 +52,7 @@ Node.prototype.traverseNextTextNode = function(stayWithin?: Node): Node|null {
   return node;
 };
 
-Element.prototype.positionAt = function(x: number|undefined, y: number|undefined, relativeTo?: Element): void {
+Element.prototype.positionAt = function(x?: number, y?: number, relativeTo?: Element): void {
   let shift: AnchorBox|{
     x: number,
     y: number,

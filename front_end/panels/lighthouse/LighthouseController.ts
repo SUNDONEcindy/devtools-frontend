@@ -760,7 +760,6 @@ export const RuntimeSettings: RuntimeSetting[] = [
         value: 'desktop'
       },
     ],
-    learnMore: undefined,
   },
   {
     setting: Common.Settings.Settings.instance().createSetting(
@@ -820,8 +819,6 @@ export const RuntimeSettings: RuntimeSetting[] = [
     setFlags: (flags: Flags, value: string|boolean) => {
       flags.disableStorageReset = !value;
     },
-    options: undefined,
-    learnMore: undefined,
   },
   {
     setting: Common.Settings.Settings.instance().createSetting(
@@ -835,8 +832,6 @@ export const RuntimeSettings: RuntimeSetting[] = [
         flags.additionalTraceCategories = '';
       }
     },
-    options: undefined,
-    learnMore: undefined,
   },
 ];
 

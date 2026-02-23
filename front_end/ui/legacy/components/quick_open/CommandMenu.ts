@@ -156,7 +156,6 @@ export class CommandMenu {
       jslogContext: action.id(),
       executeHandler: action.execute.bind(action),
       userActionCode,
-      availableHandler: undefined,
       isPanelOrDrawer: panelOrDrawer,
     });
   }
@@ -191,7 +190,6 @@ export class CommandMenu {
       jslogContext: id,
       executeHandler,
       userActionCode,
-      availableHandler: undefined,
       isPanelOrDrawer: panelOrDrawer,
       featurePromotionId,
     });

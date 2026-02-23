@@ -36,8 +36,10 @@ export class HeapSnapshotWorkerDispatcher {
   async dispatchMessage({data, ports}:
                             {data: HeapSnapshotModel.HeapSnapshotModel.WorkerCommand, ports: readonly MessagePort[]}):
       Promise<void> {
-    const response: DispatcherResponse =
-        {callId: data.callId, result: null, error: undefined, errorCallStack: undefined, errorMethodName: undefined};
+    const response: DispatcherResponse = {
+      callId: data.callId,
+      result: null,
+    };
     try {
       switch (data.disposition) {
         case 'createLoader':

@@ -146,16 +146,6 @@ export class ProfileView extends UI.View.SimpleView implements UI.SearchableView
       fixedWidth: true,
       sortable: true,
       sort: DataGrid.DataGrid.Order.Descending,
-      titleDOMFragment: undefined,
-      align: undefined,
-      editable: undefined,
-      nonSelectable: undefined,
-      longText: undefined,
-      disclosure: undefined,
-      weight: undefined,
-      allowInSortByEvenWhenHidden: undefined,
-      dataType: undefined,
-      defaultWeight: undefined,
     });
     columns.push({
       id: 'total',
@@ -163,42 +153,17 @@ export class ProfileView extends UI.View.SimpleView implements UI.SearchableView
       width: '120px',
       fixedWidth: true,
       sortable: true,
-      sort: undefined,
-      titleDOMFragment: undefined,
-      align: undefined,
-      editable: undefined,
-      nonSelectable: undefined,
-      longText: undefined,
-      disclosure: undefined,
-      weight: undefined,
-      allowInSortByEvenWhenHidden: undefined,
-      dataType: undefined,
-      defaultWeight: undefined,
     });
     columns.push({
       id: 'function',
       title: i18nString(UIStrings.function),
       disclosure: true,
       sortable: true,
-      sort: undefined,
-      titleDOMFragment: undefined,
-      align: undefined,
-      editable: undefined,
-      nonSelectable: undefined,
-      longText: undefined,
-      weight: undefined,
-      allowInSortByEvenWhenHidden: undefined,
-      dataType: undefined,
-      defaultWeight: undefined,
-      width: undefined,
-      fixedWidth: undefined,
     });
 
     this.dataGrid = new DataGrid.DataGrid.DataGridImpl({
       displayName: i18nString(UIStrings.profiler),
       columns,
-      deleteCallback: undefined,
-      refreshCallback: undefined,
     });
     this.dataGrid.addEventListener(DataGrid.DataGrid.Events.SORTING_CHANGED, this.sortProfile, this);
     this.dataGrid.addEventListener(DataGrid.DataGrid.Events.SELECTED_NODE, this.nodeSelected.bind(this, true));

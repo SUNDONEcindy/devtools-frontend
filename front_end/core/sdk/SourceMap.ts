@@ -89,10 +89,10 @@ export class SourceMapEntry {
   readonly lineNumber: number;
   readonly columnNumber: number;
   readonly sourceIndex?: number;
-  readonly sourceURL: Platform.DevToolsPath.UrlString|undefined;
+  readonly sourceURL?: Platform.DevToolsPath.UrlString;
   readonly sourceLineNumber: number;
   readonly sourceColumnNumber: number;
-  readonly name: string|undefined;
+  readonly name?: string;
 
   constructor(
       lineNumber: number, columnNumber: number, sourceIndex?: number, sourceURL?: Platform.DevToolsPath.UrlString,
@@ -248,7 +248,6 @@ export class SourceMap {
         sourceURL: this.sourceURLs()[callsite.sourceIndex],
         sourceLineNumber: callsite.line,
         sourceColumnNumber: callsite.column,
-        name: undefined,
       };
     }
     const mappings = this.mappings();

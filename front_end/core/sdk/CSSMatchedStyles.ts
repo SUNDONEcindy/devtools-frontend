@@ -225,7 +225,7 @@ export interface CSSType {
 export class CSSRegisteredProperty {
   #registration: Protocol.CSS.CSSPropertyRegistration|CSSPropertyRule;
   #cssModel: CSSModel;
-  #style: CSSStyleDeclaration|undefined;
+  #style?: CSSStyleDeclaration;
   constructor(cssModel: CSSModel, registration: CSSPropertyRule|Protocol.CSS.CSSPropertyRegistration) {
     this.#cssModel = cssModel;
     this.#registration = registration;

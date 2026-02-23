@@ -700,9 +700,6 @@ export class DeviceModeModel extends Common.ObjectWrapper.ObjectWrapper<EventTyp
         positionX,
         positionY,
         dontSetVisibleSize: true,
-        displayFeature: undefined,
-        devicePosture: undefined,
-        screenOrientation: undefined,
       };
       if (displayFeature) {
         metrics.displayFeature = displayFeature;
