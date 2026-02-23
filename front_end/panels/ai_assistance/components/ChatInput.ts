@@ -323,7 +323,6 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: ViewOutput, target: HTML
                         class=${Lit.Directives.classMap({
                           'resource-link': true,
                           'has-picker-behavior': input.conversationType === AiAssistanceModel.AiHistoryStorage.ConversationType.STYLING,
-                          disabled: input.isTextInputDisabled,
                         })}
                       >
                         ${
@@ -336,7 +335,6 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: ViewOutput, target: HTML
                                   options: {
                                     hiddenClassList: input.selectedContext.getItem().classNames().filter(
                                       className => className.startsWith(AiAssistanceModel.Injected.AI_ASSISTANCE_CSS_CLASS_NAME)),
-                                    disabled: input.isTextInputDisabled,
                                     ariaDescription: i18nString(UIStrings.revealContextDescription),
                                   },
                                 })}

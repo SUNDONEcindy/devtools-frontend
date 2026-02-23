@@ -220,6 +220,7 @@
 
   .resource-link {
     display: flex;
+    background-color: var(--sys-color-cdt-base-container);
     align-items: center;
     cursor: pointer;
     padding: var(--sys-size-2) var(--sys-size-3);
@@ -303,12 +304,6 @@
         max-height: var(--sys-size-7);
       }
     }
-  }
-
-  .resource-link.disabled {
-    color: var(--sys-color-state-disabled);
-    border-color: var(--sys-color-neutral-outline);
-    pointer-events: none;
   }
 }
 
