@@ -288,13 +288,13 @@ describe('UIUtils', () => {
         const templateButton = container.firstElementChild;
         assert.instanceOf(templateButton, HTMLButtonElement);
         templateButton.click();
-        sinon.assert.notCalled(clickHandler);
+        sinon.assert.calledOnce(clickHandler);
 
         const clonedButton = UI.UIUtils.HTMLElementWithLightDOMTemplate.cloneNode(templateButton);
         assert.instanceOf(clonedButton, HTMLButtonElement);
 
         clonedButton.click();
-        sinon.assert.calledOnce(clickHandler);
+        sinon.assert.calledTwice(clickHandler);
       });
 
       it('attaches multiple event handlers to the same element', () => {

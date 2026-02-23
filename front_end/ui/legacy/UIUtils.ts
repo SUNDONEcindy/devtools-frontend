@@ -2034,8 +2034,8 @@ export class InterceptBindingDirective extends Lit.Directive.Directive {
   }
 
   /* eslint-disable-next-line @typescript-eslint/no-unsafe-function-type */
-  render(_listener: Function): undefined {
-    return undefined;
+  render(listener: Function): Function {
+    return listener;
   }
 
   static setEventListeners(templateElement: Element, renderedElement: Element): void {
@@ -2092,7 +2092,17 @@ export class HTMLElementWithLightDOMTemplate extends HTMLElement {
   }
 
   private static patchLitTemplate(template: Lit.LitTemplate): void {
-    const wrapper = Lit.Directive.directive(InterceptBindingDirective);
+    const interceptingWrapper = Lit.Directive.directive(InterceptBindingDirective);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const patchingWrapper = <Args extends any[], R>(fn: (...args: Args) => R): ((...args: Args) => R) => {
+      return function(this: unknown, ...args: Args): R {
+        const result = fn.apply(this, args);
+        if (isLitTemplate(result)) {
+          HTMLElementWithLightDOMTemplate.patchLitTemplate(result);
+        }
+        return result;
+      };
+    };
     if (template === Lit.nothing) {
       return;
     }
@@ -2104,16 +2114,36 @@ export class HTMLElementWithLightDOMTemplate extends HTMLElement {
           value['_$litType$'] === 1);
     }
 
+    function isLitDirective(value: unknown): value is {values: unknown[]} {
+      return Boolean(typeof value === 'object' && value && '_$litDirective$' in value && 'values' in value);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function isCallable(value: unknown): value is(...args: any[]) => any {
+      return typeof value === 'function';
+    }
+
     function patchValue(value: unknown): unknown {
-      if (typeof value === 'function') {
+      if (isCallable(value)) {
         try {
-          return wrapper(value);
+          return interceptingWrapper(value);
         } catch {
           return value;
         }
       }
       if (isLitTemplate(value)) {
         HTMLElementWithLightDOMTemplate.patchLitTemplate(value);
+        return value;
+      }
+      if (isLitDirective(value)) {
+        for (let i = 0; i < value.values.length; i++) {
+          const subvalue = value.values[i];
+          if (isCallable(subvalue)) {
+            value.values[i] = patchingWrapper(subvalue);
+          } else {
+            value.values[i] = patchValue(subvalue);
+          }
+        }
         return value;
       }
       if (Array.isArray(value) || value instanceof Iterator) {
