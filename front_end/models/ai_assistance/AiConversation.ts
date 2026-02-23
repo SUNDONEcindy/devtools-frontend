@@ -425,6 +425,10 @@ Time: ${micros(time)}`;
     yield* this.#runAgent(initialQuery, options);
   }
 
+  #getQueryAfterSelection(initialQuery: string, selection: string): string {
+    return `${selection}\nOriginal user query: ${initialQuery}`;
+  }
+
   async *
       #runAgent(
           initialQuery: string,
@@ -467,7 +471,7 @@ Time: ${micros(time)}`;
       // requery with the specialized agent.
       if (data.type === ResponseType.CONTEXT_CHANGE) {
         this.setContext(data.context);
-        yield* this.#runAgent(initialQuery, options);
+        yield* this.#runAgent(this.#getQueryAfterSelection(initialQuery, data.description), options);
         return;
       }
     }

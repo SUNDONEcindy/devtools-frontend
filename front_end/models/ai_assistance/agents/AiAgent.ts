@@ -88,6 +88,12 @@ export interface SideEffectResponse {
 }
 export interface ContextChangeResponse {
   type: ResponseType.CONTEXT_CHANGE;
+  /**
+   * Information to pass down what was selected
+   * Use to make the LLM understand the the user
+   * already selected something.
+   */
+  description: string;
   context: ConversationContext<unknown>;
 }
 
@@ -212,7 +218,8 @@ export type FunctionCallHandlerResult<Result> = {
 }|{
   result: Result,
 }|{
-  context: unknown,
+  context: ConversationContext<unknown>,
+  description: string,
 }|{
   error: string,
 };
@@ -484,7 +491,9 @@ export abstract class AiAgent<T> {
    *    called with one object with `foo` and `bar` keys.
    */
   protected declareFunction<Args extends Record<string, unknown>, ReturnType = unknown>(
-      name: string, declaration: FunctionDeclaration<Args, ReturnType>): void {
+      name: string,
+      declaration: FunctionDeclaration<Args, ReturnType>,
+      ): void {
     if (this.#functionDeclarations.has(name)) {
       throw new Error(`Duplicate function declaration ${name}`);
     }
@@ -609,6 +618,7 @@ export abstract class AiAgent<T> {
           if ('context' in result) {
             yield {
               type: ResponseType.CONTEXT_CHANGE,
+              description: result.description,
               context: result.context,
             };
 
@@ -643,7 +653,9 @@ export abstract class AiAgent<T> {
           name: string,
           args: Record<string, unknown>,
           options?: FunctionHandlerOptions&{explanation?: string},
-          ): AsyncGenerator<FunctionCallResponseData, {result: unknown}|{context: ConversationContext<unknown>}> {
+          ): AsyncGenerator<FunctionCallResponseData, {
+        result: unknown,
+      }|{context: ConversationContext<unknown>, description: string}> {
     const call = this.#functionDeclarations.get(name);
     if (!call) {
       throw new Error(`Function ${name} is not found.`);
@@ -755,7 +767,7 @@ export abstract class AiAgent<T> {
     }
 
     if ('context' in result) {
-      return result as {context: ConversationContext<unknown>};
+      return result;
     }
 
     return result as {result: unknown};
