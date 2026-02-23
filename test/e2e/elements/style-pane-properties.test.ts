@@ -1791,7 +1791,9 @@ describe('The Styles pane', () => {
            const swatches = await devToolsPage.waitForMany('.color-swatch-inner', 3);
            const swatchColors = await Promise.all(
                swatches.map(swatch => swatch.evaluate(swatch => getComputedStyle(swatch).backgroundColor)));
-           assert.deepEqual(swatchColors.slice(1), [red, blue]);
+           if (swatchColors[1] !== red || swatchColors[2] !== blue) {
+             return false;
+           }
 
            return isLight ? swatchColors[0] === red : swatchColors[0] === blue;
          });
