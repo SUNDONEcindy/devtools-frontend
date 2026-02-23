@@ -6,7 +6,6 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as url from 'node:url';
 import type {Page, ScreenshotOptions, Target} from 'puppeteer-core';
 import puppeteer from 'puppeteer-core';
 
@@ -298,12 +297,13 @@ function snapshotTesterFactory() {
     }
 
     if (req.url.startsWith('/snapshot')) {
-      const parsedUrl = url.parse(req.url, true);
-      if (typeof parsedUrl.query.snapshotPath !== 'string') {
+      const parsedUrl = new URL(req.url, 'http://localhost');
+      const snapshotPathParam = parsedUrl.searchParams.get('snapshotPath');
+      if (typeof snapshotPathParam !== 'string') {
         throw new Error('invalid snapshotPath');
       }
 
-      const snapshotPath = path.join(SOURCE_ROOT, parsedUrl.query.snapshotPath);
+      const snapshotPath = path.join(SOURCE_ROOT, snapshotPathParam);
       if (!fs.existsSync(snapshotPath)) {
         res.writeHead(404);
         res.end();
@@ -317,12 +317,13 @@ function snapshotTesterFactory() {
     }
 
     if (req.url.startsWith('/update-snapshot')) {
-      const parsedUrl = url.parse(req.url, true);
-      if (typeof parsedUrl.query.snapshotPath !== 'string') {
+      const parsedUrl = new URL(req.url, 'http://localhost');
+      const snapshotPathParam = parsedUrl.searchParams.get('snapshotPath');
+      if (typeof snapshotPathParam !== 'string') {
         throw new Error('invalid snapshotPath');
       }
 
-      const snapshotPath = path.join(SOURCE_ROOT, parsedUrl.query.snapshotPath);
+      const snapshotPath = path.join(SOURCE_ROOT, snapshotPathParam);
 
       let body = '';
       req.on('data', (chunk: any) => {
