@@ -5,6 +5,7 @@
 import * as glob from 'glob';
 import * as childProcess from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import yargs from 'yargs';
 import unparse from 'yargs-unparser';
@@ -108,8 +109,29 @@ function ninja(stdio: 'inherit'|'pipe', ...args: string[]) {
   }
   // autoninja can't always find ninja if not run from the checkout root, so
   // run it from there and pass the build root as an argument.
-  const result =
-      runProcess('autoninja', ['-C', buildRoot, ...args], {encoding: 'utf-8', shell: true, cwd: CHECKOUT_ROOT, stdio});
+  let result;
+  if (os.platform() === 'win32') {
+    result = runProcess(
+        process.env.ComSpec ?? 'cmd.exe',
+        ['/c', 'autoninja.bat', '-C', buildRoot, ...args],
+        {
+          encoding: 'utf-8',
+          cwd: CHECKOUT_ROOT,
+          stdio,
+        },
+    );
+  } else {
+    result = runProcess(
+        'autoninja',
+        ['-C', buildRoot, ...args],
+        {
+          encoding: 'utf-8',
+          cwd: CHECKOUT_ROOT,
+          stdio,
+        },
+    );
+  }
+
   if (result.error) {
     throw result.error;
   }

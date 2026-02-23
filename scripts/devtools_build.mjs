@@ -4,6 +4,7 @@
 
 import childProcess from 'node:child_process';
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import {performance} from 'node:perf_hooks';
 
@@ -48,10 +49,16 @@ class SpawnError extends Error {
  */
 function spawn(command, args, options = {}) {
   return new Promise((resolve, reject) => {
-    const child = childProcess.spawn(command, args, {
-      ...options,
-      shell: true,
-    });
+    let child;
+    if (os.platform() === 'win32') {
+      child = childProcess.spawn(
+        process.env.ComSpec ?? 'cmd.exe',
+        ['/c', command, ...args],
+        options,
+      );
+    } else {
+      child = childProcess.spawn(command, args, options);
+    }
 
     let stdout = '';
     let stderr = '';
