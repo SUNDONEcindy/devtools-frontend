@@ -463,7 +463,7 @@ describeWithMockConnection('AI Assistance Panel', () => {
       assert(nextInput.state === AiAssistancePanel.ViewState.CHAT_VIEW);
       assert.strictEqual(nextInput.props.selectedContext?.getItem(), node2);
     });
-    it('should update the context when the conversation is not empty if the feature is enabled', async () => {
+    it('should not update the context when the conversation is not empty if the feature is enabled', async () => {
       updateHostConfig({
         devToolsAiAssistanceContextSelectionAgent: {
           enabled: true,
@@ -480,7 +480,9 @@ describeWithMockConnection('AI Assistance Panel', () => {
       viewManagerIsViewVisibleStub.callsFake(viewName => viewName === 'elements');
 
       const {panel, view} = await createAiAssistancePanel({
-        aidaClient: mockAidaClient([[{explanation: 'test response'}]]),
+        aidaClient: mockAidaClient([
+          [{explanation: 'test response'}, {explanation: 'test response'}],
+        ]),
       });
 
       void panel.handleAction('freestyler.elements-floating-button');
@@ -501,12 +503,15 @@ describeWithMockConnection('AI Assistance Panel', () => {
           UI.ViewManager.Events.VIEW_VISIBILITY_CHANGED,
           {location: 'panel', revealedViewId: 'network', hiddenViewId: undefined},
       );
+      nextInput.props.onTextSubmit('test');
       nextInput = await view.nextInput;
 
       assert(nextInput.state === AiAssistancePanel.ViewState.CHAT_VIEW);
       assert.strictEqual(
-          nextInput.props.selectedContext?.getItem(), networkRequest,
-          'selectedContext should be updated to network request');
+          nextInput.props.selectedContext?.getItem(),
+          initialNode,
+          'selectedContext should be initial node',
+      );
     });
   });
 

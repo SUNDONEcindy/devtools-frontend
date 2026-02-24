@@ -503,7 +503,6 @@ export class AiAssistancePanel extends UI.Panel.Panel {
   #selectedRequest: AiAssistanceModel.NetworkAgent.RequestContext|null = null;
   // Messages displayed in the `ChatView` component.
   #messages: Message[] = [];
-  #isContextAutoSelectionSuspended = false;
 
   // Whether the UI should show loading or not.
   #isLoading = false;
@@ -703,13 +702,6 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     // If there already is an agent and if it is not empty,
     // we don't automatically change the agent.
     if (this.#conversation && !this.#conversation.isEmpty) {
-      // If the context selection agent is enabled,
-      // we update the context of the current agent.
-      const context = this.#getConversationContext(this.#getDefaultConversationType());
-      if (context && isAiAssistanceContextSelectionAgentEnabled()) {
-        this.#conversation?.setContext(context);
-        this.requestUpdate();
-      }
       return;
     }
 
@@ -758,13 +750,20 @@ export class AiAssistancePanel extends UI.Panel.Panel {
       }
 
       this.#conversation = conversation;
-      this.#isContextAutoSelectionSuspended = false;
     }
 
-    if (!this.#isContextAutoSelectionSuspended) {
-      this.#conversation?.setContext(this.#getConversationContext(
-          isAiAssistanceContextSelectionAgentEnabled() ? this.#getDefaultConversationType() :
-                                                         (this.#conversation?.type ?? null)));
+    if (this.#conversation) {
+      if (this.#conversation.isEmpty && isAiAssistanceContextSelectionAgentEnabled()) {
+        this.#conversation.setContext(this.#getConversationContext(this.#getDefaultConversationType()));
+      } else {
+        const context = this.#getConversationContext(this.#conversation.type);
+        // Don't reset to the context selection agent if
+        // we remove context automatically.
+        // Require explicit user action.
+        if (context || !isAiAssistanceContextSelectionAgentEnabled()) {
+          this.#conversation.setContext(context);
+        }
+      }
     }
 
     this.requestUpdate();
@@ -1132,12 +1131,10 @@ export class AiAssistancePanel extends UI.Panel.Panel {
 
   #handleContextRemoved(): void {
     this.#conversation?.setContext(null);
-    this.#isContextAutoSelectionSuspended = true;
     this.requestUpdate();
   }
 
   #handleContextAdd(): void {
-    this.#isContextAutoSelectionSuspended = false;
     this.#conversation?.setContext(this.#getConversationContext(this.#getDefaultConversationType()));
     this.requestUpdate();
   }
@@ -1159,7 +1156,6 @@ export class AiAssistancePanel extends UI.Panel.Panel {
       return;
     }
 
-    this.#isContextAutoSelectionSuspended = false;
     let targetConversationType: AiAssistanceModel.AiHistoryStorage.ConversationType|undefined;
     switch (actionId) {
       case 'freestyler.elements-floating-button': {
@@ -1353,8 +1349,6 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     } else if (data instanceof AiAssistanceModel.PerformanceAgent.PerformanceTraceContext) {
       this.#selectedPerformanceTrace = data;
     }
-
-    this.#isContextAutoSelectionSuspended = false;
 
     void VisualLogging.logFunctionCall(`context-change-${this.#conversation?.type}`);
 
