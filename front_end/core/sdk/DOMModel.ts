@@ -2054,6 +2054,9 @@ class DOMDispatcher implements ProtocolProxyApi.DOMDispatcher {
                                           Protocol.DOM.AffectedByStartingStylesFlagUpdatedEvent): void {
     this.#domModel.affectedByStartingStylesFlagUpdated(nodeId, affectedByStartingStyles);
   }
+
+  adRelatedStateUpdated(_: Protocol.DOM.AdRelatedStateUpdatedEvent): void {
+  }
 }
 
 let domModelUndoStackInstance: DOMModelUndoStack|null = null;
