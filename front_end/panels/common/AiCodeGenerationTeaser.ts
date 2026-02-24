@@ -151,23 +151,26 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
         render(nothing, target);
         return;
       }
-      const toGenerateCode = Host.Platform.isMac() ? lockedString(UIStringsNotTranslate.cmdItoGenerateCode) :
-                                                     lockedString(UIStringsNotTranslate.ctrlItoGenerateCode);
+      const toGenerateCode =
+          Host.Platform.isMac() ? UIStringsNotTranslate.cmdItoGenerateCode : UIStringsNotTranslate.ctrlItoGenerateCode;
       const toLearnHowYourDataIsBeingUsedScreenReaderOnly = Host.Platform.isMac() ?
-          lockedString(UIStringsNotTranslate.pressCmdPeriodToLearnHowYourDataIsBeingUsed) :
-          lockedString(UIStringsNotTranslate.pressCtrlPeriodToLearnHowYourDataIsBeingUsed);
+          UIStringsNotTranslate.pressCmdPeriodToLearnHowYourDataIsBeingUsed :
+          UIStringsNotTranslate.pressCtrlPeriodToLearnHowYourDataIsBeingUsed;
+      const screenReaderText = toGenerateCode + ' ' + toLearnHowYourDataIsBeingUsedScreenReaderOnly;
+
       const toLearnHowYourDataIsBeingUsedVisible = Host.Platform.isMac() ?
-          lockedString(UIStringsNotTranslate.cmdOneTimeDisclaimerToLearnHowYourDataIsBeingUsed) :
-          lockedString(UIStringsNotTranslate.ctrlOneTimeDisclaimerToLearnHowYourDataIsBeingUsed);
+          UIStringsNotTranslate.cmdOneTimeDisclaimerToLearnHowYourDataIsBeingUsed :
+          UIStringsNotTranslate.ctrlOneTimeDisclaimerToLearnHowYourDataIsBeingUsed;
+      const teaserText =
+          input.showDataUsageTeaser ? toGenerateCode + '. ' + toLearnHowYourDataIsBeingUsedVisible : toGenerateCode;
+
       const tooltipDisclaimerText = getTooltipDisclaimerText(input.noLogging, input.panel);
 
       // clang-format off
       teaserLabel = html`<div class="ai-code-generation-teaser-trigger">
-        <span aria-atomic="true" aria-live="assertive">${toGenerateCode}</span>
-        ${input.showDataUsageTeaser ?
-            html`<span aria-hidden="true">${'. ' + toLearnHowYourDataIsBeingUsedVisible}</span>` : nothing}
+        <span aria-hidden="true">${lockedString(teaserText)}</span>
         <span class="ai-code-generation-teaser-screen-reader-only" aria-atomic="true" aria-live="assertive">
-          ${toLearnHowYourDataIsBeingUsedScreenReaderOnly}
+          ${lockedString(screenReaderText)}
         </span>
         &nbsp;<devtools-button
           .data=${{
