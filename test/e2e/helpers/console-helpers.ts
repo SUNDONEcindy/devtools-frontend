@@ -377,7 +377,7 @@ async function getIssueButtonLabel(devToolsPage: DevToolsPage): Promise<string|n
   const infobarButton = await devToolsPage.waitFor('#console-issues-counter');
   const iconButton = await devToolsPage.waitFor('icon-button', infobarButton);
   const titleElement = await devToolsPage.waitFor('.icon-button-title', iconButton);
-  const infobarButtonText = await titleElement.evaluate(node => (node as HTMLElement).textContent);
+  const infobarButtonText = await titleElement.evaluate(node => node.textContent);
   await expectVeEvents([veImpression('Counter', 'issues')], `${await veRoot(devToolsPage)} > Toolbar`, devToolsPage);
   return infobarButtonText;
 }

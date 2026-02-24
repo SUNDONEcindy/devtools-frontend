@@ -321,7 +321,7 @@ export async function waitForQuotaUsage(p: (quota: number) => boolean, devToolsP
 
 export async function getQuotaUsage(devToolsPage: DevToolsPage) {
   const storageRow = await devToolsPage.waitFor('.quota-usage-row');
-  const quotaString = await storageRow.evaluate(el => el.textContent || '');
+  const quotaString = await storageRow.evaluate(el => el.textContent);
   const [usedQuotaText, modifier] =
       quotaString.replaceAll(',', '').replace(/^\D*([\d.]+)\D*(kM?)B.used.out.of\D*\d+\D*.?B.*$/, '$1 $2').split(' ');
   let usedQuota = Number.parseInt(usedQuotaText, 10);
