@@ -75,8 +75,9 @@ interface PropertiesWidgetInput {
   onFilterChanged: (e: CustomEvent<string>) => void;
   onRegexToggled: () => void;
   isRegex: boolean;
-  treeOutlineElement: HTMLElement;
-  displayNoMatchingPropertyMessage: boolean;
+  treeOutline: ObjectUI.ObjectPropertiesSection.ObjectPropertiesSectionsTreeOutline;
+  objectTree: ObjectUI.ObjectPropertiesSection.ObjectTree|null;
+  allChildrenFiltered: boolean;
 }
 
 type View = (input: PropertiesWidgetInput, output: object, target: HTMLElement) => void;
@@ -99,10 +100,10 @@ export const DEFAULT_VIEW: View = (input, _output, target) => {
           </devtools-checkbox>
         </devtools-toolbar>
       </div>
-      ${input.displayNoMatchingPropertyMessage ? html`
+      ${input.objectTree && input.allChildrenFiltered ? html`
         <div class="gray-info-message">${i18nString(UIStrings.noMatchingProperty)}</div>
       ` : nothing}
-      ${input.treeOutlineElement}
+      ${input.treeOutline.element}
     </div>`, target);
   // clang-format on
 };
@@ -111,13 +112,13 @@ const getShowAllPropertiesSetting = (): Common.Settings.Setting<boolean> =>
     Common.Settings.Settings.instance().createSetting('show-all-properties', /* defaultValue */ false);
 
 export class PropertiesWidget extends UI.Widget.VBox {
-  private node: SDK.DOMModel.DOMNode|null;
   private readonly showAllPropertiesSetting: Common.Settings.Setting<boolean>;
   private filterRegex: RegExp|null = null;
   private readonly treeOutline: ObjectUI.ObjectPropertiesSection.ObjectPropertiesSectionsTreeOutline;
-  private lastRequestedNode?: SDK.DOMModel.DOMNode;
+  #lastRequestedNode: SDK.DOMModel.DOMNode|null = null;
   readonly #view: View;
-  #displayNoMatchingPropertyMessage = false;
+  #pendingNodeUpdate = true;
+  #objectTree: ObjectUI.ObjectPropertiesSection.ObjectTree|null = null;
   #isRegex = false;
   #filterText = '';
 
@@ -126,7 +127,7 @@ export class PropertiesWidget extends UI.Widget.VBox {
     this.registerRequiredCSS(propertiesWidgetStyles);
 
     this.showAllPropertiesSetting = getShowAllPropertiesSetting();
-    this.showAllPropertiesSetting.addChangeListener(this.filterAndScheduleUpdate.bind(this));
+    this.showAllPropertiesSetting.addChangeListener(this.onFilterChanged.bind(this));
 
     SDK.TargetManager.TargetManager.instance().addModelListener(
         SDK.DOMModel.DOMModel, SDK.DOMModel.Events.AttrModified, this.onNodeChange, this, {scoped: true});
@@ -137,7 +138,6 @@ export class PropertiesWidget extends UI.Widget.VBox {
     SDK.TargetManager.TargetManager.instance().addModelListener(
         SDK.DOMModel.DOMModel, SDK.DOMModel.Events.ChildNodeCountUpdated, this.onNodeChange, this, {scoped: true});
     UI.Context.Context.instance().addFlavorChangeListener(SDK.DOMModel.DOMNode, this.setNode, this);
-    this.node = UI.Context.Context.instance().flavor(SDK.DOMModel.DOMNode);
 
     this.#view = view;
     this.treeOutline = new ObjectUI.ObjectPropertiesSection.ObjectPropertiesSectionsTreeOutline({readOnly: true});
@@ -147,7 +147,7 @@ export class PropertiesWidget extends UI.Widget.VBox {
       Host.userMetrics.actionTaken(Host.UserMetrics.Action.DOMPropertiesExpanded);
     });
 
-    void this.performUpdate();
+    this.requestUpdate();
   }
 
   #buildFilterRegex(text: string): RegExp|null {
@@ -164,80 +164,80 @@ export class PropertiesWidget extends UI.Widget.VBox {
     return new RegExp(Platform.StringUtilities.escapeForRegExp(text), 'i');
   }
 
-  private onFilterChanged(event: CustomEvent<string>): void {
-    this.#filterText = event.detail;
-    this.filterRegex = this.#buildFilterRegex(event.detail);
-    this.filterAndScheduleUpdate();
+  private onFilterChanged(event: CustomEvent<string>|Common.EventTarget.EventTargetEvent<boolean>): void {
+    if ('detail' in event) {
+      this.#filterText = event.detail;
+      this.filterRegex = this.#buildFilterRegex(event.detail);
+    }
+    this.#updateFilter();
+    this.requestUpdate();
   }
 
   private onRegexToggled(): void {
     this.#isRegex = !this.#isRegex;
     this.filterRegex = this.#buildFilterRegex(this.#filterText);
-    this.internalFilterProperties();
-    this.#renderView();
-  }
-
-  private filterAndScheduleUpdate(): void {
-    const previousDisplay = this.#displayNoMatchingPropertyMessage;
-    this.internalFilterProperties();
-    if (previousDisplay !== this.#displayNoMatchingPropertyMessage) {
-      this.requestUpdate();
-    }
-  }
-
-  private internalFilterProperties(): void {
-    this.#displayNoMatchingPropertyMessage = true;
-    for (const element of this.treeOutline.rootElement().children()) {
-      const {property} = element as ObjectUI.ObjectPropertiesSection.ObjectPropertyTreeElement;
-      const hidden = !property?.property.match({
-        includeNullOrUndefinedValues: this.showAllPropertiesSetting.get(),
-        regex: this.filterRegex,
-      });
-      this.#displayNoMatchingPropertyMessage = this.#displayNoMatchingPropertyMessage && hidden;
-      element.hidden = hidden;
-    }
-  }
-
-  private setNode(event: Common.EventTarget.EventTargetEvent<SDK.DOMModel.DOMNode|null>): void {
-    this.node = event.data;
+    this.#updateFilter();
     this.requestUpdate();
   }
 
-  override async performUpdate(): Promise<void> {
-    if (this.lastRequestedNode) {
-      this.lastRequestedNode.domModel().runtimeModel().releaseObjectGroup(OBJECT_GROUP_NAME);
-      delete this.lastRequestedNode;
-    }
-
-    if (!this.node) {
-      this.treeOutline.removeChildren();
-      this.#displayNoMatchingPropertyMessage = false;
-    } else {
-      this.lastRequestedNode = this.node;
-      const object = await this.node.resolveToObject(OBJECT_GROUP_NAME);
-      if (!object) {
-        return;
-      }
-
-      const treeElement = this.treeOutline.rootElement();
-      treeElement.removeChildren();
-      const root = new ObjectUI.ObjectPropertiesSection.ObjectTree(
-          object, ObjectUI.ObjectPropertiesSection.ObjectPropertiesMode.OWN_AND_INTERNAL_AND_INHERITED);
-      ObjectUI.ObjectPropertiesSection.ObjectPropertyTreeElement.populateWithProperties(
-          treeElement, await root.populateChildrenIfNeeded(), true /* skipProto */, true /* skipGettersAndSetters */);
-      this.internalFilterProperties();
-    }
-    this.#renderView();
+  #updateFilter(): void {
+    this.#objectTree?.setFilter({
+      includeNullOrUndefinedValues: this.showAllPropertiesSetting.get(),
+      regex: this.filterRegex,
+    });
   }
 
-  #renderView(): void {
+  private setNode(): void {
+    this.#pendingNodeUpdate = true;
+    this.requestUpdate();
+  }
+
+  async #updateNodeIfRequired(): Promise<void> {
+    if (!this.#pendingNodeUpdate) {
+      return;
+    }
+    this.#pendingNodeUpdate = false;
+    this.#lastRequestedNode?.domModel().runtimeModel().releaseObjectGroup(OBJECT_GROUP_NAME);
+    this.#lastRequestedNode = UI.Context.Context.instance().flavor(SDK.DOMModel.DOMNode);
+
+    if (!this.#lastRequestedNode) {
+      this.#objectTree = null;
+      return;
+    }
+    const object = await this.#lastRequestedNode.resolveToObject(OBJECT_GROUP_NAME);
+    if (!object) {
+      return;
+    }
+
+    this.#objectTree = new ObjectUI.ObjectPropertiesSection.ObjectTree(
+        object, ObjectUI.ObjectPropertiesSection.ObjectPropertiesMode.OWN_AND_INTERNAL_AND_INHERITED);
+    this.#updateFilter();
+  }
+
+  override async performUpdate(): Promise<void> {
+    await this.#updateNodeIfRequired();
+    if (!this.#objectTree) {
+      this.treeOutline.removeChildren();
+    } else {
+      const treeElement = this.treeOutline.rootElement();
+      treeElement.removeChildren();
+      ObjectUI.ObjectPropertiesSection.ObjectPropertyTreeElement.populateWithProperties(
+          treeElement, await this.#objectTree.populateChildrenIfNeeded(), true /* skipProto */,
+          true /* skipGettersAndSetters */);
+    }
+    const allChildrenFiltered =
+        !(this.#objectTree?.children?.accessors?.some(c => !c.isFiltered) ||
+          this.#objectTree?.children?.arrayRanges?.some(() => true) ||
+          this.#objectTree?.children?.internalProperties?.some(c => !c.isFiltered) ||
+          this.#objectTree?.children?.properties?.some(c => !c.isFiltered));
     this.#view(
         {
           onFilterChanged: this.onFilterChanged.bind(this),
           onRegexToggled: this.onRegexToggled.bind(this),
           isRegex: this.#isRegex,
-          treeOutlineElement: this.treeOutline.element,
-          displayNoMatchingPropertyMessage: this.#displayNoMatchingPropertyMessage,
+          treeOutline: this.treeOutline,
+          allChildrenFiltered,
+          objectTree: this.#objectTree,
         },
         {}, this.contentElement);
   }
@@ -245,14 +245,15 @@ export class PropertiesWidget extends UI.Widget.VBox {
   private onNodeChange(
       event: Common.EventTarget.EventTargetEvent<{node: SDK.DOMModel.DOMNode, name: string}|SDK.DOMModel.DOMNode>,
       ): void {
-    if (!this.node) {
+    if (!this.#lastRequestedNode) {
       return;
     }
     const data = event.data;
     const node = (data instanceof SDK.DOMModel.DOMNode ? data : data.node);
-    if (this.node !== node) {
+    if (this.#lastRequestedNode !== node) {
       return;
     }
+    this.#pendingNodeUpdate = true;
     this.requestUpdate();
   }
 }

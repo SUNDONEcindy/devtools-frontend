@@ -150,12 +150,14 @@ interface NodeChildren {
 
 abstract class ObjectTreeNodeBase extends Common.ObjectWrapper.ObjectWrapper<ObjectTreeNodeBase.EventTypes> {
   #children?: NodeChildren;
+  protected filter: {includeNullOrUndefinedValues: boolean, regex: RegExp|null}|null = null;
   protected extraProperties: ObjectTreeNode[] = [];
   expanded = false;
   constructor(
       readonly parent?: ObjectTreeNodeBase,
       readonly propertiesMode: ObjectPropertiesMode = ObjectPropertiesMode.OWN_AND_INTERNAL_AND_INHERITED) {
     super();
+    this.filter = parent?.filter ?? null;
   }
 
   // Performs a pre-order tree traversal over the populated children. If any children need to be populated, callers must
@@ -187,6 +189,15 @@ abstract class ObjectTreeNodeBase extends Common.ObjectWrapper.ObjectWrapper<Obj
     for (const node of this.#walk()) {
       node.expanded = false;
     }
+  }
+
+  setFilter(filter: {includeNullOrUndefinedValues: boolean, regex: RegExp|null}|null): void {
+    this.filter = filter;
+    this.dispatchEventToListeners(ObjectTreeNodeBase.Events.FILTER_CHANGED);
+    this.#walk().forEach(c => {
+      c.filter = filter;
+      c.dispatchEventToListeners(ObjectTreeNodeBase.Events.FILTER_CHANGED);
+    });
   }
 
   abstract get object(): SDK.RemoteObject.RemoteObject|undefined;
@@ -222,9 +233,13 @@ abstract class ObjectTreeNodeBase extends Common.ObjectWrapper.ObjectWrapper<Obj
   }
 
   async populateChildrenIfNeeded(): Promise<NodeChildren> {
-    if (this.#children) {
-      return this.#children;
+    if (!this.#children) {
+      this.#children = await this.populateChildrenIfNeededImpl();
     }
+    return this.#children;
+  }
+
+  protected async populateChildrenIfNeededImpl(): Promise<NodeChildren> {
     const object = this.object;
     if (!object) {
       return {};
@@ -315,10 +330,12 @@ namespace ObjectTreeNodeBase {
   export const enum Events {
     VALUE_CHANGED = 'value-changed',
     CHILDREN_CHANGED = 'children-changed',
+    FILTER_CHANGED = 'filter-changed',
   }
   export interface EventTypes {
     [Events.VALUE_CHANGED]: void;
     [Events.CHILDREN_CHANGED]: void;
+    [Events.FILTER_CHANGED]: void;
   }
 }
 
@@ -348,10 +365,7 @@ class ArrayGroupTreeNode extends ObjectTreeNodeBase {
     this.#range = range;
   }
 
-  override async populateChildrenIfNeeded(): Promise<NodeChildren> {
-    if (this.children) {
-      return this.children;
-    }
+  override async populateChildrenIfNeededImpl(): Promise<NodeChildren> {
     if (this.#range.count > ArrayGroupingTreeElement.bucketThreshold) {
       const ranges = await arrayRangeGroups(this.object, this.#range.fromIndex, this.#range.toIndex);
       const arrayRanges = ranges?.ranges.map(
@@ -403,6 +417,10 @@ export class ObjectTreeNode extends ObjectTreeNodeBase {
   }
   override get object(): SDK.RemoteObject.RemoteObject|undefined {
     return this.property.value;
+  }
+
+  get isFiltered(): boolean {
+    return Boolean(this.filter && !this.property.match(this.filter));
   }
 
   get name(): string {
@@ -1274,8 +1292,10 @@ export class ObjectPropertyTreeElement extends UI.TreeOutline.TreeElement {
 
     this.#widget = new ObjectPropertyWidget();
     this.property = property;
+    this.hidden = property.isFiltered;
     this.property.addEventListener(ObjectTreeNodeBase.Events.VALUE_CHANGED, this.#updateValue, this);
     this.property.addEventListener(ObjectTreeNodeBase.Events.CHILDREN_CHANGED, this.#updateChildren, this);
+    this.property.addEventListener(ObjectTreeNodeBase.Events.FILTER_CHANGED, this.#updateFilter, this);
     this.toggleOnClick = true;
     this.linkifier = linkifier;
     this.maxNumPropertiesToShow = InitialVisibleChildrenLimit;
@@ -1355,6 +1375,7 @@ export class ObjectPropertyTreeElement extends UI.TreeOutline.TreeElement {
   revertHighlightChanges(): void {
     this.#widget.revertHighlightChanges();
   }
+
   setSearchRegex(regex: RegExp, additionalCssClassName?: string): boolean {
     return this.#widget.setSearchRegex(regex, additionalCssClassName);
   }
@@ -1455,6 +1476,10 @@ export class ObjectPropertyTreeElement extends UI.TreeOutline.TreeElement {
   #updateChildren(): void {
     this.removeChildren();
     void this.onpopulate();
+  }
+
+  #updateFilter(): void {
+    this.hidden = this.property.isFiltered;
   }
 
   getContextMenu(event: Event): UI.ContextMenu.ContextMenu {
