@@ -94,12 +94,17 @@ function runProcess(exe: string, args: string[], options: childProcess.SpawnSync
 function configureChrome(executablePath: string) {
   if (os.type() === 'Windows_NT') {
     const result = runProcess(
-        'python3',
+        process.env.ComSpec ?? 'cmd.exe',
         [
+          '/c',
+          'python3',
           path.join(SOURCE_ROOT, 'scripts', 'deps', 'set_lpac_acls.py'),
           path.dirname(executablePath),
         ],
-        {encoding: 'utf-8', stdio: 'inherit', shell: true});
+        {
+          encoding: 'utf-8',
+          stdio: 'inherit',
+        });
     if (result.error || (result.status ?? 1) !== 0) {
       throw new Error('Setting permissions failed: ' + result.error?.message);
     }
