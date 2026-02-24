@@ -1217,7 +1217,7 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
           onExpand: () => this.expand(),
 
           containerAdornerActive: this.#containerAdornerActive,
-          showAdAdorner: this.nodeInternal.isAdFrameNode(),
+          showAdAdorner: this.nodeInternal.isAdRelatedNode(),
           showContainerAdorner: Boolean(this.#layout?.containerType) && !this.isClosingTag(),
           containerType: this.#layout?.containerType,
           showFlexAdorner: Boolean(this.#layout?.isFlex) && !this.isClosingTag(),
@@ -1510,6 +1510,8 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
       this.nodeInternal.addEventListener(
           SDK.DOMModel.DOMNodeEvents.SCROLLABLE_FLAG_UPDATED, this.#onScrollableFlagUpdated, this);
       this.nodeInternal.addEventListener(
+          SDK.DOMModel.DOMNodeEvents.AD_RELATED_STATE_UPDATED, this.#onAdRelatedStateUpdated, this);
+      this.nodeInternal.addEventListener(
           SDK.DOMModel.DOMNodeEvents.CONTAINER_QUERY_OVERLAY_STATE_CHANGED,
           this.#onPersistentContainerQueryOverlayStateChanged, this);
       this.nodeInternal.addEventListener(
@@ -1593,6 +1595,8 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
     this.nodeInternal.removeEventListener(
         SDK.DOMModel.DOMNodeEvents.SCROLLABLE_FLAG_UPDATED, this.#onScrollableFlagUpdated, this);
     this.nodeInternal.removeEventListener(
+        SDK.DOMModel.DOMNodeEvents.AD_RELATED_STATE_UPDATED, this.#onAdRelatedStateUpdated, this);
+    this.nodeInternal.removeEventListener(
         SDK.DOMModel.DOMNodeEvents.CONTAINER_QUERY_OVERLAY_STATE_CHANGED,
         this.#onPersistentContainerQueryOverlayStateChanged, this);
     this.nodeInternal.removeEventListener(
@@ -1606,6 +1610,10 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
   }
 
   #onScrollableFlagUpdated(): void {
+    void this.#updateAdorners();
+  }
+
+  #onAdRelatedStateUpdated(): void {
     void this.#updateAdorners();
   }
 

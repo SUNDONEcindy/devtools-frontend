@@ -111,6 +111,7 @@ export const ARIA_ATTRIBUTES = new Set<string>([
 export enum DOMNodeEvents {
   TOP_LAYER_INDEX_CHANGED = 'TopLayerIndexChanged',
   SCROLLABLE_FLAG_UPDATED = 'ScrollableFlagUpdated',
+  AD_RELATED_STATE_UPDATED = 'AdRelatedStateUpdated',
   GRID_OVERLAY_STATE_CHANGED = 'GridOverlayStateChanged',
   FLEX_CONTAINER_OVERLAY_STATE_CHANGED = 'FlexContainerOverlayStateChanged',
   SCROLL_SNAP_OVERLAY_STATE_CHANGED = 'ScrollSnapOverlayStateChanged',
@@ -120,6 +121,7 @@ export enum DOMNodeEvents {
 export interface DOMNodeEventTypes {
   [DOMNodeEvents.TOP_LAYER_INDEX_CHANGED]: void;
   [DOMNodeEvents.SCROLLABLE_FLAG_UPDATED]: void;
+  [DOMNodeEvents.AD_RELATED_STATE_UPDATED]: void;
   [DOMNodeEvents.GRID_OVERLAY_STATE_CHANGED]: {enabled: boolean};
   [DOMNodeEvents.FLEX_CONTAINER_OVERLAY_STATE_CHANGED]: {enabled: boolean};
   [DOMNodeEvents.SCROLL_SNAP_OVERLAY_STATE_CHANGED]: {enabled: boolean};
@@ -185,6 +187,10 @@ export class DOMNode extends Common.ObjectWrapper.ObjectWrapper<DOMNodeEventType
    * for non-backdrop nodes.
    */
   #topLayerIndex = -1;
+  /**
+   * Set if a DOMNode is ad related.
+   */
+  #isAdRelatedInternal = false;
 
   constructor(domModel: DOMModel) {
     super();
@@ -285,6 +291,10 @@ export class DOMNode extends Common.ObjectWrapper.ObjectWrapper<DOMNodeEventType
 
     this.setPseudoElements(payload.pseudoElements);
 
+    if (payload.isAdRelated) {
+      this.#isAdRelatedInternal = true;
+    }
+
     if (this.#nodeType === Node.ELEMENT_NODE) {
       // HTML and BODY from internal iframes should not overwrite top-level ones.
       if (this.ownerDocument && !this.ownerDocument.documentElement && this.#nodeName === 'HTML') {
@@ -321,7 +331,12 @@ export class DOMNode extends Common.ObjectWrapper.ObjectWrapper<DOMNodeEventType
     return this.#topLayerIndex;
   }
 
-  isAdFrameNode(): boolean {
+  isAdRelatedNode(): boolean {
+    // For iframes, we rely on `AdFrameType` to preserve legacy behavior and
+    // prevent regressions.
+    //
+    // TODO(yaoxia): Deprecate the iframe-specific logic and consolidate
+    // everything to use `#isAdRelatedInternal`.
     if (this.isIframe() && this.#frameOwnerFrameId) {
       const frame = FrameManager.instance().getFrame(this.#frameOwnerFrameId);
       if (!frame) {
@@ -329,7 +344,8 @@ export class DOMNode extends Common.ObjectWrapper.ObjectWrapper<DOMNodeEventType
       }
       return frame.adFrameType() !== Protocol.Page.AdFrameType.None;
     }
-    return false;
+
+    return this.#isAdRelatedInternal;
   }
 
   isRootNode(): boolean {
@@ -407,6 +423,11 @@ export class DOMNode extends Common.ObjectWrapper.ObjectWrapper<DOMNodeEventType
       // We show the scroll badge of the document on the <html> element.
       this.ownerDocument?.documentElement?.setIsScrollable(isScrollable);
     }
+  }
+
+  setIsAdRelated(isAdRelated: boolean): void {
+    this.#isAdRelatedInternal = isAdRelated;
+    this.dispatchEventToListeners(DOMNodeEvents.AD_RELATED_STATE_UPDATED);
   }
 
   setAffectedByStartingStyles(affectedByStartingStyles: boolean): void {
@@ -1691,6 +1712,14 @@ export class DOMModel extends SDKModel<EventTypes> {
     node.setIsScrollable(isScrollable);
   }
 
+  adRelatedStateUpdated(nodeId: Protocol.DOM.NodeId, isAdRelated: boolean): void {
+    const node = this.nodeForId(nodeId);
+    if (!node || node.isAdRelatedNode() === isAdRelated) {
+      return;
+    }
+    node.setIsAdRelated(isAdRelated);
+  }
+
   affectedByStartingStylesFlagUpdated(nodeId: Protocol.DOM.NodeId, affectedByStartingStyles: boolean): void {
     const node = this.nodeForId(nodeId);
     if (!node || node.affectedByStartingStyles() === affectedByStartingStyles) {
@@ -2055,7 +2084,8 @@ class DOMDispatcher implements ProtocolProxyApi.DOMDispatcher {
     this.#domModel.affectedByStartingStylesFlagUpdated(nodeId, affectedByStartingStyles);
   }
 
-  adRelatedStateUpdated(_: Protocol.DOM.AdRelatedStateUpdatedEvent): void {
+  adRelatedStateUpdated({nodeId, isAdRelated}: Protocol.DOM.AdRelatedStateUpdatedEvent): void {
+    this.#domModel.adRelatedStateUpdated(nodeId, isAdRelated);
   }
 }
 
