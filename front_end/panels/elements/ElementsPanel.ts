@@ -59,6 +59,7 @@ import {DOMTreeWidget, type ElementsTreeOutline} from './ElementsTreeOutline.js'
 import {LayoutPane} from './LayoutPane.js';
 import type {MarkerDecorator} from './MarkerDecorator.js';
 import {MetricsSidebarPane} from './MetricsSidebarPane.js';
+import {PlatformFontsWidget} from './PlatformFontsWidget.js';
 import {
   Events as StylesSidebarPaneEvents,
   StylesSidebarPane,
@@ -1116,9 +1117,15 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
     this.setupTextSelectionHack(matchedStylePanesWrapper.element);
 
     const computedStylePanesWrapper = new UI.Widget.VBox();
-    computedStylePanesWrapper.element.classList.add('style-panes-wrapper');
+    computedStylePanesWrapper.element.classList.add('style-panes-wrapper', 'computed-styles-pane-wrapper');
     computedStylePanesWrapper.element.setAttribute('jslog', `${VisualLogging.pane('computed').track({resize: true})}`);
+    this.#computedStyleWidget.element.classList.add('computed-styles-wrapper');
     this.#computedStyleWidget.show(computedStylePanesWrapper.element);
+
+    const platformFontsWidget = new PlatformFontsWidget();
+    platformFontsWidget.element.classList.add('platform-fonts-wrapper');
+    platformFontsWidget.sharedModel = this.#computedStyleModel;
+    platformFontsWidget.show(computedStylePanesWrapper.element);
 
     const stylesSplitWidget = new UI.SplitWidget.SplitWidget(
         true /* isVertical */, true /* secondIsSidebar */, 'elements.styles.sidebar.width', 100);

@@ -48,7 +48,6 @@ import * as Lit from '../../ui/lit/lit.js';
 import * as ElementsComponents from './components/components.js';
 import computedStyleWidgetStyles from './computedStyleWidget.css.js';
 import {ImagePreviewPopover} from './ImagePreviewPopover.js';
-import {PlatformFontsWidget} from './PlatformFontsWidget.js';
 import {categorizePropertyName, type Category, DefaultCategoryOrder} from './PropertyNameCategories.js';
 import {Renderer, rendererBase, type RenderingContext, StringRenderer, URLRenderer} from './PropertyRenderer.js';
 import {StylePropertiesSection} from './StylePropertiesSection.js';
@@ -265,7 +264,6 @@ type ComputedStyleData = {
 interface ComputedStyleWidgetInput {
   computedStylesTree: TreeOutline.TreeOutline.TreeOutline<ComputedStyleData>;
   hasMatches: boolean;
-  computedStyleModel?: ComputedStyleModule.ComputedStyleModel.ComputedStyleModel;
   showInheritedComputedStylePropertiesSetting: Common.Settings.Setting<boolean>;
   groupComputedStylesSetting: Common.Settings.Setting<boolean>;
   onFilterChanged: (event: CustomEvent<string>) => void;
@@ -301,7 +299,6 @@ export const DEFAULT_VIEW: View = (input, _output, target) => {
     </div>
     ${input.computedStylesTree}
     ${!input.hasMatches ? html`<div class="gray-info-message">${i18nString(UIStrings.noMatchingProperty)}</div>` : ''}
-    ${input.computedStyleModel ? html`<devtools-widget .widgetConfig=${UI.Widget.widgetConfig(PlatformFontsWidget, { sharedModel: input.computedStyleModel})}></devtools-widget>` : ''}
   `, target);
   // clang-format on
 };
@@ -373,7 +370,6 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
         {
           computedStylesTree: this.#computedStylesTree,
           hasMatches,
-          computedStyleModel: this.#computedStyleModel,
           showInheritedComputedStylePropertiesSetting: this.showInheritedComputedStylePropertiesSetting,
           groupComputedStylesSetting: this.groupComputedStylesSetting,
           onFilterChanged: this.onFilterChanged.bind(this),
