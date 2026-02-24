@@ -2097,7 +2097,7 @@ export class CSSPropertyPrompt extends UI.TextPrompt.TextPrompt {
 
     function colorSwatchRenderer(color: Common.Color.Color): Element {
       const swatch = new InlineEditor.ColorSwatch.ColorSwatch();
-      swatch.color = color;
+      swatch.renderColor(color);
       swatch.style.pointerEvents = 'none';
       return swatch;
     }

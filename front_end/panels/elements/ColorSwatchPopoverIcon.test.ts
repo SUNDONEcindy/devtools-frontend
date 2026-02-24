@@ -43,7 +43,7 @@ describeWithMockConnection('ColorSwatchPopoverIcon', () => {
 
       const helper = new InlineEditor.SwatchPopoverHelper.SwatchPopoverHelper();
       const swatch = new InlineEditor.ColorSwatch.ColorSwatch();
-      swatch.color = Common.Color.parse('red')!;
+      swatch.setColor(Common.Color.parse('red')!);
       const showPopoverStub = sinon.stub(helper, 'show');
       const icon = new Elements.ColorSwatchPopoverIcon.ColorSwatchPopoverIcon(treeElement, helper, swatch);
       const iconColorChanged = sinon.stub<[Common.EventTarget.EventTargetEvent<

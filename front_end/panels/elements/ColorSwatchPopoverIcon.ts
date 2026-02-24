@@ -277,7 +277,7 @@ export class ColorSwatchPopoverIcon extends Common.ObjectWrapper.ObjectWrapper<C
       return;
     }
 
-    this.swatch.color = color;
+    this.swatch.renderColor(color);
     this.dispatchEventToListeners(ColorSwatchPopoverIconEvents.COLOR_CHANGED, color);
   }
 
