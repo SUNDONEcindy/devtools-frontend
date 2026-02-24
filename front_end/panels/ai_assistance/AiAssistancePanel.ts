@@ -275,9 +275,9 @@ async function getEmptyStateSuggestions(conversation?: AiAssistanceModel.AiConve
 
     case AiAssistanceModel.AiHistoryStorage.ConversationType.NONE: {
       return [
-        {title: 'How can I use DevTools to debug?', jslogContext: 'empty'},
-        {title: 'What performance issues exist with my page?', jslogContext: 'empty'},
-        {title: 'What are the slowest requests on this page?', jslogContext: 'empty'},
+        {title: 'What can you help me with?', jslogContext: 'empty'},
+        {title: 'What performance issues exist on the page?', jslogContext: 'empty'},
+        {title: 'What are the slowest network requests on this page?', jslogContext: 'empty'},
       ];
     }
 
