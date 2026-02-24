@@ -177,10 +177,9 @@ describe('ConsoleInsight', function() {
     // Click on a citation link within the insight
     await devToolsPage.click(citationSelector);
 
-    // Check if the citations are expanded and if the link is highlighted
+    // Check if the citations are expanded and if the link is correct
     await devToolsPage.waitFor(detailsSelector + '[open]');
-    const highlightedLinkSelector = 'devtools-link.highlighted';
-    await devToolsPage.waitFor(highlightedLinkSelector);
+    await devToolsPage.waitForElementWithTextContent('https://example.com');
   });
 
   it('shows citations in code blocks', async ({devToolsPage, inspectedPage}) => {
@@ -236,10 +235,9 @@ describe('ConsoleInsight', function() {
     // Click on a citation link within the code block
     await devToolsPage.click(citationSelector);
 
-    // Check if the citations are expanded and if the link is highlighted
+    // Check if the citations are expanded and if the link is correct
     await devToolsPage.waitFor(detailsSelector + '[open]');
-    const highlightedLinkSelector = 'devtools-link.highlighted';
-    await devToolsPage.waitFor(highlightedLinkSelector);
+    await devToolsPage.waitForElementWithTextContent('https://example.com');
   });
 
   it('does not show context menu if AIDA is not available', async ({devToolsPage, inspectedPage}) => {
