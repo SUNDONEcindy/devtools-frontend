@@ -352,16 +352,6 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
     this.#computedStylesTree.classList.toggle('computed-narrow', isNarrow);
   }
 
-  override wasShown(): void {
-    UI.Context.Context.instance().setFlavor(ComputedStyleWidget, this);
-    super.wasShown();
-  }
-
-  override willHide(): void {
-    super.willHide();
-    UI.Context.Context.instance().setFlavor(ComputedStyleWidget, null);
-  }
-
   /**
    * @param input.hasMatches Whether any properties matched the current filter (or if any properties exist at all).
    */

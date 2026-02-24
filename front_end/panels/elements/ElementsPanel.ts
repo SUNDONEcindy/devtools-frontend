@@ -313,8 +313,6 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
 
     UI.Context.Context.instance().addFlavorChangeListener(
         StylesSidebarPane, this.evaluateTrackingComputedStyleUpdatesForNode, this);
-    UI.Context.Context.instance().addFlavorChangeListener(
-        ComputedStyleWidget, this.evaluateTrackingComputedStyleUpdatesForNode, this);
 
     this.stylesWidget = new StylesSidebarPane(this.#computedStyleModel);
     this.#computedStyleWidget = new ComputedStyleWidget();
@@ -373,7 +371,7 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
       return;
     }
 
-    const isComputedStyleWidgetVisible = Boolean(UI.Context.Context.instance().flavor(ComputedStyleWidget));
+    const isComputedStyleWidgetVisible = this.#computedStyleWidget.isShowing();
     const isStylesTabVisible = Boolean(UI.Context.Context.instance().flavor(StylesSidebarPane));
     const shouldTrackComputedStyleUpdates = isComputedStyleWidgetVisible ||
         (isStylesTabVisible && Root.Runtime.hostConfig.devToolsAnimationStylesInStylesTab?.enabled);
@@ -551,6 +549,7 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
     super.wasShown();
     UI.Context.Context.instance().setFlavor(ElementsPanel, this);
     this.#domTreeWidget.show(this.domTreeContainer);
+    this.evaluateTrackingComputedStyleUpdatesForNode();
 
     if (Annotations.AnnotationRepository.annotationsEnabled()) {
       void PanelCommon.AnnotationManager.instance().resolveAnnotationsOfType(Annotations.AnnotationType.ELEMENT_NODE);
@@ -559,6 +558,7 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
 
   override willHide(): void {
     SDK.OverlayModel.OverlayModel.hideDOMNodeHighlight();
+    this.evaluateTrackingComputedStyleUpdatesForNode();
     this.#domTreeWidget.detach();
     super.willHide();
     UI.Context.Context.instance().setFlavor(ElementsPanel, null);
@@ -1169,6 +1169,7 @@ export class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.S
 
     const tabSelected = (event: Common.EventTarget.EventTargetEvent<UI.TabbedPane.EventData>): void => {
       const {tabId} = event.data;
+      this.evaluateTrackingComputedStyleUpdatesForNode();
       if (tabId === SidebarPaneTabId.COMPUTED) {
         computedStylePanesWrapper.show(computedView.element);
         showMetricsWidgetInComputedPane();
