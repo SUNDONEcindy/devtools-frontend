@@ -769,10 +769,6 @@ export class StylesSidebarPane extends Common.ObjectWrapper.eventMixin<EventType
       return;
     }
 
-    if (!UI.ViewManager.ViewManager.instance().isViewVisible('animations')) {
-      return;
-    }
-
     void this.computedStyleUpdateThrottler.schedule(async () => {
       await this.#updateAnimatedStyles();
       this.handledComputedStyleChangedForTest();
@@ -795,12 +791,24 @@ export class StylesSidebarPane extends Common.ObjectWrapper.eventMixin<EventType
   #scheduleResetUpdateIfNotEditing(): void {
     this.scheduleResetUpdateIfNotEditingCalledForTest();
 
+    // Don't schedule if editing; the edit completion will handle the update.
+    if (this.userOperation || this.isEditingStyle) {
+      return;
+    }
+
     void this.resetUpdateThrottler.schedule(async () => {
       this.#resetUpdateIfNotEditing();
     });
   }
 
   scheduleResetUpdateIfNotEditingCalledForTest(): void {
+  }
+
+  #hasAnimatedStyles(animatedStyles: Protocol.CSS.GetAnimatedStylesForNodeResponse): boolean {
+    return Boolean(
+        animatedStyles.animationStyles?.length || animatedStyles.transitionsStyle?.cssProperties.length ||
+        animatedStyles.inherited?.some(
+            inherited => inherited.animationStyles?.length || inherited.transitionsStyle?.cssProperties.length));
   }
 
   async #updateAnimatedStyles(): Promise<void> {
@@ -815,6 +823,18 @@ export class StylesSidebarPane extends Common.ObjectWrapper.eventMixin<EventType
 
     const animatedStyles = await this.cssModel()?.getAnimatedStylesForNode(nodeId);
     if (!animatedStyles) {
+      return;
+    }
+
+    if (!this.#hasAnimatedStyles(animatedStyles)) {
+      // A computed style change that doesn't correspond to any animation is
+      // likely to be a change in the matched styles. In this case, we should
+      // update the matched styles.
+      this.#scheduleResetUpdateIfNotEditing();
+      return;
+    }
+
+    if (!UI.ViewManager.ViewManager.instance().isViewVisible('animations')) {
       return;
     }
 

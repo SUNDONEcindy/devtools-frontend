@@ -17,6 +17,7 @@ import {
   getDisplayedStyleRules,
   getDisplayedStyleRulesCompact,
   getStyleRule,
+  getStyleRuleSelector,
   getStyleSectionSubtitles,
   goToResourceAndWaitForStyleSection,
   waitForAndClickTreeElementWithPartialText,
@@ -682,7 +683,7 @@ describe('The Styles pane', () => {
 
     // Verify that initial CSS properties correspond to the ones in the test file.
     const rule1PropertiesSection = await getStyleRule(RULE1_SELECTOR, devToolsPage);
-    const rule2PropertiesSection = await getStyleRule(RULE2_SELECTOR, devToolsPage);
+    let rule2PropertiesSection = await getStyleRule(RULE2_SELECTOR, devToolsPage);
     {
       const displayedNames = await getDisplayedCSSPropertyNames(rule1PropertiesSection, devToolsPage);
       assert.deepEqual(
@@ -702,7 +703,10 @@ describe('The Styles pane', () => {
           'incorrectly displayed style after initialization');
     }
 
-    await editQueryRuleText(rule1PropertiesSection, '(min-width: 300px)', devToolsPage);
+    await editQueryRuleText(rule1PropertiesSection, '(min-width: 300px)', devToolsPage, true);
+    // This can cause the styles pane to be regenerated, so we need to get the
+    // style rule handle again.
+    rule2PropertiesSection = await getStyleRule(RULE2_SELECTOR, devToolsPage);
     await editQueryRuleText(rule2PropertiesSection, '(max-width: 300px)', devToolsPage);
 
     // Verify that computed styles correspond to the changes made.
@@ -1877,8 +1881,7 @@ describe('The Styles pane', () => {
                      }]);
 
     // Delete the style rule
-    await deletePropertyByBackspace(
-        devToolsPage, '.webkit-css-property[aria-label="CSS property name: font-weight"]', propertiesSection);
+    await deletePropertyByBackspace(devToolsPage, '.webkit-css-property[aria-label="CSS property name: font-weight"]');
 
     // Select another node (#other)
     await waitForAndClickTreeElementWithPartialText('other', devToolsPage);
@@ -1903,7 +1906,8 @@ describe('The Styles pane', () => {
     await waitForElementsStyleSection(undefined, devToolsPage);
     await waitForAndClickTreeElementWithPartialText('inspected', devToolsPage);
 
-    const propertiesSection = await getStyleRule('#inspected', devToolsPage);
+    const propertiesSectionSelector = getStyleRuleSelector('#inspected');
+    const propertiesSection = await devToolsPage.waitFor(propertiesSectionSelector);
     let inspectedRules = await getDisplayedCSSDeclarations(devToolsPage);
     assert.sameDeepMembers(inspectedRules, ['font-size: 12px;', 'display: block;', 'unicode-bidi: isolate;']);
     let displayedNames = await getDisplayedCSSPropertyNames(propertiesSection, devToolsPage);
@@ -1914,10 +1918,11 @@ describe('The Styles pane', () => {
         ],
         'incorrectly displayed style after initialization');
 
-    await propertiesSection.click();
+    await devToolsPage.click(propertiesSectionSelector);
     await devToolsPage.pasteText('margin-left: 1px');
-    await propertiesSection.click();
-    displayedNames = await getDisplayedCSSPropertyNames(propertiesSection, devToolsPage);
+    await devToolsPage.click(propertiesSectionSelector);
+    displayedNames =
+        await getDisplayedCSSPropertyNames(await devToolsPage.waitFor(propertiesSectionSelector), devToolsPage);
     assert.sameDeepMembers(
         displayedNames,
         [
@@ -1926,10 +1931,11 @@ describe('The Styles pane', () => {
         ],
         'incorrectly displayed style after pasting');
 
-    await propertiesSection.click();
+    await devToolsPage.click(propertiesSectionSelector);
     await devToolsPage.pasteText('margin-top: 1px; color: red;');
-    await propertiesSection.click();
-    displayedNames = await getDisplayedCSSPropertyNames(propertiesSection, devToolsPage);
+    await devToolsPage.click(propertiesSectionSelector);
+    displayedNames =
+        await getDisplayedCSSPropertyNames(await devToolsPage.waitFor(propertiesSectionSelector), devToolsPage);
     assert.sameDeepMembers(
         displayedNames,
         [
@@ -1941,10 +1947,12 @@ describe('The Styles pane', () => {
         'incorrectly displayed style after pasting');
 
     await devToolsPage.click(
-        '.webkit-css-property[aria-label="CSS property name: margin-top"]', {root: propertiesSection});
+        '.webkit-css-property[aria-label="CSS property name: margin-top"]',
+        {root: await devToolsPage.waitFor(propertiesSectionSelector)});
     await devToolsPage.pasteText('foo: bar; moo: zoo;');
-    await propertiesSection.click();
-    displayedNames = await getDisplayedCSSPropertyNames(propertiesSection, devToolsPage);
+    await devToolsPage.click(propertiesSectionSelector);
+    displayedNames =
+        await getDisplayedCSSPropertyNames(await devToolsPage.waitFor(propertiesSectionSelector), devToolsPage);
     assert.sameDeepMembers(
         displayedNames,
         [

@@ -851,7 +851,8 @@ export async function editCSSProperty(
 
 /** Edit a media or container query rule text for the given styles section **/
 export async function editQueryRuleText(
-    queryStylesSections: puppeteer.ElementHandle<Element>, newQueryText: string, devToolsPage: DevToolsPage) {
+    queryStylesSections: puppeteer.ElementHandle<Element>, newQueryText: string, devToolsPage: DevToolsPage,
+    willDelete = false) {
   await devToolsPage.click(STYLE_QUERY_RULE_TEXT_SELECTOR, {root: queryStylesSections});
   // TODO: it should actually wait for rendering to finish.
   await devToolsPage.drainTaskQueue();
@@ -870,15 +871,19 @@ export async function editQueryRuleText(
   // TODO: it should actually wait for rendering to finish.
   await devToolsPage.drainTaskQueue();
 
-  await devToolsPage.waitForFunction(async () => {
-    // Wait until the value element is not a text-prompt anymore.
-    const queryText = await devToolsPage.$(STYLE_QUERY_RULE_TEXT_SELECTOR, queryStylesSections);
-    assert.isOk(queryText, 'Could not find any query in the given styles section');
-    const check = await queryText.evaluate(node => {
-      return !node.classList.contains('being-edited') && !node.hasAttribute('contenteditable');
+  if (willDelete) {
+    await devToolsPage.waitForFunction(async () => await queryStylesSections.evaluate(node => !node.isConnected));
+  } else {
+    await devToolsPage.waitForFunction(async () => {
+      // Wait until the value element is not a text-prompt anymore.
+      const queryText = await devToolsPage.$(STYLE_QUERY_RULE_TEXT_SELECTOR, queryStylesSections);
+      assert.isOk(queryText, 'Could not find any query in the given styles section');
+      const check = await queryText.evaluate(node => {
+        return !node.classList.contains('being-edited') && !node.hasAttribute('contenteditable');
+      });
+      return check;
     });
-    return check;
-  });
+  }
   await expectVeEvents(
       [
         veClick('Panel: elements > Pane: styles > Section: style-properties > CSSRuleHeader: container-query'),
