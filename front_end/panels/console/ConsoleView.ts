@@ -141,7 +141,7 @@ const UIStrings = {
   /**
    * @description Text in Console View of the Console panel
    */
-  hideNetwork: 'Hide network',
+  networkMessages: 'Network messages',
   /**
    * @description Tooltip text that appears on the setting when hovering over it in Console View of the Console panel
    */
@@ -473,8 +473,8 @@ export class ConsoleView extends UI.Widget.VBox implements
     const userActivationEvalSetting = Common.Settings.Settings.instance().moduleSetting('console-user-activation-eval');
     settingsPane.append(
         SettingsUI.SettingsUI.createSettingCheckbox(
-            i18nString(UIStrings.hideNetwork), this.filter.hideNetworkMessagesSetting,
-            this.filter.hideNetworkMessagesSetting.title()),
+            i18nString(UIStrings.networkMessages), this.filter.networkMessagesSetting,
+            this.filter.networkMessagesSetting.title()),
         SettingsUI.SettingsUI.createSettingCheckbox(
             i18nString(UIStrings.logXMLHttpRequests), monitoringXHREnabledSetting),
         SettingsUI.SettingsUI.createSettingCheckbox(
@@ -1733,7 +1733,7 @@ globalThis.Console.ConsoleView = ConsoleView;
 export class ConsoleViewFilter {
   private readonly filterChanged: () => void;
   messageLevelFiltersSetting: Common.Settings.Setting<LevelsMask>;
-  hideNetworkMessagesSetting: Common.Settings.Setting<boolean>;
+  networkMessagesSetting: Common.Settings.Setting<boolean>;
   filterByExecutionContextSetting: Common.Settings.Setting<boolean>;
   private readonly suggestionBuilder: UI.FilterSuggestionBuilder.FilterSuggestionBuilder;
   readonly textFilterUI: UI.Toolbar.ToolbarInput;
@@ -1748,12 +1748,12 @@ export class ConsoleViewFilter {
     this.filterChanged = filterChangedCallback;
 
     this.messageLevelFiltersSetting = ConsoleViewFilter.levelFilterSetting();
-    this.hideNetworkMessagesSetting = Common.Settings.Settings.instance().moduleSetting('hide-network-messages');
+    this.networkMessagesSetting = Common.Settings.Settings.instance().moduleSetting('network-messages');
     this.filterByExecutionContextSetting =
         Common.Settings.Settings.instance().moduleSetting('selected-context-filter-enabled');
 
     this.messageLevelFiltersSetting.addChangeListener(this.onFilterChanged.bind(this));
-    this.hideNetworkMessagesSetting.addChangeListener(this.onFilterChanged.bind(this));
+    this.networkMessagesSetting.addChangeListener(this.onFilterChanged.bind(this));
     this.filterByExecutionContextSetting.addChangeListener(this.onFilterChanged.bind(this));
     UI.Context.Context.instance().addFlavorChangeListener(
         SDK.RuntimeModel.ExecutionContext, this.onFilterChanged, this);
@@ -1838,7 +1838,7 @@ export class ConsoleViewFilter {
           break;
       }
     }
-    if (this.hideNetworkMessagesSetting.get()) {
+    if (!this.networkMessagesSetting.get()) {
       parsedFilters.push(
           {key: FilterType.Source, text: Protocol.Log.LogEntrySource.Network, negative: true, regex: undefined});
     }
@@ -1928,7 +1928,7 @@ export class ConsoleViewFilter {
   reset(): void {
     this.messageLevelFiltersSetting.set(ConsoleFilter.defaultLevelsFilterValue());
     this.filterByExecutionContextSetting.set(false);
-    this.hideNetworkMessagesSetting.set(false);
+    this.networkMessagesSetting.set(true);
     this.textFilterUI.setValue('');
     this.onFilterChanged();
   }

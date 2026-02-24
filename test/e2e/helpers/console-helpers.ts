@@ -453,7 +453,7 @@ function veImpressionsForConsoleSettings() {
     veImpression('Toggle', 'console-history-autocomplete'),
     veImpression('Toggle', 'console-shows-cors-errors'),
     veImpression('Toggle', 'console-user-activation-eval'),
-    veImpression('Toggle', 'hide-network-messages'),
+    veImpression('Toggle', 'network-messages'),
     veImpression('Toggle', 'monitoring-xhr-enabled'),
     veImpression('Toggle', 'preserve-console-log'),
     veImpression('Toggle', 'selected-context-filter-enabled'),

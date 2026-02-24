@@ -170,7 +170,7 @@ export const DEFAULT_SETTING_REGISTRATIONS_FOR_TEST = [
       Common.Settings.SettingCategory.SOURCES, 'network.enable-remote-file-loading', false,
       Common.Settings.SettingType.BOOLEAN),
   createSettingValue(
-      Common.Settings.SettingCategory.CONSOLE, 'hide-network-messages', false, Common.Settings.SettingType.BOOLEAN),
+      Common.Settings.SettingCategory.CONSOLE, 'network-messages', true, Common.Settings.SettingType.BOOLEAN),
   createSettingValue(
       Common.Settings.SettingCategory.CONSOLE, 'selected-context-filter-enabled', false,
       Common.Settings.SettingType.BOOLEAN),

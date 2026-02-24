@@ -684,7 +684,7 @@ export class VersionController {
   static readonly SYNCED_VERSION_SETTING_NAME = 'syncedInspectorVersion';
   static readonly LOCAL_VERSION_SETTING_NAME = 'localInspectorVersion';
 
-  static readonly CURRENT_VERSION = 40;
+  static readonly CURRENT_VERSION = 41;
 
   readonly #settings: Settings;
   readonly #globalVersionSetting: Setting<number>;
@@ -1444,6 +1444,35 @@ export class VersionController {
     } finally {
       // This setting is now not used, so we can remove it.
       this.#settings.globalStorage.remove(PREFERRED_NETWORK_COND_SETTING);
+    }
+  }
+
+  // This migration handles two setting renames that requires inverted logic
+  // (from "Hide X" to "X") and flipped the default values to true.
+  updateVersionFrom40To41(): void {
+    // 1. Rename 'Hide network messages' to 'Network messages'
+    if (this.#settings.syncedStorage.has('hide-network-messages')) {
+      const oldNetworkSetting = this.#settings.createSetting('hide-network-messages', false, SettingStorageType.SYNCED);
+      if (!this.#settings.syncedStorage.has('network-messages')) {
+        const newNetworkSetting = this.#settings.createSetting('network-messages', true, SettingStorageType.SYNCED);
+        // If the user had a saved preference for the old setting, migrate it by
+        // inverting the value to match the new logic.
+        newNetworkSetting.set(!oldNetworkSetting.get());
+      }
+      this.#removeSetting(oldNetworkSetting);
+    }
+
+    // 2. Rename 'Hide `chrome` frame in Layers view' to 'Chrome frame in Layers view'
+    if (this.#settings.syncedStorage.has('frame-viewer-hide-chrome-window')) {
+      const oldChromeFrameSetting =
+          this.#settings.createSetting('frame-viewer-hide-chrome-window', false, SettingStorageType.SYNCED);
+      if (!this.#settings.syncedStorage.has('frame-viewer-chrome-window')) {
+        const newChromeFrameSetting =
+            this.#settings.createSetting('frame-viewer-chrome-window', true, SettingStorageType.SYNCED);
+        // Similar to above, move the preference and invert the boolean.
+        newChromeFrameSetting.set(!oldChromeFrameSetting.get());
+      }
+      this.#removeSetting(oldChromeFrameSetting);
     }
   }
 
