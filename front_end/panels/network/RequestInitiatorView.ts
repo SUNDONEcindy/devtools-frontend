@@ -61,7 +61,7 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: undefined, target: HTMLE
       return html`${nothing}`;
     }
     return html`
-      <li role="treeitem" class="request-initiator-view-section-title" aria-expanded="true">
+      <li role="treeitem" class="request-initiator-view-section-title" aria-expanded="true" open>
         ${i18nString(UIStrings.requestCallStack)}
         <ul role="group">
           <li role="treeitem">
@@ -85,7 +85,7 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: undefined, target: HTMLE
     const isCurrentRequest = (index === initiators.length - 1);
 
     return html`
-      <li role="treeitem" ?selected=${isCurrentRequest} aria-expanded="true">
+      <li role="treeitem" ?selected=${isCurrentRequest} aria-expanded="true" open>
         <span style=${isCurrentRequest ? 'font-weight: bold' : ''}>${request.url()}</span>
         <ul role="group">
           ${renderInitiatorNodes(initiators, index + 1, initiated, visited)}
@@ -114,7 +114,7 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: undefined, target: HTMLE
         visited.add(child);
       }
       return html`
-        <li role="treeitem" aria-expanded="true">
+        <li role="treeitem" aria-expanded="true" open>
           <span>${child.url()}</span>
           ${shouldRecurse ? html`<ul>${renderInitiatedNodes(initiated, child, visited)}</ul>` : nothing}
         </li>
@@ -128,7 +128,7 @@ export const DEFAULT_VIEW = (input: ViewInput, _output: undefined, target: HTMLE
     const visited = new Set<SDK.NetworkRequest.NetworkRequest>();
     visited.add(input.request);
     return html`
-      <li role="treeitem" class="request-initiator-view-section-title" aria-expanded="true">
+      <li role="treeitem" class="request-initiator-view-section-title" aria-expanded="true" open>
         ${i18nString(UIStrings.requestInitiatorChain)}
         <ul role="group">
           ${renderInitiatorNodes(initiators, 0, initiatorGraph.initiated, visited)}

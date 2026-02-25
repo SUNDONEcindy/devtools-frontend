@@ -69,10 +69,11 @@ export const DEFAULT_VIEW: View = (input, _output, target) => {
         ${results.map(searchResult => html`
           <li @expand=${(e: UI.TreeOutline.TreeViewElement.ExpandEvent) => onExpand(searchResult, e)}
               role="treeitem"
-              class="search-result">
+              class="search-result"
+              ?open=${expandedResults.has(searchResult)}>
             <style>${searchResultsPaneStyles}</style>
             ${renderSearchResult(searchResult)}
-            <ul role="group" ?hidden=${!expandedResults.has(searchResult)}>
+            <ul role="group">
               ${renderSearchMatches(searchResult, matches, onSelectMatch, onShowMoreMatches)}
             </ul>
           </li>`)}

@@ -237,7 +237,8 @@ export const DEFAULT_VIEW = (input: ViewInput, output: ViewOutput, target: HTMLE
               jslog-context=${category}
               aria-checked=${breakpoints.some(breakpoint => breakpoint.enabled())
                 ? breakpoints.some(breakpoint => !breakpoint.enabled()) ? 'mixed' : true
-                : false}>
+                : false}
+              ?open=${shouldExpandCategory(breakpoints) || input.userExpandedCategories.has(category)}>
             <style>${categorizedBreakpointsSidebarPaneStyles}</style>
             <devtools-checkbox
               class="small"
@@ -248,9 +249,7 @@ export const DEFAULT_VIEW = (input: ViewInput, output: ViewOutput, target: HTMLE
               ?checked=${!breakpoints.some(breakpoint => !breakpoint.enabled())}
               @change=${(e: Event) => onCheckboxClicked(e, category)}
             >${getLocalizedCategory(category)}</devtools-checkbox>
-            <ul
-                role="group"
-                ?hidden=${!shouldExpandCategory(breakpoints) && !input.userExpandedCategories.has(category)}>
+            <ul role="group">
               ${breakpoints.map(breakpoint => html`
               <li @select=${() => input.onItemSelected(breakpoint)}
                   role="treeitem"

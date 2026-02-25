@@ -101,7 +101,7 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
                         n: group.messageCount
                       })}
                   ${group.messageCount === 0 ? nothing : html`
-                  <ul role="group" hidden>
+                  <ul role="group">
                     ${group.urlGroups.values().map(urlGroup => html`
                       <li
                         @select=${() => input.onSelectionChanged(urlGroup.filter)}

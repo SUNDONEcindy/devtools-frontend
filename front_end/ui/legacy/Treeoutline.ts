@@ -1648,9 +1648,16 @@ function removeNode(node: TreeElement): void {
  *          <ul role="group">
  *            Node with subtree
  *            <li role="treeitem" jslog-context="context">
- *              <ul role="group" hidden>
+ *              <ul role="group">
  *                <li role="treeitem">Tree Node Text in collapsed subtree</li>
  *                <li role="treeitem">Tree Node Text in collapsed subtree</li>
+ *              </ul>
+ *           </li>
+ *           <li role="treeitem" open>
+ *             Tree Node Text in expanded subtree
+ *              <ul role="group">
+ *                <li role="treeitem">Tree Node Text in expanded subtree</li>
+ *                <li role="treeitem">Tree Node Text in expanded subtree</li>
  *              </ul>
  *           </li>
  *           <li selected role="treeitem">Tree Node Text in a selected-by-default node</li>
@@ -1662,8 +1669,8 @@ function removeNode(node: TreeElement): void {
  *
  * ```
  * where a <li role="treeitem"> element defines a tree node and its contents (the <li> is the `config element` for this
- * tree node). If a tree node contains a <ul role="group">, that defines a subtree under that tree node. The `hidden`
- * attribute on the <ul> defines whether that subtree should render as collapsed. Note that node expanding/collapsing do
+ * tree node). If a tree node contains a <ul role="group">, that defines a subtree under that tree node. The `open`
+ * attribute on the <li> defines whether that subtree should render as expanded. Note that node expanding/collapsing do
  * not reflect this state back to the attribute on the config element, those state changes are rather sent out as
  * `expand` events on the config element.
  *
@@ -1674,7 +1681,7 @@ function removeNode(node: TreeElement): void {
  * - `selected`: Whether the tree node should be rendered as selected.
  * - `jslog-context`: The jslog context for the tree element.
  * - `aria-*`: All aria attributes defined on the config element are cloned over.
- * - `hidden`: On the <ul>, declares whether the subtree should be rendererd as expanded or collapsed.
+ * - `open`: On the <li>, declares whether the subtree should be rendererd as expanded or collapsed.
  *
  * ## Event Handling ##
  *
@@ -1735,7 +1742,7 @@ export class TreeViewElement extends HTMLElementWithLightDOMTemplate {
     if (subtreeRoot.role !== 'group' || !subtreeRoot.parentElement) {
       return null;
     }
-    const expanded = !hasBooleanAttribute(subtreeRoot, 'hidden');
+    const expanded = hasBooleanAttribute(subtreeRoot.parentElement, 'open');
     const treeElement = TreeViewTreeElement.get(subtreeRoot.parentElement);
     return treeElement ? {expanded, treeElement} : null;
   }
@@ -1756,11 +1763,11 @@ export class TreeViewElement extends HTMLElementWithLightDOMTemplate {
     if (node === treeNode && attributeName === 'selected' && hasBooleanAttribute(treeNode, 'selected')) {
       treeElement.revealAndSelect(true);
     }
-    if (attributeName === 'hidden' && node instanceof HTMLUListElement && node.role === 'group') {
-      if (hasBooleanAttribute(node, 'hidden')) {
-        treeElement.collapse();
-      } else {
+    if (node === treeNode && attributeName === 'open') {
+      if (hasBooleanAttribute(treeNode, 'open')) {
         treeElement.expand();
+      } else {
+        treeElement.collapse();
       }
     }
   }

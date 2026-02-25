@@ -1370,9 +1370,9 @@ export const DEFAULT_VIEW = (input, _output, target) => {
       <devtools-tree .template=${html`
         <ul role="tree">
           <li role="treeitem">Node 1</li>
-          <li role="treeitem">
+          <li role="treeitem" open>
             Node 2
-            <ul role="group" hidden>
+            <ul role="group">
               <li role="treeitem">Child 1</li>
             </ul>
           </li>

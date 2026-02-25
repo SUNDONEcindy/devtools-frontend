@@ -223,7 +223,7 @@ function maybeRenderFrameTree(
         ` : nothing}
         ${node.text}
         ${node.children?.length ? html`
-          <ul role="group" hidden>
+          <ul role="group">
             ${node.children.map(child => renderFrameTreeNode(child))}
           </ul>` : nothing}
       </li>`;

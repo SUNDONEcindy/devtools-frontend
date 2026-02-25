@@ -173,15 +173,15 @@ describe('TreeViewElement', () => {
     assert.isTrue(nodes[1].selected);
   });
 
-  it('expands subtrees based on the `hidden` attribute', async () => {
+  it('expands subtrees based on the `open` attribute', async () => {
     const component = await makeTree(html`<devtools-tree .template=${html`
       <ul role="tree">
         <li role="treeitem">first subtree
-          <ul role="group" hidden>
+          <ul role="group">
             <li role="treeitem">in first subtree</li>
           </ul>
         </li>
-        <li role="treeitem">second subtree
+        <li role="treeitem" open>second subtree
           <ul role="group">
             <li role="treeitem">in second subtree</li>
           </ul>
@@ -232,12 +232,12 @@ describe('TreeViewElement', () => {
        .template=${html`
          <ul role="tree">
            <li @expand=${onExpand1} role="treeitem">first subtree
-             <ul role="group" hidden>
+             <ul role="group">
                <li role="treeitem">in first subtree</li>
              </ul>
            </li>
            <li @expand=${onExpand2} role="treeitem">second subtree
-             <ul role="group" hidden>
+             <ul role="group">
                <li role="treeitem">in second subtree</li>
              </ul>
            </li>

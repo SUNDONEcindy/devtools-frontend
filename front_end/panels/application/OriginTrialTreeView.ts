@@ -98,7 +98,7 @@ function renderOriginTrialTree(originTrial: Protocol.Page.OriginTrial): LitTempl
           ${i18nString(UIStrings.tokens, {PH1: originTrial.tokensWithStatus.length})}
         </devtools-adorner>`
         : nothing}
-      <ul role="group" hidden>
+      <ul role="group">
         ${originTrial.tokensWithStatus.length > 1 ?
           originTrial.tokensWithStatus.map(renderTokenNode) :
           renderTokenDetailsNodes(originTrial.tokensWithStatus[0])}
@@ -117,7 +117,7 @@ function renderTokenNode(token: Protocol.Page.OriginTrialTokenWithStatus): LitTe
       <devtools-adorner class="token-status-badge badge-${success ? 'success' : 'error'}">
         ${token.status}
       </devtools-adorner>
-      <ul role="group" hidden>
+      <ul role="group">
         ${renderTokenDetailsNodes(token)}
       </ul>
     </li>`;
@@ -151,7 +151,7 @@ function renderRawTokenTextNode(tokenText: string): LitTemplate {
   return html`
     <li role="treeitem">
       ${i18nString(UIStrings.rawTokenText)}
-      <ul role="group" hidden>
+      <ul role="group">
         <li role="treeitem">
           <div style="overflow-wrap: break-word;">
             ${tokenText}
