@@ -72,7 +72,7 @@ Content:
     },
     {
       "name": "selectSourceFile",
-      "description": "Selects a source file. Use this when asked about files on the page.",
+      "description": "Selects a source file. Use this when asked about files on the page. Use listSourceFiles if you don't know the full path name.",
       "parameters": {
         "type": 6,
         "description": "",
@@ -83,7 +83,7 @@ Content:
         "properties": {
           "name": {
             "type": 1,
-            "description": "The name of the file you want to select.",
+            "description": "The full path name of the file you want to select.",
             "nullable": false
           }
         }
