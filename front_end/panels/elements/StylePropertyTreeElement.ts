@@ -47,11 +47,7 @@ import {
 import {StyleEditorWidget} from './StyleEditorWidget.js';
 import type {StylePropertiesSection} from './StylePropertiesSection.js';
 import {getCssDeclarationAsJavascriptProperty} from './StylePropertyUtils.js';
-import {
-  CSSPropertyPrompt,
-  REGISTERED_PROPERTY_SECTION_NAME,
-  StylesSidebarPane,
-} from './StylesSidebarPane.js';
+import {CSSPropertyPrompt, REGISTERED_PROPERTY_SECTION_NAME, type StylesSidebarPane} from './StylesSidebarPane.js';
 
 const {html, nothing, render, Directives: {classMap}} = Lit;
 const ASTUtils = SDK.CSSPropertyParser.ASTUtils;
@@ -2174,7 +2170,7 @@ export class StylePropertyTreeElement extends UI.TreeOutline.TreeElement {
       this.listItemElement.classList.remove('implicit');
     }
 
-    const hasIgnorableError = !this.property.parsedOk && StylesSidebarPane.ignoreErrorsForProperty(this.property);
+    const hasIgnorableError = !this.property.parsedOk && this.property.ignoreErrors();
     if (hasIgnorableError) {
       this.listItemElement.classList.add('has-ignorable-error');
     } else {
@@ -2857,7 +2853,7 @@ export class StylePropertyTreeElement extends UI.TreeOutline.TreeElement {
     }, {jslogContext: 'copy-value'});
 
     contextMenu.headerSection().appendItem(i18nString(UIStrings.copyRule), () => {
-      const ruleText = StylesSidebarPane.formatLeadingProperties(this.#parentSection).ruleText;
+      const ruleText = this.#parentSection.formatLeadingProperties().ruleText;
       Host.InspectorFrontendHost.InspectorFrontendHostInstance.copyText(ruleText);
     }, {jslogContext: 'copy-rule'});
 
@@ -2866,7 +2862,7 @@ export class StylePropertyTreeElement extends UI.TreeOutline.TreeElement {
         {jslogContext: 'copy-css-declaration-as-js'});
 
     contextMenu.clipboardSection().appendItem(i18nString(UIStrings.copyAllDeclarations), () => {
-      const allDeclarationText = StylesSidebarPane.formatLeadingProperties(this.#parentSection).allDeclarationText;
+      const allDeclarationText = this.#parentSection.formatLeadingProperties().allDeclarationText;
       Host.InspectorFrontendHost.InspectorFrontendHostInstance.copyText(allDeclarationText);
     }, {jslogContext: 'copy-all-declarations'});
 
