@@ -3,15 +3,18 @@
 // found in the LICENSE file.
 
 import * as Common from '../../core/common/common.js';
+import type * as Host from '../../core/host/host.js';
 import * as Platform from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
-import {mockAidaClient} from '../../testing/AiAssistanceHelpers.js';
+import * as TextUtils from '../../models/text_utils/text_utils.js';
+import {createNetworkRequest, mockAidaClient} from '../../testing/AiAssistanceHelpers.js';
 import {
   describeWithEnvironment,
   updateHostConfig,
 } from '../../testing/EnvironmentHelpers.js';
 import * as Bindings from '../bindings/bindings.js';
-import type * as NetworkTimeCalculator from '../network_time_calculator/network_time_calculator.js';
+import * as Logs from '../logs/logs.js';
+import * as NetworkTimeCalculator from '../network_time_calculator/network_time_calculator.js';
 import * as Workspace from '../workspace/workspace.js';
 
 import * as AiAssistance from './ai_assistance.js';
@@ -37,7 +40,7 @@ describeWithEnvironment('AiConversation', () => {
     const conversation =
         new AiAssistance.AiConversation.AiConversation(AiAssistance.AiHistoryStorage.ConversationType.STYLING);
     const networkRequest = new AiAssistance.NetworkAgent.RequestContext(
-        {} as SDK.NetworkRequest.NetworkRequest, {} as NetworkTimeCalculator.NetworkTransferTimeCalculator);
+        createNetworkRequest(), new NetworkTimeCalculator.NetworkTransferTimeCalculator());
 
     conversation.setContext(networkRequest);
 
@@ -119,5 +122,78 @@ describeWithEnvironment('AiConversation', () => {
       imageId: undefined,
       imageInput: undefined,
     });
+  });
+
+  it('should forward history to the new agent when switching agents', async () => {
+    updateHostConfig({devToolsAiAssistanceContextSelectionAgent: {enabled: true}});
+
+    function hasFunctionCalls(request: Host.AidaClient.DoConversationRequest): boolean {
+      return request.historical_contexts?.some(history => {
+        return history.parts.some(part => 'functionCall' in part || 'functionResponse' in part);
+      }) ??
+          false;
+    }
+
+    const aidaClient = mockAidaClient([
+      [
+        {
+          explanation: '',
+          functionCalls: [{
+            name: 'selectNetworkRequest',
+            args: {url: 'https://example.com'},
+          }],
+        },
+      ],
+      [
+        {
+          explanation: 'Works 1',
+        },
+      ],
+      [
+        {
+          explanation: 'Works 2',
+        },
+      ],
+      [
+        {
+          explanation: 'Works 3',
+        },
+      ]
+    ]);
+
+    const conversation = new AiAssistance.AiConversation.AiConversation(
+        AiAssistance.AiHistoryStorage.ConversationType.NONE,
+        [],
+        'test-id',
+        false,
+        aidaClient,
+    );
+    const networkRequest = createNetworkRequest({url: Platform.DevToolsPath.urlString`https://example.com`});
+    sinon.stub(networkRequest, 'requestContentData')
+        .resolves(new TextUtils.ContentData.ContentData('test content', false, 'text/plain'));
+
+    sinon.stub(Logs.NetworkLog.NetworkLog.instance(), 'requests').returns([networkRequest]);
+
+    await Array.fromAsync(conversation.run('test query 1'));
+    // Called two time as we pass the convestation to the new agent.
+    assert.lengthOf(aidaClient.doConversation.getCalls(), 2);
+    const firstRequest = aidaClient.doConversation.getCall(1).firstArg;
+    assert.isFalse(hasFunctionCalls(firstRequest));
+    assert.lengthOf(firstRequest.historical_contexts ?? [], 1);
+
+    await Array.fromAsync(conversation.run('test query 1'));
+    assert.lengthOf(aidaClient.doConversation.getCalls(), 3);
+    const secondRequest = aidaClient.doConversation.getCall(1).firstArg;
+    assert.isFalse(hasFunctionCalls(secondRequest));
+    assert.lengthOf(secondRequest.historical_contexts ?? [], 1);
+
+    conversation.setContext(new AiAssistance.NetworkAgent.RequestContext(
+        networkRequest, new NetworkTimeCalculator.NetworkTransferTimeCalculator()));
+
+    await Array.fromAsync(conversation.run('test query 2'));
+    assert.lengthOf(aidaClient.doConversation.getCalls(), 4);
+    const thirdRequest = aidaClient.doConversation.getCall(2).firstArg;
+    assert.isFalse(hasFunctionCalls(thirdRequest));
+    assert.lengthOf(thirdRequest.historical_contexts ?? [], 3);
   });
 });

@@ -141,6 +141,7 @@ export interface AgentOptions {
   sessionId?: string;
   confirmSideEffectForTest?: typeof Promise.withResolvers;
   onInspectElement?: () => Promise<SDK.DOMModel.DOMNode|null>;
+  history?: Host.AidaClient.Content[];
 }
 
 export interface ParsedAnswer {
@@ -311,7 +312,7 @@ export abstract class AiAgent<T> {
    */
   protected context?: ConversationContext<T>;
 
-  #history: Host.AidaClient.Content[] = [];
+  #history: Host.AidaClient.Content[];
 
   #facts: Set<Host.AidaClient.RequestFact> = new Set<Host.AidaClient.RequestFact>();
 
@@ -326,6 +327,7 @@ export abstract class AiAgent<T> {
     }
     this.#sessionId = opts.sessionId ?? crypto.randomUUID();
     this.confirmSideEffect = opts.confirmSideEffectForTest ?? (() => Promise.withResolvers());
+    this.#history = opts.history ?? [];
   }
 
   async enhanceQuery(query: string, selected: ConversationContext<T>|null, multimodalInputType?: MultimodalInputType):
@@ -336,6 +338,10 @@ export abstract class AiAgent<T> {
 
   currentFacts(): ReadonlySet<Host.AidaClient.RequestFact> {
     return this.#facts;
+  }
+
+  get history(): Host.AidaClient.Content[] {
+    return [...this.#history];
   }
 
   /**
