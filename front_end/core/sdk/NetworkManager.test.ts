@@ -20,6 +20,51 @@ const LONG_URL_PART =
     'LoremIpsumDolorSitAmetConsecteturAdipiscingElitPhasellusVitaeOrciInAugueCondimentumTinciduntUtEgetDolorQuisqueEfficiturUltricesTinciduntVivamusVelitPurusCommodoQuisErosSitAmetTemporMalesuadaNislNullamTtempusVulputateAugueEgetScelerisqueLacusVestibulumNon/index.html';
 
 describeWithMockConnection('NetworkManager', () => {
+  describe('request post data', () => {
+    async function createPostRequestWithHeaders(headers: Protocol.Network.Headers):
+        Promise<SDK.NetworkRequest.NetworkRequest> {
+      const networkManager = new SDK.NetworkManager.NetworkManager(createTarget());
+      const requestStartedPromise = networkManager.once(SDK.NetworkManager.Events.RequestStarted);
+
+      networkManager.dispatcher.requestWillBeSent({
+        requestId: 'mock-request-id' as Protocol.Network.RequestId,
+        loaderId: 'mock-loader-id' as Protocol.Network.LoaderId,
+        documentURL: 'https://example.test/',
+        request: {
+          url: 'https://example.test/',
+          method: 'POST',
+          headers,
+          hasPostData: true,
+          postData: 'garbled-inline-post-data',
+        },
+        timestamp: 1,
+        wallTime: 1,
+        initiator: {type: Protocol.Network.InitiatorType.Other},
+      } as Protocol.Network.RequestWillBeSentEvent);
+
+      const {request} = await requestStartedPromise;
+      return request;
+    }
+
+    it('decodes gzip-compressed request form data', async () => {
+      const expectedPostData = 'a=1&b=hello+world';
+      const compressedPostData = await Common.Gzip.compress(expectedPostData);
+      const encodedPostData = await Common.Base64.encode(compressedPostData);
+      setMockConnectionResponseHandler('Network.getRequestPostData', () => ({
+                                                                       postData: encodedPostData,
+                                                                       base64Encoded: true,
+                                                                     }));
+
+      const request = await createPostRequestWithHeaders({
+        'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
+        'Content-Encoding': 'gzip',
+      });
+
+      const requestFormData = await request.requestFormData();
+      assert.strictEqual(requestFormData, expectedPostData);
+    });
+  });
+
   describe('Direct TCP socket handling', () => {
     it('on CDP created event creates request ', () => {
       const networkManager = new SDK.NetworkManager.NetworkManager(createTarget());

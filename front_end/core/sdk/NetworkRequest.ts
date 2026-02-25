@@ -1471,6 +1471,10 @@ export class NetworkRequest extends Common.ObjectWrapper.ObjectWrapper<EventType
     return this.requestHeaderValue('Content-Type');
   }
 
+  requestContentEncoding(): string|undefined {
+    return this.requestHeaderValue('Content-Encoding');
+  }
+
   hasErrorStatusCode(): boolean {
     return this.statusCode >= 400;
   }
