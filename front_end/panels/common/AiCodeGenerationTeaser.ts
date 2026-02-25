@@ -19,6 +19,10 @@ const UIStringsNotTranslate = {
   /**
    * @description Text for teaser to generate code.
    */
+  toGenerateCode: 'to generate code',
+  /**
+   * @description Text for teaser to generate code.
+   */
   ctrlItoGenerateCode: 'ctrl+i to generate code',
   /**
    * @description Text for teaser to generate code in Mac.
@@ -27,11 +31,7 @@ const UIStringsNotTranslate = {
   /**
    * @description Text for teaser to learn how data is being used.
    */
-  ctrlOneTimeDisclaimerToLearnHowYourDataIsBeingUsed: 'ctrl+. to learn how your data is being used.',
-  /**
-   * @description Text for teaser to learn how data is being used in Mac.
-   */
-  cmdOneTimeDisclaimerToLearnHowYourDataIsBeingUsed: 'cmd+. to learn how your data is being used.',
+  toLearnHowYourDataIsBeingUsed: 'to learn how your data is being used.',
   /**
    * @description Aria label for teaser to generate code.
    */
@@ -43,9 +43,13 @@ const UIStringsNotTranslate = {
   /**
    * @description Text for teaser when generating suggestion.
    */
-  generating: 'Generating... (esc to cancel)',
+  generating: 'Generating... (',
   /**
-   * @description Aria label for teaser when generating suggestion.
+   * @description Text for teaser when generating suggestion.
+   */
+  toCancel: ' to cancel)',
+  /**
+   * @description Text for teaser when generating suggestion.
    */
   generatingAriaLabel: 'Generating. Press escape to cancel.',
   /**
@@ -68,6 +72,26 @@ const UIStringsNotTranslate = {
    * @description Text for teaser when suggestion has been generated.
    */
   toAccept: 'to accept',
+  /**
+   * @description Text for teaser keys.
+   */
+  ctrl: 'ctrl',
+  /**
+   * @description Text for teaser keys.
+   */
+  cmd: 'cmd',
+  /**
+   * @description Text for teaser keys.
+   */
+  i: 'i',
+  /**
+   * @description Text for teaser keys.
+   */
+  period: '.',
+  /**
+   * @description Text for teaser keys.
+   */
+  esc: 'esc',
   /**
    * @description Text for tooltip shown on hovering over "Relevant Data" in the disclaimer text for AI code generation in Console panel.
    */
@@ -153,24 +177,33 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
         render(nothing, target);
         return;
       }
-      const toGenerateCode =
-          Host.Platform.isMac() ? UIStringsNotTranslate.cmdItoGenerateCode : UIStringsNotTranslate.ctrlItoGenerateCode;
+
       const toLearnHowYourDataIsBeingUsedScreenReaderOnly = Host.Platform.isMac() ?
           UIStringsNotTranslate.pressCmdPeriodToLearnHowYourDataIsBeingUsed :
           UIStringsNotTranslate.pressCtrlPeriodToLearnHowYourDataIsBeingUsed;
-      const screenReaderText = toGenerateCode + ' ' + toLearnHowYourDataIsBeingUsedScreenReaderOnly;
+      const screenReaderText = (Host.Platform.isMac() ? UIStringsNotTranslate.cmdItoGenerateCode :
+                                                        UIStringsNotTranslate.ctrlItoGenerateCode) +
+          ' ' + toLearnHowYourDataIsBeingUsedScreenReaderOnly;
 
-      const toLearnHowYourDataIsBeingUsedVisible = Host.Platform.isMac() ?
-          UIStringsNotTranslate.cmdOneTimeDisclaimerToLearnHowYourDataIsBeingUsed :
-          UIStringsNotTranslate.ctrlOneTimeDisclaimerToLearnHowYourDataIsBeingUsed;
-      const teaserText =
-          input.showDataUsageTeaser ? toGenerateCode + '. ' + toLearnHowYourDataIsBeingUsedVisible : toGenerateCode;
+      const cmdOrCtrl =
+          Host.Platform.isMac() ? lockedString(UIStringsNotTranslate.cmd) : lockedString(UIStringsNotTranslate.ctrl);
+      const toGenerateCode = html`<span class="ai-code-generation-keyboard-action">
+          <span>${cmdOrCtrl}</span>
+          <span>${lockedString(UIStringsNotTranslate.i)}</span>
+        </span>&nbsp;${lockedString(UIStringsNotTranslate.toGenerateCode)}`;
+      const toLearnHowYourDataIsBeingUsedVisible = html`<span class="ai-code-generation-keyboard-action">
+          <span>${cmdOrCtrl}</span>
+          <span>${lockedString(UIStringsNotTranslate.period)}</span>
+        </span>&nbsp;${lockedString(UIStringsNotTranslate.toLearnHowYourDataIsBeingUsed)}`;
+      const teaserText = input.showDataUsageTeaser ?
+          html`${toGenerateCode}.&nbsp;${toLearnHowYourDataIsBeingUsedVisible}` :
+          toGenerateCode;
 
       const tooltipDisclaimerText = getTooltipDisclaimerText(input.noLogging, input.panel);
 
       // clang-format off
       teaserLabel = html`<div class="ai-code-generation-teaser-trigger">
-        <span aria-hidden="true">${lockedString(teaserText)}</span>
+        <span aria-hidden="true">${teaserText}</span>
         <span class="ai-code-generation-teaser-screen-reader-only" aria-atomic="true" aria-live="assertive">
           ${lockedString(screenReaderText)}
         </span>
@@ -235,7 +268,11 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
       // clang-format off
       teaserLabel = html`
         <div class="ai-code-generation-teaser-screen-reader-only">${teaserAriaLabel}</div>
-        <span class="ai-code-generation-spinner" aria-hidden="true"></span>&nbsp;${lockedString(UIStringsNotTranslate.generating)}&nbsp;
+        <span class="ai-code-generation-spinner" aria-hidden="true">
+          &nbsp;${lockedString(UIStringsNotTranslate.generating)}
+          <span class="ai-code-generation-keyboard-action"><span>${lockedString(UIStringsNotTranslate.esc)}</span></span>
+          ${lockedString(UIStringsNotTranslate.toCancel)}&nbsp;
+        </span>
         <span class="ai-code-generation-timer" aria-hidden="true" ${Directives.ref(el => {
           if (el) {
             output.setTimerText = (text: string) => {
