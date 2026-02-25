@@ -6790,10 +6790,6 @@ export const NativeFunctions = [
     signatures: [["type","?eventInitDict"]]
   },
   {
-    name: "OverscrollEvent",
-    signatures: [["type","bubbles","?eventInitDict"]]
-  },
-  {
     name: "PageTransitionEvent",
     signatures: [["type","?eventInitDict"]]
   },
@@ -8936,7 +8932,7 @@ export const NativeFunctions = [
   },
   {
     name: "framebufferTexturePixelLocalStorageWEBGL",
-    signatures: [["plane","texture","level","layer"]]
+    signatures: [["plane","texture","level","layer","usage"]]
   },
   {
     name: "framebufferPixelLocalClearValuefvWEBGL",

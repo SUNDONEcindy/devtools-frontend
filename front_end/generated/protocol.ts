@@ -7027,6 +7027,7 @@ export namespace Emulation {
    */
   export const enum DisabledImageType {
     Avif = 'avif',
+    Jxl = 'jxl',
     Webp = 'webp',
   }
 

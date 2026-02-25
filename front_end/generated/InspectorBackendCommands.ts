@@ -503,7 +503,7 @@ inspectorBackend.registerEnum("Emulation.VirtualTimePolicy", {Advance: "advance"
 inspectorBackend.registerEnum("Emulation.SensorType", {AbsoluteOrientation: "absolute-orientation", Accelerometer: "accelerometer", AmbientLight: "ambient-light", Gravity: "gravity", Gyroscope: "gyroscope", LinearAcceleration: "linear-acceleration", Magnetometer: "magnetometer", RelativeOrientation: "relative-orientation"});
 inspectorBackend.registerEnum("Emulation.PressureSource", {Cpu: "cpu"});
 inspectorBackend.registerEnum("Emulation.PressureState", {Nominal: "nominal", Fair: "fair", Serious: "serious", Critical: "critical"});
-inspectorBackend.registerEnum("Emulation.DisabledImageType", {Avif: "avif", Webp: "webp"});
+inspectorBackend.registerEnum("Emulation.DisabledImageType", {Avif: "avif", Jxl: "jxl", Webp: "webp"});
 inspectorBackend.registerEvent("Emulation.virtualTimeBudgetExpired", []);
 inspectorBackend.registerCommand("Emulation.canEmulate", [], ["result"], "Tells whether emulation is supported.");
 inspectorBackend.registerCommand("Emulation.clearDeviceMetricsOverride", [], [], "Clears the overridden device metrics.");
