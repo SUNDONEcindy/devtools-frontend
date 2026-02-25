@@ -42,6 +42,7 @@ import * as Root from '../../core/root/root.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import * as Protocol from '../../generated/protocol.js';
 import * as AiCodeCompletion from '../../models/ai_code_completion/ai_code_completion.js';
+import * as AiCodeGeneration from '../../models/ai_code_generation/ai_code_generation.js';
 import * as Bindings from '../../models/bindings/bindings.js';
 import * as IssuesManager from '../../models/issues_manager/issues_manager.js';
 import * as Logs from '../../models/logs/logs.js';
@@ -565,6 +566,9 @@ export class ConsoleView extends UI.Widget.VBox implements
               included_reason: Host.AidaClient.Reason.RELATED_FILE,
             }],
             stopSequences: ['\n\n'],
+          },
+          generationContext: {
+            additionalPreambleContext: AiCodeGeneration.AiCodeGeneration.additionalContextForConsole,
           },
           onFeatureEnabled: () => {
             this.setupAiCodeCompletion();

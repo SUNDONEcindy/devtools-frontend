@@ -47,6 +47,9 @@ export interface AiCodeCompletionConfig {
     getPrefix?: () => string,
     stopSequences?: string[],
   };
+  generationContext: {
+    additionalPreambleContext?: string,
+  };
   onFeatureEnabled: () => void;
   onFeatureDisabled: () => void;
   onSuggestionAccepted: (citations: Host.AidaClient.Citation[]) => void;
@@ -86,6 +89,7 @@ export class AiCodeCompletionProvider {
       this.#aiCodeGenerationConfig = {
         generationContext: {
           inferenceLanguage: this.#aiCodeCompletionConfig.completionContext.inferenceLanguage,
+          additionalPreambleContext: this.#aiCodeCompletionConfig.generationContext.additionalPreambleContext,
         },
         onSuggestionAccepted: this.#aiCodeCompletionConfig.onSuggestionAccepted.bind(this),
         onRequestTriggered: this.#aiCodeCompletionConfig.onRequestTriggered.bind(this),

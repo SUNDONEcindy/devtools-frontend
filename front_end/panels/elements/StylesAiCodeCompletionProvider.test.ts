@@ -13,6 +13,7 @@ function createProvider() {
     // TODO: Update this to Styles panel
     panel: AiCodeCompletion.AiCodeCompletion.ContextFlavor.SOURCES,
     completionContext: {},
+    generationContext: {},
     onFeatureEnabled: sinon.spy(),
     onFeatureDisabled: sinon.spy(),
     onSuggestionAccepted: () => {},

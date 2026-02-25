@@ -13,6 +13,7 @@ import {AiCodeCompletionProvider, Config, TextEditor} from './text_editor.js';
 
 function createEditorWithProvider(doc: string, config: AiCodeCompletionProvider.AiCodeCompletionConfig = {
   completionContext: {},
+  generationContext: {},
   onFeatureEnabled: () => {},
   onFeatureDisabled: () => {},
   onSuggestionAccepted: () => {},

@@ -41,6 +41,7 @@ const aiCodeGenerationTeaserModeState = CodeMirror.StateField.define<AiCodeGener
 
 export interface AiCodeGenerationConfig {
   generationContext: {
+    additionalPreambleContext?: string,
     inferenceLanguage?: Host.AidaClient.AidaInferenceLanguage,
   };
   onSuggestionAccepted: (citations: Host.AidaClient.Citation[]) => void;
@@ -322,19 +323,20 @@ export class AiCodeGenerationProvider {
     this.#generationTeaser.displayState = PanelCommon.AiCodeGenerationTeaser.AiCodeGenerationTeaserDisplayState.LOADING;
     try {
       const startTime = performance.now();
-      this.#aiCodeGenerationConfig?.onRequestTriggered();
+      this.#aiCodeGenerationConfig.onRequestTriggered();
       Host.userMetrics.actionTaken(Host.UserMetrics.Action.AiCodeGenerationRequestTriggered);
 
+      const preamble = AiCodeGeneration.AiCodeGeneration.basePreamble +
+          this.#aiCodeGenerationConfig.generationContext.additionalPreambleContext;
       const generationResponse = await this.#aiCodeGeneration.generateCode(
-          query, AiCodeGeneration.AiCodeGeneration.basePreamble,
-          this.#aiCodeGenerationConfig?.generationContext.inferenceLanguage, options);
+          query, preamble, this.#aiCodeGenerationConfig.generationContext.inferenceLanguage, options);
 
       if (this.#generationTeaser) {
         this.#dismissTeaserAndSuggestion();
       }
 
       if (!generationResponse || generationResponse.samples.length === 0) {
-        this.#aiCodeGenerationConfig?.onResponseReceived();
+        this.#aiCodeGenerationConfig.onResponseReceived();
         return;
       }
       const topSample = generationResponse.samples[0];
@@ -368,7 +370,7 @@ export class AiCodeGenerationProvider {
       AiCodeGeneration.debugLog('Suggestion dispatched to the editor', suggestionText);
       const citations = topSample.attributionMetadata?.citations ?? [];
       this.#aiCodeGenerationCitations = citations;
-      this.#aiCodeGenerationConfig?.onResponseReceived();
+      this.#aiCodeGenerationConfig.onResponseReceived();
       return;
     } catch (e) {
       if (e instanceof Host.DispatchHttpRequestClient.DispatchHttpRequestError &&
@@ -376,7 +378,7 @@ export class AiCodeGenerationProvider {
         return;
       }
       AiCodeGeneration.debugLog('Error while fetching code generation suggestions from AIDA', e);
-      this.#aiCodeGenerationConfig?.onResponseReceived();
+      this.#aiCodeGenerationConfig.onResponseReceived();
       Host.userMetrics.actionTaken(Host.UserMetrics.Action.AiCodeGenerationError);
     }
 
