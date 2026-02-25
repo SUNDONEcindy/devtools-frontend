@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 import '../../ui/components/tooltips/tooltips.js';
 
+import * as Common from '../../core/common/common.js';
 import * as Host from '../../core/host/host.js';
 import * as i18n from '../../core/i18n/i18n.js';
 import * as Root from '../../core/root/root.js';
@@ -126,6 +127,7 @@ export interface ViewInput {
   noLogging: boolean;
   onManageInSettingsTooltipClick: (event: Event) => void;
   showDataUsageTeaser: boolean;
+  showDiscoveryTeaser: boolean;
   // TODO(b/472268298): Remove ContextFlavor explicitly and pass required values
   panel?: AiCodeCompletion.AiCodeCompletion.ContextFlavor;
 }
@@ -217,6 +219,10 @@ export const DEFAULT_VIEW: View = (input, output, target) => {
     }
 
     case AiCodeGenerationTeaserDisplayState.DISCOVERY: {
+      if (!input.showDiscoveryTeaser) {
+        teaserLabel = nothing;
+        break;
+      }
       const newBadge = UI.UIUtils.maybeCreateNewBadge(PROMOTION_ID);
       teaserLabel = newBadge ?
           html`${lockedString(UIStringsNotTranslate.writeACommentToGenerateCode)}&nbsp;${newBadge}` :
@@ -278,7 +284,9 @@ export class AiCodeGenerationTeaser extends UI.Widget.Widget {
   #panel?: AiCodeCompletion.AiCodeCompletion.ContextFlavor;
   #timerIntervalId?: number;
   #loadStartTime?: number;
+  #aiCodeGenerationUsedSetting = Common.Settings.Settings.instance().createSetting('ai-code-generation-used', false);
   static #showDataUsageTeaser = true;
+  static #discoveryTeaserShownInSession = false;
 
   constructor(view?: View) {
     super();
@@ -297,6 +305,8 @@ export class AiCodeGenerationTeaser extends UI.Widget.Widget {
           disclaimerTooltipId: this.#disclaimerTooltipId,
           noLogging: this.#noLogging,
           showDataUsageTeaser: AiCodeGenerationTeaser.#showDataUsageTeaser,
+          showDiscoveryTeaser:
+              !this.#aiCodeGenerationUsedSetting.get() && !AiCodeGenerationTeaser.#discoveryTeaserShownInSession,
           panel: this.#panel,
         },
         this.#viewOutput, this.contentElement);
@@ -317,6 +327,9 @@ export class AiCodeGenerationTeaser extends UI.Widget.Widget {
     }
     if (this.#displayState === AiCodeGenerationTeaserDisplayState.TRIGGER) {
       AiCodeGenerationTeaser.#showDataUsageTeaser = false;
+    }
+    if (this.#displayState === AiCodeGenerationTeaserDisplayState.DISCOVERY) {
+      AiCodeGenerationTeaser.#discoveryTeaserShownInSession = true;
     }
     this.#displayState = displayState;
     this.requestUpdate();
@@ -371,5 +384,9 @@ export class AiCodeGenerationTeaser extends UI.Widget.Widget {
 
   showTooltip(): void {
     this.#viewOutput.showTooltip?.();
+  }
+
+  static setDiscoveryTeaserShownInSessionForTest(value: boolean): void {
+    AiCodeGenerationTeaser.#discoveryTeaserShownInSession = value;
   }
 }

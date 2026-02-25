@@ -58,6 +58,7 @@ export class AiCodeGenerationProvider {
   #aiCodeGenerationSettingEnabled = this.#aiCodeGenerationEnabledSetting.get();
   #aiCodeGenerationOnboardingCompletedSetting =
       Common.Settings.Settings.instance().createSetting('ai-code-generation-onboarding-completed', false);
+  #aiCodeGenerationUsedSetting = Common.Settings.Settings.instance().createSetting('ai-code-generation-used', false);
   #generationTeaserCompartment = new CodeMirror.Compartment();
   #generationTeaser: PanelCommon.AiCodeGenerationTeaser.AiCodeGenerationTeaser;
   #editor?: TextEditor;
@@ -301,6 +302,8 @@ export class AiCodeGenerationProvider {
     if (!this.#editor || !this.#aiCodeGeneration) {
       return;
     }
+
+    this.#aiCodeGenerationUsedSetting.set(true);
 
     this.#aiCodeGenerationCitations = [];
     const cursor = this.#editor.state.selection.main.head;

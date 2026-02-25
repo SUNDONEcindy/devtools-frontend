@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import * as Common from '../../core/common/common.js';
 import * as Root from '../../core/root/root.js';
 import * as AiCodeCompletion from '../../models/ai_code_completion/ai_code_completion.js';
 import {renderElementIntoDOM} from '../../testing/DOMHelpers.js';
@@ -14,6 +15,14 @@ import * as PanelCommon from './common.js';
 const {AiCodeGenerationTeaser, AiCodeGenerationTeaserDisplayState} = PanelCommon.AiCodeGenerationTeaser;
 
 describeWithEnvironment('AiCodeGenerationTeaser', () => {
+  beforeEach(() => {
+    AiCodeGenerationTeaser.setDiscoveryTeaserShownInSessionForTest(false);
+  });
+
+  afterEach(() => {
+    Common.Settings.Settings.instance().settingForTest('ai-code-generation-used').set(false);
+  });
+
   async function createTeaser() {
     const setTimerText = sinon.spy();
     const view = createViewFunctionStub(AiCodeGenerationTeaser, {setTimerText});
@@ -32,7 +41,6 @@ describeWithEnvironment('AiCodeGenerationTeaser', () => {
     await view.nextInput;
 
     assert.deepEqual(view.input.displayState, AiCodeGenerationTeaserDisplayState.TRIGGER);
-    widget.detach();
   });
 
   it('updates spinner and timer when loading', async () => {
@@ -62,7 +70,6 @@ describeWithEnvironment('AiCodeGenerationTeaser', () => {
     clock.tick(1100);
 
     assert.strictEqual(timerCallCount, setTimerText.callCount);
-    widget.detach();
     clock.restore();
   });
 
@@ -74,7 +81,6 @@ describeWithEnvironment('AiCodeGenerationTeaser', () => {
     await view.nextInput;
 
     assert.deepEqual(view.input.panel, AiCodeCompletion.AiCodeCompletion.ContextFlavor.CONSOLE);
-    widget.detach();
   });
 
   it('disclaimerTooltipId is updated', async () => {
@@ -85,7 +91,6 @@ describeWithEnvironment('AiCodeGenerationTeaser', () => {
     await view.nextInput;
 
     assert.deepEqual(view.input.disclaimerTooltipId, 'id');
-    widget.detach();
   });
 
   it('should show disclaimer with no logging text when enterprise policy value is ALLOW_WITHOUT_LOGGING', async () => {
@@ -93,29 +98,26 @@ describeWithEnvironment('AiCodeGenerationTeaser', () => {
       aidaAvailability: {enterprisePolicyValue: Root.Runtime.GenAiEnterprisePolicyValue.ALLOW_WITHOUT_LOGGING},
     });
 
-    const {view, widget} = await createTeaser();
+    const {view} = await createTeaser();
 
     assert.isTrue(view.input.noLogging);
-    widget.detach();
   });
 
   it('should show disclaimer without no logging text when enterprise policy value is ALLOW', async () => {
     updateHostConfig({aidaAvailability: {enterprisePolicyValue: Root.Runtime.GenAiEnterprisePolicyValue.ALLOW}});
 
-    const {view, widget} = await createTeaser();
+    const {view} = await createTeaser();
 
     assert.isFalse(view.input.noLogging);
-    widget.detach();
   });
 
   it('should open settings on manage in settings tooltip click', async () => {
-    const {view, widget} = await createTeaser();
+    const {view} = await createTeaser();
     const showViewStub = sinon.stub(UI.ViewManager.ViewManager.instance(), 'showView');
 
     view.input.onManageInSettingsTooltipClick(new Event('click'));
 
     assert.isTrue(showViewStub.calledOnceWith('chrome-ai'));
-    widget.detach();
   });
 
   it('dataUsageTeaserShown is true after leaving TRIGGER state', async () => {
@@ -133,7 +135,26 @@ describeWithEnvironment('AiCodeGenerationTeaser', () => {
     widget.displayState = AiCodeGenerationTeaserDisplayState.TRIGGER;
     await view.nextInput;
     assert.isFalse(view.input.showDataUsageTeaser);
+  });
 
-    widget.detach();
+  it('discovery teaser is hidden if feature is used', async () => {
+    Common.Settings.Settings.instance().settingForTest('ai-code-generation-used').set(true);
+    const {view} = await createTeaser();
+
+    assert.isFalse(view.input.showDiscoveryTeaser);
+  });
+
+  it('discovery teaser is shown once per session', async () => {
+    const {view, widget} = await createTeaser();
+
+    assert.isTrue(view.input.showDiscoveryTeaser);
+
+    widget.displayState = AiCodeGenerationTeaserDisplayState.TRIGGER;
+    await view.nextInput;
+
+    widget.displayState = AiCodeGenerationTeaserDisplayState.DISCOVERY;
+    await view.nextInput;
+
+    assert.isFalse(view.input.showDiscoveryTeaser);
   });
 });
