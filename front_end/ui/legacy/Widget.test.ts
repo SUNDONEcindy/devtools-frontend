@@ -542,6 +542,28 @@ describeWithEnvironment('Widget', () => {
 
       assert.strictEqual(document.activeElement, child2.element);
     });
+
+    it('does not recursively call focus when the widget element has autofocus', () => {
+      const widgetElement = new UI.Widget.WidgetElement();
+      widgetElement.setAttribute('autofocus', '');
+      widgetElement.tabIndex = -1;
+
+      class FocusableWidget extends UI.Widget.Widget {
+        override performUpdate(): void {
+          // no-op
+        }
+      }
+
+      widgetElement.widgetConfig = UI.Widget.widgetConfig(FocusableWidget);
+      renderElementIntoDOM(widgetElement);
+
+      const widget = widgetElement.getWidget();
+      assert.exists(widget);
+
+      widget!.focus();
+
+      assert.strictEqual(document.activeElement, widgetElement);
+    });
   });
 
   describe('WidgetElement', () => {

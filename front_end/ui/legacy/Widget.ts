@@ -877,6 +877,10 @@ export class Widget {
       const widget = Widget.get(autofocusElement);
       if (widget && widget !== this) {
         widget.focus();
+      } else if (autofocusElement === this.element && autofocusElement instanceof WidgetElement) {
+        // If the autofocus element is the widget itself, we need to call the native focus method
+        // to avoid infinite recursion if the element is a WidgetElement.
+        HTMLElement.prototype.focus.call(autofocusElement);
       } else {
         autofocusElement.focus();
       }
@@ -891,7 +895,13 @@ export class Widget {
     }
 
     if (this.element === this.contentElement && this.element.hasAttribute('autofocus')) {
-      this.element.focus();
+      if (this.element instanceof WidgetElement) {
+        // If the autofocus element is the widget itself, we need to call the native focus method
+        // to avoid infinite recursion if the element is a WidgetElement.
+        HTMLElement.prototype.focus.call(this.element);
+      } else {
+        this.element.focus();
+      }
     }
   }
 
