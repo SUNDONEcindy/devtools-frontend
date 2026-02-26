@@ -14,6 +14,7 @@ describe('LoggingDriver', () => {
   let recordImpression: sinon.SinonStub;
   let throttler: Common.Throttler.Throttler;
   let throttle: sinon.SinonStub;
+  let processingThrottler: Common.Throttler.Throttler;
   let onerror: OnErrorEventHandler;
 
   before(() => {
@@ -32,6 +33,7 @@ describe('LoggingDriver', () => {
   beforeEach(() => {
     throttler = new Common.Throttler.Throttler(1000000000);
     throttle = sinon.stub(throttler, 'schedule');
+    processingThrottler = new Common.Throttler.Throttler(1000000000);
     recordImpression = sinon.stub(
         Host.InspectorFrontendHost.InspectorFrontendHostInstance,
         'recordImpression',
@@ -725,7 +727,7 @@ describe('LoggingDriver', () => {
 
   it('logs resize', async () => {
     await addLoggableElements();
-    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler});
+    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler, processingThrottler});
     const recordResize = sinon.stub(
         Host.InspectorFrontendHost.InspectorFrontendHostInstance,
         'recordResize',
@@ -755,7 +757,7 @@ describe('LoggingDriver', () => {
 
   it('logs resize on visibility change', async () => {
     await addLoggableElements();
-    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler});
+    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler, processingThrottler});
     const recordResize = sinon.stub(
         Host.InspectorFrontendHost.InspectorFrontendHostInstance,
         'recordResize',
@@ -788,7 +790,7 @@ describe('LoggingDriver', () => {
     const element1 = document.getElementById('element')!;
     const element2 = element1.cloneNode() as HTMLElement;
     document.getElementById('parent')?.appendChild(element2);
-    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler});
+    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler, processingThrottler});
     const recordResize = sinon.stub(
         Host.InspectorFrontendHost.InspectorFrontendHostInstance,
         'recordResize',
@@ -820,7 +822,7 @@ describe('LoggingDriver', () => {
     child.style.height = '100%';
     element.appendChild(child);
 
-    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler});
+    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler, processingThrottler});
     const recordResize = sinon.stub(
         Host.InspectorFrontendHost.InspectorFrontendHostInstance,
         'recordResize',
@@ -846,7 +848,7 @@ describe('LoggingDriver', () => {
     child.style.height = '100%';
     element.appendChild(child);
 
-    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler});
+    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler, processingThrottler});
     const recordResize = sinon.stub(
         Host.InspectorFrontendHost.InspectorFrontendHostInstance,
         'recordResize',
@@ -871,7 +873,7 @@ describe('LoggingDriver', () => {
     child.style.height = '100%';
     element.appendChild(child);
 
-    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler});
+    await VisualLoggingTesting.LoggingDriver.startLogging({resizeLogThrottler: throttler, processingThrottler});
     const recordResize = sinon.stub(
         Host.InspectorFrontendHost.InspectorFrontendHostInstance,
         'recordResize',
