@@ -7589,6 +7589,32 @@ export namespace Extensions {
     Managed = 'managed',
   }
 
+  /**
+   * Detailed information about an extension.
+   */
+  export interface ExtensionInfo {
+    /**
+     * Extension id.
+     */
+    id: string;
+    /**
+     * Extension name.
+     */
+    name: string;
+    /**
+     * Extension version.
+     */
+    version: string;
+    /**
+     * The path from which the extension was loaded.
+     */
+    path: string;
+    /**
+     * Extension enabled status.
+     */
+    enabled: boolean;
+  }
+
   export interface TriggerActionRequest {
     /**
      * Extension id.
@@ -7616,6 +7642,10 @@ export namespace Extensions {
      * Extension id.
      */
     id: string;
+  }
+
+  export interface GetExtensionsResponse extends ProtocolResponseWithError {
+    extensions: ExtensionInfo[];
   }
 
   export interface UninstallRequest {
