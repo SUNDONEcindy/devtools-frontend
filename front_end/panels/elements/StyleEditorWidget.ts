@@ -9,7 +9,7 @@ import * as UI from '../../ui/legacy/legacy.js';
 import type * as ElementsComponents from './components/components.js';
 import type {StylePropertiesSection} from './StylePropertiesSection.js';
 import {StylePropertyTreeElement} from './StylePropertyTreeElement.js';
-import type {StylesSidebarPane} from './StylesSidebarPane.js';
+import type {StylesContainer} from './StylesContainer.js';
 
 type PropertySelectedEvent = ElementsComponents.StylePropertyEditor.PropertySelectedEvent;
 type PropertyDeselectedEvent = ElementsComponents.StylePropertyEditor.PropertyDeselectedEvent;
@@ -29,7 +29,7 @@ interface Editor extends HTMLElement {
  */
 export class StyleEditorWidget extends UI.Widget.VBox {
   private editor?: Editor;
-  private pane?: StylesSidebarPane;
+  private pane?: StylesContainer;
   private section?: StylePropertiesSection;
   private editorContainer: HTMLElement;
 
@@ -69,7 +69,7 @@ export class StyleEditorWidget extends UI.Widget.VBox {
     await this.render();
   }
 
-  bindContext(pane: StylesSidebarPane, section: StylePropertiesSection): void {
+  bindContext(pane: StylesContainer, section: StylePropertiesSection): void {
     this.pane = pane;
     this.section = section;
     this.editor?.addEventListener('propertyselected', this.onPropertySelected);
@@ -118,7 +118,7 @@ export class StyleEditorWidget extends UI.Widget.VBox {
   }
 
   static createTriggerButton(
-      pane: StylesSidebarPane, section: StylePropertiesSection, editorClass: {new(): Editor}, buttonTitle: string,
+      pane: StylesContainer, section: StylePropertiesSection, editorClass: {new(): Editor}, buttonTitle: string,
       triggerKey: string): HTMLElement {
     const triggerButton = createIcon('flex-wrap', 'styles-pane-button');
     triggerButton.title = buttonTitle;
@@ -168,7 +168,7 @@ function ensureTreeElementForProperty(section: StylePropertiesSection, propertyN
   return newTarget;
 }
 
-async function fetchComputedStyles(pane: StylesSidebarPane): Promise<Map<string, string>> {
+async function fetchComputedStyles(pane: StylesContainer): Promise<Map<string, string>> {
   const computedStyleModel = pane.computedStyleModel();
   const style = await computedStyleModel.fetchComputedStyle();
   return style ? style.computedStyle : new Map();

@@ -56,7 +56,7 @@ import * as ElementsComponents from './components/components.js';
 import {ElementsPanel} from './ElementsPanel.js';
 import stylePropertiesTreeOutlineStyles from './stylePropertiesTreeOutline.css.js';
 import {type Context, StylePropertyTreeElement} from './StylePropertyTreeElement.js';
-import type {StylesSidebarPane} from './StylesSidebarPane.js';
+import type {StylesContainer} from './StylesContainer.js';
 
 const UIStrings = {
   /**
@@ -123,7 +123,7 @@ const STYLE_TAG = '<style>';
 const DEFAULT_MAX_PROPERTIES = 50;
 
 export class StylePropertiesSection {
-  protected parentPane: StylesSidebarPane;
+  protected parentPane: StylesContainer;
   styleInternal: SDK.CSSStyleDeclaration.CSSStyleDeclaration;
   readonly matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles;
   private computedStyles: Map<string, string>|null;
@@ -167,7 +167,7 @@ export class StylePropertiesSection {
   readonly sectionTooltipIdPrefix = StylePropertiesSection.#nextSectionTooltipIdPrefix++;
 
   constructor(
-      parentPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
+      parentPane: StylesContainer, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
       style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, sectionIdx: number, computedStyles: Map<string, string>|null,
       parentsComputedStyles: Map<string, string>|null,
       computedStyleExtraFields: Protocol.CSS.ComputedStyleExtraFields|null, customHeaderText?: string) {
@@ -1709,7 +1709,7 @@ export class BlankStylePropertiesSection extends StylePropertiesSection {
   private readonly styleSheetHeader;
 
   constructor(
-      stylesPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, defaultSelectorText: string,
+      stylesPane: StylesContainer, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, defaultSelectorText: string,
       styleSheetHeader: SDK.CSSStyleSheetHeader.CSSStyleSheetHeader, ruleLocation: TextUtils.TextRange.TextRange,
       insertAfterStyle: SDK.CSSStyleDeclaration.CSSStyleDeclaration, sectionIdx: number) {
     const cssModel = (stylesPane.cssModel() as SDK.CSSModel.CSSModel);
@@ -1813,7 +1813,7 @@ export class BlankStylePropertiesSection extends StylePropertiesSection {
 
 export class RegisteredPropertiesSection extends StylePropertiesSection {
   constructor(
-      stylesPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
+      stylesPane: StylesContainer, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
       style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, sectionIdx: number, propertyName: string,
       expandedByDefault: boolean) {
     super(stylesPane, matchedStyles, style, sectionIdx, null, null, null, propertyName);
@@ -1848,7 +1848,7 @@ export class RegisteredPropertiesSection extends StylePropertiesSection {
 
 export class FunctionRuleSection extends StylePropertiesSection {
   constructor(
-      stylesPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
+      stylesPane: StylesContainer, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
       style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, children: SDK.CSSRule.CSSNestedStyle[], sectionIdx: number,
       functionName: string, expandedByDefault: boolean) {
     super(stylesPane, matchedStyles, style, sectionIdx, null, null, null, functionName);
@@ -1911,7 +1911,7 @@ export class FunctionRuleSection extends StylePropertiesSection {
 
 export class AtRuleSection extends StylePropertiesSection {
   constructor(
-      stylesPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
+      stylesPane: StylesContainer, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
       style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, sectionIdx: number, expandedByDefault: boolean) {
     super(stylesPane, matchedStyles, style, sectionIdx, null, null, null);
     this.selectorElement.className = 'font-palette-values-key';
@@ -1923,7 +1923,7 @@ export class AtRuleSection extends StylePropertiesSection {
 
 export class PositionTryRuleSection extends StylePropertiesSection {
   constructor(
-      stylesPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
+      stylesPane: StylesContainer, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
       style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, sectionIdx: number, active: boolean) {
     super(stylesPane, matchedStyles, style, sectionIdx, null, null, null);
     this.selectorElement.className = 'position-try-values-key';
@@ -1933,7 +1933,7 @@ export class PositionTryRuleSection extends StylePropertiesSection {
 
 export class KeyframePropertiesSection extends StylePropertiesSection {
   constructor(
-      stylesPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
+      stylesPane: StylesContainer, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
       style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, sectionIdx: number) {
     super(stylesPane, matchedStyles, style, sectionIdx, null, null, null);
     this.selectorElement.className = 'keyframe-key';

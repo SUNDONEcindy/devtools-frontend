@@ -13,7 +13,7 @@ import * as UI from '../../ui/legacy/legacy.js';
 
 import type {StylePropertiesSection} from './StylePropertiesSection.js';
 import type {StylePropertyTreeElement} from './StylePropertyTreeElement.js';
-import type {StylesSidebarPane} from './StylesSidebarPane.js';
+import type {StylesContainer} from './StylesContainer.js';
 
 const UIStrings = {
   /**
@@ -408,7 +408,7 @@ export class FontEditorSectionManager {
   private readonly treeElementMap: Map<string, StylePropertyTreeElement>;
   private readonly swatchPopoverHelper: InlineEditor.SwatchPopoverHelper.SwatchPopoverHelper;
   private readonly section: StylePropertiesSection;
-  private parentPane: StylesSidebarPane|null;
+  private parentPane: StylesContainer|null;
   private fontEditor: InlineEditor.FontEditor.FontEditor|null;
   private scrollerElement: Element|null;
   private readonly boundFontChanged:
@@ -514,7 +514,7 @@ export class FontEditorSectionManager {
     }
   }
 
-  async showPopover(iconElement: Element, parentPane: StylesSidebarPane): Promise<void> {
+  async showPopover(iconElement: Element, parentPane: StylesContainer): Promise<void> {
     if (this.swatchPopoverHelper.isShowing()) {
       this.swatchPopoverHelper.hide(true);
       return;

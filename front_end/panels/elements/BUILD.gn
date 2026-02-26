@@ -66,6 +66,7 @@ devtools_ui_module("elements") {
     "StylePropertyTreeElement.ts",
     "StylePropertyUtils.ts",
     "StylesAiCodeCompletionProvider.ts",
+    "StylesContainer.ts",
     "StylesSidebarPane.ts",
     "TopLayerContainer.ts",
     "WebCustomData.ts",

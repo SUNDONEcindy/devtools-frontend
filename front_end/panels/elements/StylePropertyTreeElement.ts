@@ -47,7 +47,8 @@ import {
 import {StyleEditorWidget} from './StyleEditorWidget.js';
 import type {StylePropertiesSection} from './StylePropertiesSection.js';
 import {getCssDeclarationAsJavascriptProperty} from './StylePropertyUtils.js';
-import {CSSPropertyPrompt, REGISTERED_PROPERTY_SECTION_NAME, type StylesSidebarPane} from './StylesSidebarPane.js';
+import type {StylesContainer} from './StylesContainer.js';
+import {CSSPropertyPrompt, REGISTERED_PROPERTY_SECTION_NAME} from './StylesSidebarPane.js';
 
 const {html, nothing, render, Directives: {classMap}} = Lit;
 const ASTUtils = SDK.CSSPropertyParser.ASTUtils;
@@ -157,10 +158,10 @@ const UIStrings = {
 } as const;
 const str_ = i18n.i18n.registerUIStrings('panels/elements/StylePropertyTreeElement.ts', UIStrings);
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
-const parentMap = new WeakMap<StylesSidebarPane, StylePropertyTreeElement>();
+const parentMap = new WeakMap<StylesContainer, StylePropertyTreeElement>();
 
 interface StylePropertyTreeElementParams {
-  stylesPane: StylesSidebarPane;
+  stylesPane: StylesContainer;
   section: StylePropertiesSection;
   matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles;
   property: SDK.CSSProperty.CSSProperty;
@@ -211,8 +212,8 @@ export class EnvFunctionRenderer extends rendererBase(SDK.CSSPropertyParserMatch
 export class FlexGridRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.FlexGridGridLanesMatch) {
   // clang-format on
   readonly #treeElement: StylePropertyTreeElement|null;
-  readonly #stylesPane: StylesSidebarPane;
-  constructor(stylesPane: StylesSidebarPane, treeElement: StylePropertyTreeElement|null) {
+  readonly #stylesPane: StylesContainer;
+  constructor(stylesPane: StylesContainer, treeElement: StylePropertyTreeElement|null) {
     super();
     this.#treeElement = treeElement;
     this.#stylesPane = stylesPane;
@@ -281,8 +282,8 @@ export class FlexGridRenderer extends rendererBase(SDK.CSSPropertyParserMatchers
 export class CSSWideKeywordRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.CSSWideKeywordMatch) {
   // clang-format on
   readonly #treeElement: StylePropertyTreeElement|null;
-  readonly #stylesPane: StylesSidebarPane;
-  constructor(stylesPane: StylesSidebarPane, treeElement: StylePropertyTreeElement|null) {
+  readonly #stylesPane: StylesContainer;
+  constructor(stylesPane: StylesContainer, treeElement: StylePropertyTreeElement|null) {
     super();
     this.#treeElement = treeElement;
     this.#stylesPane = stylesPane;
@@ -318,13 +319,13 @@ export class CSSWideKeywordRenderer extends rendererBase(SDK.CSSPropertyParserMa
 // clang-format off
 export class VariableRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.VariableMatch) {
   // clang-format on
-  readonly #stylesPane: StylesSidebarPane;
+  readonly #stylesPane: StylesContainer;
   readonly #treeElement: StylePropertyTreeElement|null;
   readonly #matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles;
   readonly #computedStyles: Map<string, string>;
   readonly #computedStyleExtraFields: Protocol.CSS.ComputedStyleExtraFields|null;
   constructor(
-      stylesPane: StylesSidebarPane, treeElement: StylePropertyTreeElement|null,
+      stylesPane: StylesContainer, treeElement: StylePropertyTreeElement|null,
       matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, computedStyles: Map<string, string>,
       computedStyleExtraFields: Protocol.CSS.ComputedStyleExtraFields|null) {
     super();
@@ -434,13 +435,13 @@ export class VariableRenderer extends rendererBase(SDK.CSSPropertyParserMatchers
 // clang-format off
 export class AttributeRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.AttributeMatch) {
   // clang-format on
-  readonly #stylesPane: StylesSidebarPane;
+  readonly #stylesPane: StylesContainer;
   readonly #treeElement: StylePropertyTreeElement|null;
   readonly #matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles;
   readonly #computedStyles: Map<string, string>;
   readonly #computedStyleExtraFields: Protocol.CSS.ComputedStyleExtraFields|null;
   constructor(
-      stylesPane: StylesSidebarPane, treeElement: StylePropertyTreeElement|null,
+      stylesPane: StylesContainer, treeElement: StylePropertyTreeElement|null,
       matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, computedStyles: Map<string, string>,
       computedStyleExtraFields: Protocol.CSS.ComputedStyleExtraFields|null) {
     super();
@@ -623,8 +624,8 @@ export class RelativeColorChannelRenderer extends rendererBase(SDK.CSSPropertyPa
 export class ColorRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.ColorMatch) {
   // clang-format on
   readonly #treeElement: StylePropertyTreeElement|null;
-  readonly #stylesPane: StylesSidebarPane;
-  constructor(stylesPane: StylesSidebarPane, treeElement: StylePropertyTreeElement|null) {
+  readonly #stylesPane: StylesContainer;
+  constructor(stylesPane: StylesContainer, treeElement: StylePropertyTreeElement|null) {
     super();
     this.#treeElement = treeElement;
     this.#stylesPane = stylesPane;
@@ -782,10 +783,10 @@ export class ColorRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.Co
 export class LightDarkColorRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.LightDarkColorMatch) {
   // clang-format on
   readonly #treeElement: StylePropertyTreeElement|null;
-  readonly #stylesPane: StylesSidebarPane;
+  readonly #stylesPane: StylesContainer;
   readonly #matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles;
   constructor(
-      stylesPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
+      stylesPane: StylesContainer, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
       treeElement: StylePropertyTreeElement|null) {
     super();
     this.#treeElement = treeElement;
@@ -882,15 +883,15 @@ export class LightDarkColorRenderer extends rendererBase(SDK.CSSPropertyParserMa
 // clang-format off
 export class ColorMixRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.ColorMixMatch) {
   // clang-format on
-  readonly #pane: StylesSidebarPane;
+  readonly #pane: StylesContainer;
   readonly #matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles;
   readonly #computedStyles: Map<string, string>;
   readonly #computedStyleExtraFields: Protocol.CSS.ComputedStyleExtraFields|null;
   readonly #treeElement: StylePropertyTreeElement|null;
 
   constructor(
-      pane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
-      computedStyles: Map<string, string>, computedStyleExtraFields: Protocol.CSS.ComputedStyleExtraFields|null,
+      pane: StylesContainer, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, computedStyles: Map<string, string>,
+      computedStyleExtraFields: Protocol.CSS.ComputedStyleExtraFields|null,
       treeElement: StylePropertyTreeElement|null) {
     super();
     this.#pane = pane;
@@ -1085,8 +1086,8 @@ export class AngleRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.An
 export class LinkableNameRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.LinkableNameMatch) {
   // clang-format on
   readonly #matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles;
-  readonly #stylesPane: StylesSidebarPane;
-  constructor(matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, stylesSidebarPane: StylesSidebarPane) {
+  readonly #stylesPane: StylesContainer;
+  constructor(matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, stylesSidebarPane: StylesContainer) {
     super();
     this.#matchedStyles = matchedStyles;
     this.#stylesPane = stylesSidebarPane;
@@ -1594,7 +1595,7 @@ export const SHORTHANDS_FOR_PERCENTAGES = new Set([
 ]);
 
 async function resolveValues(
-    stylesPane: StylesSidebarPane, propertyName: string, match: SDK.CSSPropertyParser.Match, context: RenderingContext,
+    stylesPane: StylesContainer, propertyName: string, match: SDK.CSSPropertyParser.Match, context: RenderingContext,
     ...values: string[]): Promise<string[]|null|undefined> {
   // We want to resolve values against the original property we're tracing and not the property we're substituting,
   // so try to look up the original name.
@@ -1616,10 +1617,10 @@ async function resolveValues(
 // clang-format off
 export class LengthRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.LengthMatch) {
   // clang-format on
-  readonly #stylesPane: StylesSidebarPane;
+  readonly #stylesPane: StylesContainer;
   readonly #treeElement: StylePropertyTreeElement|null;
   readonly #propertyName: string;
-  constructor(stylesPane: StylesSidebarPane, propertyName: string, treeElement: StylePropertyTreeElement|null) {
+  constructor(stylesPane: StylesContainer, propertyName: string, treeElement: StylePropertyTreeElement|null) {
     super();
     this.#stylesPane = stylesPane;
     this.#treeElement = treeElement;
@@ -1685,14 +1686,14 @@ export class LengthRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.L
 // clang-format off
 export class BaseFunctionRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.BaseFunctionMatch) {
   // clang-format on
-  readonly #stylesPane: StylesSidebarPane;
+  readonly #stylesPane: StylesContainer;
   readonly #matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles;
   readonly #computedStyles: Map<string, string>;
   readonly #computedStyleExtraFields: Protocol.CSS.ComputedStyleExtraFields|null;
   readonly #treeElement: StylePropertyTreeElement|null;
   readonly #propertyName: string;
   constructor(
-      stylesPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
+      stylesPane: StylesContainer, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles,
       computedStyles: Map<string, string>, computedStyleExtraFields: Protocol.CSS.ComputedStyleExtraFields|null,
       propertyName: string, treeElement: StylePropertyTreeElement|null) {
     super();
@@ -1790,10 +1791,10 @@ export class CustomFunctionRenderer extends BaseFunctionRenderer {
 // clang-format off
 export class AnchorFunctionRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.AnchorFunctionMatch) {
   // clang-format on
-  readonly #stylesPane: StylesSidebarPane;
+  readonly #stylesPane: StylesContainer;
 
   static async decorateAnchorForAnchorLink(
-      stylesPane: StylesSidebarPane, container: HTMLElement,
+      stylesPane: StylesContainer, container: HTMLElement,
       {identifier, needsSpace}: {identifier?: string, needsSpace?: boolean}): Promise<void> {
     if (identifier) {
       render(html`${identifier}`, container, {host: container});
@@ -1856,7 +1857,7 @@ export class AnchorFunctionRenderer extends rendererBase(SDK.CSSPropertyParserMa
     }
   }
 
-  constructor(stylesPane: StylesSidebarPane) {
+  constructor(stylesPane: StylesContainer) {
     super();
     this.#stylesPane = stylesPane;
   }
@@ -1885,10 +1886,10 @@ export class AnchorFunctionRenderer extends rendererBase(SDK.CSSPropertyParserMa
 
 // clang-format off
 export class PositionAnchorRenderer extends rendererBase(SDK.CSSPropertyParserMatchers.PositionAnchorMatch) {
-  readonly #stylesPane: StylesSidebarPane;
+  readonly #stylesPane: StylesContainer;
   // clang-format on
 
-  constructor(stylesPane: StylesSidebarPane) {
+  constructor(stylesPane: StylesContainer) {
     super();
     this.#stylesPane = stylesPane;
   }
@@ -1933,7 +1934,7 @@ export class PositionTryRenderer extends rendererBase(SDK.CSSPropertyParserMatch
 }
 
 export function getPropertyRenderers(
-    propertyName: string, style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, stylesPane: StylesSidebarPane,
+    propertyName: string, style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, stylesPane: StylesContainer,
     matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, treeElement: StylePropertyTreeElement|null,
     computedStyles: Map<string, string>, computedStyleExtraFields: Protocol.CSS.ComputedStyleExtraFields|null):
     Array<MatchRenderer<SDK.CSSPropertyParser.Match>> {
@@ -1974,7 +1975,7 @@ export class StylePropertyTreeElement extends UI.TreeOutline.TreeElement {
   property: SDK.CSSProperty.CSSProperty;
   readonly #inherited: boolean;
   #overloaded: boolean;
-  #parentPane: StylesSidebarPane;
+  #parentPane: StylesContainer;
   #parentSection: StylePropertiesSection;
   isShorthand: boolean;
   private readonly applyStyleThrottler = new Common.Throttler.Throttler(0);
@@ -2200,7 +2201,7 @@ export class StylePropertyTreeElement extends UI.TreeOutline.TreeElement {
     return this.#parentPane.node();
   }
 
-  parentPane(): StylesSidebarPane {
+  parentPane(): StylesContainer {
     return this.#parentPane;
   }
 

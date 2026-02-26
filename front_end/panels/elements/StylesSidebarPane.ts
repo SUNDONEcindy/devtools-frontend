@@ -70,6 +70,7 @@ import {
 } from './StylePropertiesSection.js';
 import {StylePropertyHighlighter} from './StylePropertyHighlighter.js';
 import type {StylePropertyTreeElement} from './StylePropertyTreeElement.js';
+import type {StylesContainer} from './StylesContainer.js';
 import stylesSidebarPaneStyles from './stylesSidebarPane.css.js';
 import {WebCustomData} from './WebCustomData.js';
 
@@ -162,7 +163,7 @@ const HIGHLIGHTABLE_PROPERTIES = [
 ];
 
 export class StylesSidebarPane extends Common.ObjectWrapper.eventMixin<EventTypes, typeof ElementsSidebarPane>(
-    ElementsSidebarPane) {
+    ElementsSidebarPane) implements StylesContainer {
   private matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles|null = null;
   private currentToolbarPane: UI.Widget.Widget|null = null;
   private animatedToolbarPane: UI.Widget.Widget|null = null;
