@@ -1383,6 +1383,39 @@ export const DEFAULT_VIEW = (input, _output, target) => {
 };
 ```
 
+In a more complex case you might want to skip rendering of the collapsed nodes
+subtrees and temporarily expand nodes to show search matches. This could be done
+as follows:
+
+```typescript
+export const DEFAULT_VIEW = (input, _output, target) => {
+  render(html`
+    <div>
+      <devtools-tree .template=${html`
+        <ul role="tree">
+          ${input.topLevelNodes.map(node => html`
+            <li role="treeitem" ?open=${containsSearchResult(node)}>
+              ${node.name}
+              ${node.children.length ? html`
+                <ul role="group">
+                  ${ifExpanded(node.children.map(renderChild))}
+                </ul>
+              ` : nothing}
+            </li>`)}
+        </ul>
+      `}></devtools-tree>
+    </div>`,
+    target, {host: input});
+};
+```
+
+Here `open` attribute overrides the expansion state set by the user. Once `open`
+attribute is removed, the expansion state is reversed to the last state set by
+the user.
+
+`ifExpanded` is a lit directive provided on `UI.TreeOutline` and it makes its
+argument render only if the current tree node is expanded.
+
 ## Refactoring UI.Toolbar.Provider
 
 As part of the migration, sometimes classes need to be broken up into smaller pieces. Classes implementing

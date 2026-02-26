@@ -366,8 +366,8 @@ export async function setEventListenerBreakpoint(groupName: string, eventName: s
   const groupCheckbox = await devToolsPage.waitFor(groupSelector);
   await devToolsPage.scrollElementIntoView(groupSelector);
   await devToolsPage.waitForVisible(groupSelector);
-  const eventCheckbox = await devToolsPage.waitFor(eventSelector);
-  if (!(await eventCheckbox.evaluate(x => x.checkVisibility()))) {
+  const eventCheckbox = await devToolsPage.$(eventSelector);
+  if (!eventCheckbox || !(await eventCheckbox.evaluate(x => x.checkVisibility()))) {
     // Unfortunately the shadow DOM makes it hard to find the expander element
     // we are attempting to click on, so we click to the left of the checkbox
     // bounding box.

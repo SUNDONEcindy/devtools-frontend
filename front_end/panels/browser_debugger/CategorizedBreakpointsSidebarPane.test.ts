@@ -169,12 +169,11 @@ describeWithMockConnection('CategorizedBreakpointsSidebarPane', () => {
             highlightedItem: null,
             categories,
             sortedCategoryNames: categories.keys().toArray().toSorted(),
-            userExpandedCategories: new Set(),
+            onExpandCollapse: function(): void {
+              throw new Error('Function not implemented.');
+            },
           },
-          {
-            userExpandedCategories: new Set(),
-          },
-          target);
+          undefined, target);
       await assertScreenshot('browser_debugger/categorized_breakpoint_sidebar_pane.png');
     });
 
@@ -195,12 +194,9 @@ describeWithMockConnection('CategorizedBreakpointsSidebarPane', () => {
             highlightedItem: categories.get(SDK.CategorizedBreakpoint.Category.CANVAS)![0],
             categories,
             sortedCategoryNames: categories.keys().toArray().toSorted(),
-            userExpandedCategories: new Set(),
+            onExpandCollapse: function(): void {},
           },
-          {
-            userExpandedCategories: new Set(),
-          },
-          target);
+          undefined, target);
       await assertScreenshot('browser_debugger/categorized_breakpoint_sidebar_pane_highlight.png');
     });
 
@@ -222,12 +218,9 @@ describeWithMockConnection('CategorizedBreakpointsSidebarPane', () => {
             categories,
             sortedCategoryNames: categories.keys().toArray().toSorted(),
             highlightedItem: null,
-            userExpandedCategories: new Set(),
+            onExpandCollapse: function(): void {},
           },
-          {
-            userExpandedCategories: new Set(),
-          },
-          target);
+          undefined, target);
       await assertScreenshot('browser_debugger/categorized_breakpoint_sidebar_pane_expand.png');
     });
 
@@ -248,12 +241,9 @@ describeWithMockConnection('CategorizedBreakpointsSidebarPane', () => {
             highlightedItem: null,
             categories,
             sortedCategoryNames: categories.keys().toArray().toSorted(),
-            userExpandedCategories: new Set(),
+            onExpandCollapse: function(): void {},
           },
-          {
-            userExpandedCategories: new Set(),
-          },
-          target);
+          undefined, target);
       await assertScreenshot('browser_debugger/categorized_breakpoint_sidebar_pane_filter_animation.png');
     });
 
@@ -274,12 +264,9 @@ describeWithMockConnection('CategorizedBreakpointsSidebarPane', () => {
             highlightedItem: null,
             categories,
             sortedCategoryNames: categories.keys().toArray().toSorted(),
-            userExpandedCategories: new Set(),
+            onExpandCollapse: function(): void {},
           },
-          {
-            userExpandedCategories: new Set(),
-          },
-          target);
+          undefined, target);
       await assertScreenshot('browser_debugger/categorized_breakpoint_sidebar_pane_filter_category.png');
     });
 
@@ -300,12 +287,9 @@ describeWithMockConnection('CategorizedBreakpointsSidebarPane', () => {
             highlightedItem: null,
             categories,
             sortedCategoryNames: categories.keys().toArray().toSorted(),
-            userExpandedCategories: new Set(),
+            onExpandCollapse: function(): void {},
           },
-          {
-            userExpandedCategories: new Set(),
-          },
-          target);
+          undefined, target);
       await assertScreenshot('browser_debugger/categorized_breakpoint_sidebar_pane_filter_breakpoint_only.png');
     });
   });
