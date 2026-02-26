@@ -68,6 +68,12 @@ const argv = yargs(hideBin(process.argv))
       throw new Error(`Unsupported channel "${arg}"`);
     },
   })
+  .option('watch', {
+    alias: 'w',
+    type: 'boolean',
+    default: true,
+    description: 'Enable watch mode to auto rebuild'
+  })
   .option('unstable-features', {
     alias: 'u',
     type: 'boolean',
@@ -291,14 +297,16 @@ async function start() {
 
 // Run build watcher in the background to automatically rebuild
 // devtools-frontend whenever there are changes detected.
-const watcher = childProcess.spawn(
+const watcher = argv.watch ? childProcess.spawn(
   process.argv[0],
   [runBuildPath, '--skip-initial-build', `--target=${target}`, '--watch'],
   { cwd, env, stdio: 'inherit' },
-);
+) : null;
 try {
   // Launch chrome.
   await start();
 } finally {
-  watcher.kill();
+  if(watcher) {
+    watcher.kill();
+  }
 }
