@@ -113,7 +113,7 @@ describeWithMockConnection('StylePropertyTreeElement', () => {
         propertyName, result, true, false, true, false, '', undefined, []);
     matchedStyles.functionRules()[0].style.allProperties().push(property);
     return new Elements.StylePropertyTreeElement.StylePropertyTreeElement({
-      stylesPane: new Elements.StylesSidebarPane.StylesSidebarPane(computedStyleModel),
+      stylesContainer: new Elements.StylesSidebarPane.StylesSidebarPane(computedStyleModel),
       section: sinon.createStubInstance(Elements.StylePropertiesSection.StylePropertiesSection),
       matchedStyles,
       property,
@@ -130,7 +130,7 @@ describeWithMockConnection('StylePropertyTreeElement', () => {
         new Elements.StylesSidebarPane.StylesSidebarPane(computedStyleModel), matchedStyles, property.ownerStyle, 0,
         null, null, null);
     return new Elements.StylePropertyTreeElement.StylePropertyTreeElement({
-      stylesPane: stylesSidebarPane,
+      stylesContainer: stylesSidebarPane,
       section,
       matchedStyles,
       property,
@@ -1177,7 +1177,7 @@ describeWithMockConnection('StylePropertyTreeElement', () => {
       assert.exists(swatches);
       assert.lengthOf(swatches, 2);
 
-      const showPopoverStub = sinon.stub(stylePropertyTreeElement.parentPane().swatchPopoverHelper(), 'show');
+      const showPopoverStub = sinon.stub(stylePropertyTreeElement.stylesContainer().swatchPopoverHelper(), 'show');
 
       const editorProperties = (editor: InlineEditor.CSSShadowEditor.CSSShadowEditor): string[] =>
           Array.from(editor.contentElement.querySelectorAll('.shadow-editor-field'))
@@ -1216,7 +1216,7 @@ describeWithMockConnection('StylePropertyTreeElement', () => {
       const swatches = stylePropertyTreeElement.valueElement?.querySelectorAll('css-shadow-swatch');
       assert.exists(swatches);
       assert.lengthOf(swatches, 1);
-      const showPopoverStub = sinon.stub(stylePropertyTreeElement.parentPane().swatchPopoverHelper(), 'show');
+      const showPopoverStub = sinon.stub(stylePropertyTreeElement.stylesContainer().swatchPopoverHelper(), 'show');
       swatches[0].iconElement().click();
       sinon.assert.calledOnce(showPopoverStub);
 
@@ -1238,7 +1238,7 @@ describeWithMockConnection('StylePropertyTreeElement', () => {
       const swatches = stylePropertyTreeElement.valueElement?.querySelectorAll('css-shadow-swatch');
       assert.exists(swatches);
       assert.lengthOf(swatches, 1);
-      const showPopoverStub = sinon.stub(stylePropertyTreeElement.parentPane().swatchPopoverHelper(), 'show');
+      const showPopoverStub = sinon.stub(stylePropertyTreeElement.stylesContainer().swatchPopoverHelper(), 'show');
       swatches[0].iconElement().click();
       sinon.assert.calledOnce(showPopoverStub);
 
@@ -1868,7 +1868,7 @@ describeWithMockConnection('StylePropertyTreeElement', () => {
       const linkSwatch = stylePropertyTreeElement.valueElement.querySelector('devtools-link-swatch');
       assert.isOk(linkSwatch);
       assert.strictEqual(linkSwatch.innerText, keyword);
-      const spy = sinon.spy(stylePropertyTreeElement.parentPane(), 'revealProperty');
+      const spy = sinon.spy(stylePropertyTreeElement.stylesContainer(), 'revealProperty');
       linkSwatch.querySelector('button')?.click();
       sinon.assert.calledOnceWithExactly(spy, originalDeclaration);
     });

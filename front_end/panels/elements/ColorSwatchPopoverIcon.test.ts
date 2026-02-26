@@ -30,7 +30,7 @@ describeWithMockConnection('ColorSwatchPopoverIcon', () => {
           sinon.createStubInstance(SDK.CSSStyleDeclaration.CSSStyleDeclaration), 0, 'color', 'red', true, false, true,
           false, '', undefined, []);
       const treeElement = new Elements.StylePropertyTreeElement.StylePropertyTreeElement({
-        stylesPane:
+        stylesContainer:
             new Elements.StylesSidebarPane.StylesSidebarPane(new ComputedStyle.ComputedStyleModel.ComputedStyleModel()),
         section: sinon.createStubInstance(Elements.StylePropertiesSection.StylePropertiesSection),
         matchedStyles: await getMatchedStyles(),

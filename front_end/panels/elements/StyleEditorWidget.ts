@@ -29,7 +29,7 @@ interface Editor extends HTMLElement {
  */
 export class StyleEditorWidget extends UI.Widget.VBox {
   private editor?: Editor;
-  private pane?: StylesContainer;
+  private stylesContainer?: StylesContainer;
   private section?: StylePropertiesSection;
   private editorContainer: HTMLElement;
 
@@ -69,8 +69,8 @@ export class StyleEditorWidget extends UI.Widget.VBox {
     await this.render();
   }
 
-  bindContext(pane: StylesContainer, section: StylePropertiesSection): void {
-    this.pane = pane;
+  bindContext(stylesContainer: StylesContainer, section: StylePropertiesSection): void {
+    this.stylesContainer = stylesContainer;
     this.section = section;
     this.editor?.addEventListener('propertyselected', this.onPropertySelected);
     this.editor?.addEventListener('propertydeselected', this.onPropertyDeselected);
@@ -85,7 +85,7 @@ export class StyleEditorWidget extends UI.Widget.VBox {
   }
 
   unbindContext(): void {
-    this.pane = undefined;
+    this.stylesContainer = undefined;
     this.section = undefined;
     this.editor?.removeEventListener('propertyselected', this.onPropertySelected);
     this.editor?.removeEventListener('propertydeselected', this.onPropertyDeselected);
@@ -98,7 +98,7 @@ export class StyleEditorWidget extends UI.Widget.VBox {
     this.editor.data = {
       authoredProperties: this.section ? getAuthoredStyles(this.section, this.editor.getEditableProperties()) :
                                          new Map(),
-      computedProperties: this.pane ? await fetchComputedStyles(this.pane) : new Map(),
+      computedProperties: this.stylesContainer ? await fetchComputedStyles(this.stylesContainer) : new Map(),
     };
   }
 
@@ -118,19 +118,19 @@ export class StyleEditorWidget extends UI.Widget.VBox {
   }
 
   static createTriggerButton(
-      pane: StylesContainer, section: StylePropertiesSection, editorClass: {new(): Editor}, buttonTitle: string,
-      triggerKey: string): HTMLElement {
+      stylesContainer: StylesContainer, section: StylePropertiesSection, editorClass: {new(): Editor},
+      buttonTitle: string, triggerKey: string): HTMLElement {
     const triggerButton = createIcon('flex-wrap', 'styles-pane-button');
     triggerButton.title = buttonTitle;
     triggerButton.role = 'button';
 
     triggerButton.onclick = async event => {
       event.stopPropagation();
-      const popoverHelper = pane.swatchPopoverHelper();
+      const popoverHelper = stylesContainer.swatchPopoverHelper();
       const widget = StyleEditorWidget.instance();
       widget.element.classList.toggle('with-padding', true);
       widget.setEditor(editorClass);
-      widget.bindContext(pane, section);
+      widget.bindContext(stylesContainer, section);
       widget.setTriggerKey(triggerKey);
       await widget.render();
       widget.focus();
@@ -168,8 +168,8 @@ function ensureTreeElementForProperty(section: StylePropertiesSection, propertyN
   return newTarget;
 }
 
-async function fetchComputedStyles(pane: StylesContainer): Promise<Map<string, string>> {
-  const computedStyleModel = pane.computedStyleModel();
+async function fetchComputedStyles(stylesContainer: StylesContainer): Promise<Map<string, string>> {
+  const computedStyleModel = stylesContainer.computedStyleModel();
   const style = await computedStyleModel.fetchComputedStyle();
   return style ? style.computedStyle : new Map();
 }
