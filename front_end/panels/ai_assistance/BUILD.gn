@@ -16,6 +16,7 @@ generate_css("css_files") {
     "./components/chatView.css",
     "./components/disabledWidget.css",
     "./components/exploreWidget.css",
+    "./components/walkthroughView.css",
     "./selectWorkspaceDialog.css",
   ]
 }
@@ -32,6 +33,7 @@ devtools_ui_module("ai_assistance") {
     "components/ExploreWidget.ts",
     "components/MarkdownRendererWithCodeBlock.ts",
     "components/PerformanceAgentMarkdownRenderer.ts",
+    "components/WalkthroughView.ts",
   ]
 
   deps = [

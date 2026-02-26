@@ -42,12 +42,18 @@ import {DisabledWidget} from './components/DisabledWidget.js';
 import {ExploreWidget} from './components/ExploreWidget.js';
 import {MarkdownRendererWithCodeBlock} from './components/MarkdownRendererWithCodeBlock.js';
 import {PerformanceAgentMarkdownRenderer} from './components/PerformanceAgentMarkdownRenderer.js';
+import {
+  WalkthroughView,
+} from './components/WalkthroughView.js';
 import {isAiAssistancePatchingEnabled} from './PatchWidget.js';
 
 const {html} = Lit;
 
 const AI_ASSISTANCE_SEND_FEEDBACK = 'https://crbug.com/364805393' as Platform.DevToolsPath.UrlString;
-const AI_ASSISTANCE_HELP = 'https://developer.chrome.com/docs/devtools/ai-assistance';
+const AI_ASSISTANCE_HELP =
+    'https://developer.chrome.com/docs/devtools/ai-assistance' as Platform.DevToolsPath.UrlString;
+const WALKTHROUGH_SIDEBAR_BREAKPOINT = 700;
+const WALKTHROUGH_SIDEBAR_INITIAL_WIDTH = 400;
 
 const UIStrings = {
   /**
@@ -311,9 +317,16 @@ interface ToolbarViewInput {
   onExportConversationClick: () => void;
   onHelpClick: () => void;
   onSettingsClick: () => void;
-  isLoading: boolean;
+
   showChatActions: boolean;
   showActiveConversationActions: boolean;
+  isLoading: boolean;
+
+  walkthrough: {
+    isExpanded: boolean,
+    isInlined: boolean,
+    onToggle: (isOpen: boolean) => void,
+  };
 }
 
 export const enum ViewState {
@@ -414,8 +427,7 @@ function defaultView(input: ViewInput, output: PanelViewOutput, target: HTMLElem
   function renderState(): Lit.TemplateResult {
     switch (input.state) {
       case ViewState.CHAT_VIEW: {
-      return html`
-        <devtools-ai-chat-view
+        return html`<devtools-ai-chat-view
           .props=${input.props}
           ${Lit.Directives.ref(el => {
             if (!el || !(el instanceof ChatView)) {
@@ -440,13 +452,40 @@ function defaultView(input: ViewInput, output: PanelViewOutput, target: HTMLElem
     }
   }
 
-  Lit.render(
-    html`
+  const shouldShowWalkthrough = input.state === ViewState.CHAT_VIEW && input.walkthrough.isExpanded;
+
+  if (Root.Runtime.hostConfig.devToolsAiAssistanceV2?.enabled) {
+    Lit.render(html`
+      ${toolbarView(input)}
+      <div class="ai-assistance-view-container">
+        <devtools-split-view
+          name="ai-assistance-split-view-state"
+          direction="column"
+          sidebar-position="second"
+          sidebar-visibility=${shouldShowWalkthrough && !input.walkthrough.isInlined ? 'visible' : 'hidden'}
+          sidebar-initial-size=${WALKTHROUGH_SIDEBAR_INITIAL_WIDTH}
+        >
+          <div slot="main" class="main-view">
+            ${renderState()}
+          </div>
+          <div slot="sidebar" class="sidebar-view">
+            ${shouldShowWalkthrough ? html`
+              <devtools-widget .widgetConfig=${UI.Widget.widgetConfig(WalkthroughView, {
+                message: input.props.walkthrough.activeMessage,
+                isLoading: input.props.isLoading,
+                markdownRenderer: input.props.markdownRenderer,
+                onToggle: input.props.walkthrough.onToggle,
+              })}></devtools-widget>` : Lit.nothing}
+          </div>
+        </devtools-split-view>
+      </div>
+    `, target);
+  } else {
+    Lit.render(html`
       ${toolbarView(input)}
       <div class="ai-assistance-view-container">${renderState()}</div>
-    `,
-    target
-  );
+    `, target);
+  }
   // clang-format on
 }
 
@@ -480,6 +519,30 @@ function createPerformanceTraceContext(focus: AiAssistanceModel.AIContext.AgentF
     return null;
   }
   return new AiAssistanceModel.PerformanceAgent.PerformanceTraceContext(focus);
+}
+
+/**
+ * State relating to the visibility of the Walkthrough.
+ * Note that we have to track the active message and the visibility as distinct
+ * state, because you can toggle the walkthrough via the sidebar, in which case
+ * we need to make it visible/hidden but keep track of the active message for
+ * when the user expands it again.
+ */
+interface WalkthroughState {
+  /**
+   * Whether to show the walkthrough inline (done at narrow widths) or in a side panel.
+   */
+  isInlined: boolean;
+  /**
+   * If the walkthrough UI is currently visible (either in the sidebar, or inlined)
+   */
+  isExpanded: boolean;
+  /**
+   * The message that the walkthrough is showing all the steps for. A
+   * conversation can have many Model messages (1 per each user prompt) so we
+   * need to track which one we are showing for the walkthrough.
+   */
+  activeMessage: ModelChatMessage|null;
 }
 
 let panelInstance: AiAssistancePanel;
@@ -516,6 +579,11 @@ export class AiAssistancePanel extends UI.Panel.Panel {
   };
   #timelinePanelInstance: TimelinePanel.TimelinePanel.TimelinePanel|null = null;
   #runAbortController = new AbortController();
+  #walkthrough: WalkthroughState = {
+    isInlined: false,
+    isExpanded: false,
+    activeMessage: null,
+  };
 
   constructor(private view: View = defaultView, {aidaClient, aidaAvailability, syncInfo}: {
     aidaClient: Host.AidaClient.AidaClient,
@@ -540,6 +608,29 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     }
     AiAssistanceModel.AiHistoryStorage.AiHistoryStorage.instance().addEventListener(
         AiAssistanceModel.AiHistoryStorage.Events.HISTORY_DELETED, this.#onHistoryDeleted, this);
+  }
+
+  #getToolbarInput(): ToolbarViewInput {
+    return {
+      isLoading: this.#isLoading,
+      showChatActions: this.#shouldShowChatActions(),
+      showActiveConversationActions: Boolean(this.#conversation && !this.#conversation.isEmpty),
+      onNewChatClick: this.#handleNewChatRequest.bind(this),
+      populateHistoryMenu: this.#populateHistoryMenu.bind(this),
+      onDeleteClick: this.#onDeleteClicked.bind(this),
+      onExportConversationClick: this.#onExportConversationClick.bind(this),
+      onHelpClick: () => {
+        UIHelpers.openInNewTab(AI_ASSISTANCE_HELP);
+      },
+      onSettingsClick: () => {
+        void UI.ViewManager.ViewManager.instance().showView('chrome-ai');
+      },
+      walkthrough: {
+        isExpanded: this.#walkthrough.isExpanded,
+        isInlined: this.#walkthrough.isInlined,
+        onToggle: this.#toggleWalkthrough.bind(this),
+      }
+    };
   }
 
   async #getPanelViewInput(): Promise<PanelViewInput> {
@@ -602,6 +693,13 @@ export class AiAssistancePanel extends UI.Panel.Panel {
           onCopyResponseClick: this.#onCopyResponseClick.bind(this),
           onContextRemoved: isAiAssistanceContextSelectionAgentEnabled() ? this.#handleContextRemoved.bind(this) : null,
           onContextAdd,
+          walkthrough: {
+            onToggle: this.#toggleWalkthrough.bind(this),
+            onOpen: this.#openWalkthrough.bind(this),
+            isExpanded: this.#walkthrough.isExpanded,
+            isInlined: this.#walkthrough.isInlined,
+            activeMessage: this.#walkthrough.activeMessage,
+          },
         }
       };
     }
@@ -609,6 +707,34 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     return {
       state: ViewState.EXPLORE_VIEW,
     };
+  }
+
+  // Responsive logic for Walkthrough
+  override onResize(): void {
+    super.onResize();
+    if (Root.Runtime.hostConfig.devToolsAiAssistanceV2?.enabled) {
+      this.#updateWalkthroughResponsiveness();
+    }
+  }
+
+  #updateWalkthroughResponsiveness(): void {
+    const isNarrow = this.contentElement.offsetWidth < WALKTHROUGH_SIDEBAR_BREAKPOINT;
+    if (isNarrow === this.#walkthrough.isInlined) {
+      return;
+    }
+    this.#walkthrough.isInlined = isNarrow;
+    this.requestUpdate();
+  }
+
+  #openWalkthrough(message: ModelChatMessage): void {
+    this.#walkthrough.activeMessage = message;
+    this.#walkthrough.isExpanded = true;
+    this.requestUpdate();
+  }
+
+  #toggleWalkthrough(isOpen: boolean): void {
+    this.#walkthrough.isExpanded = isOpen;
+    this.requestUpdate();
   }
 
   #getAiAssistanceEnabledSetting(): Common.Settings.Setting<boolean>|undefined {
@@ -932,31 +1058,13 @@ export class AiAssistancePanel extends UI.Panel.Panel {
     return this.#changeManager.formatChangesForPatching(this.#conversation.id, /* includeSourceLocation= */ true);
   }
 
-  #getToolbarInput(): ToolbarViewInput {
-    return {
-      isLoading: this.#isLoading,
-      showChatActions: this.#shouldShowChatActions(),
-      showActiveConversationActions: Boolean(this.#conversation && !this.#conversation.isEmpty),
-      onNewChatClick: this.#handleNewChatRequest.bind(this),
-      populateHistoryMenu: this.#populateHistoryMenu.bind(this),
-      onDeleteClick: this.#onDeleteClicked.bind(this),
-      onExportConversationClick: this.#onExportConversationClick.bind(this),
-      onHelpClick: () => {
-        UIHelpers.openInNewTab(AI_ASSISTANCE_HELP);
-      },
-      onSettingsClick: () => {
-        void UI.ViewManager.ViewManager.instance().showView('chrome-ai');
-      },
-    };
-  }
-
   override async performUpdate(): Promise<void> {
-    this.view(
-        {
-          ...this.#getToolbarInput(),
-          ...await this.#getPanelViewInput(),
-        },
-        this.#viewOutput, this.contentElement);
+    const viewInput: ViewInput = {
+      ...this.#getToolbarInput(),
+      ...await this.#getPanelViewInput(),
+    };
+
+    this.view(viewInput, this.#viewOutput, this.contentElement);
   }
 
   #onCopyResponseClick(message: ModelChatMessage): void {

@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import * as Host from '../../../core/host/host.js';
+import * as Root from '../../../core/root/root.js';
 import {assertScreenshot, renderElementIntoDOM} from '../../../testing/DOMHelpers.js';
 import {
   describeWithEnvironment,
@@ -35,6 +36,13 @@ describeWithEnvironment('ChatMessage', () => {
     component.wasShown();
     return [view, component];
   }
+
+  const DEFAULT_WALKTHROUGH: AiAssistance.ChatMessage.ChatMessageViewInput['walkthrough'] = {
+    onOpen: () => {},
+    onToggle: () => {},
+    isExpanded: false,
+    isInlined: false,
+  };
 
   it('should show the feedback form when canShowFeedbackForm is true', async () => {
     const [view] = createComponent({
@@ -174,6 +182,148 @@ describeWithEnvironment('ChatMessage', () => {
     expect(view.input.suggestions).deep.equals(['suggestion']);
   });
 
+  describe('Walkthrough Rendering', () => {
+    beforeEach(() => {
+      Root.Runtime.hostConfig.devToolsAiAssistanceV2 = {
+        enabled: true,
+      };
+    });
+
+    function renderView(props: Partial<AiAssistance.ChatMessage.ChatMessageViewInput>) {
+      const target = document.createElement('div');
+      AiAssistance.ChatMessage.DEFAULT_VIEW(
+          {
+            onRatingClick: () => {},
+            onReportClick: () => {},
+            onCopyResponseClick: () => {},
+            scrollSuggestionsScrollContainer: () => {},
+            onSuggestionsScrollOrResize: () => {},
+            onSuggestionClick: () => {},
+            onSubmit: () => {},
+            onClose: () => {},
+            onInputChange: () => {},
+            onFeedbackSubmit: () => {},
+            showRateButtons: false,
+            isSubmitButtonDisabled: false,
+            isShowingFeedbackForm: false,
+            isLastMessage: true,
+            showActions: true,
+            message: {
+              entity: AiAssistance.ChatMessage.ChatMessageEntity.MODEL,
+              parts: [],
+              rpcId: 99,
+            },
+            isLoading: false,
+            isReadOnly: false,
+            canShowFeedbackForm: false,
+            userInfo: {},
+            markdownRenderer: new AiAssistance.MarkdownRendererWithCodeBlock(),
+            currentRating: undefined,
+            walkthrough: {
+              ...DEFAULT_WALKTHROUGH,
+              ...(props.walkthrough ?? {}),
+            },
+            ...props,
+          },
+          {}, target);
+      return target;
+    }
+
+    const stepMessage: AiAssistance.ChatMessage.ModelChatMessage = {
+      entity: AiAssistance.ChatMessage.ChatMessageEntity.MODEL,
+      parts: [{
+        type: 'step',
+        step: {
+          isLoading: false,
+          title: 'Step 1',
+          code: 'console.log("test")',
+        },
+      }],
+      rpcId: 99,
+    };
+
+    it('renders "Show thinking" button when there are steps and not inline', () => {
+      const target = renderView({
+        message: stepMessage,
+        walkthrough: {
+          ...DEFAULT_WALKTHROUGH,
+          isInlined: false,
+        }
+      });
+      const buttons = target.querySelectorAll('devtools-button');
+      const showThinkingButton = Array.from(buttons).find(b => b.textContent?.includes('Show thinking'));
+      assert.isNotNull(showThinkingButton);
+    });
+
+    it('does not render "Show thinking" button when inline', () => {
+      const target = renderView({
+        message: stepMessage,
+        walkthrough: {
+          ...DEFAULT_WALKTHROUGH,
+          isInlined: true,
+        }
+      });
+      const buttons = target.querySelectorAll('devtools-button');
+      const showThinkingButton = Array.from(buttons).find(b => b.textContent?.includes('Show thinking'));
+      assert.isUndefined(showThinkingButton);
+    });
+
+    it('renders inline walkthrough when inline', () => {
+      const target = renderView({
+        message: stepMessage,
+        walkthrough: {
+          ...DEFAULT_WALKTHROUGH,
+          isInlined: true,
+          isExpanded: true,
+        }
+      });
+      const walkthrough = target.querySelector('.walkthrough-container');
+      assert.isNotNull(walkthrough);
+    });
+
+    it('does not render inline walkthrough when not inline', () => {
+      const target = renderView({
+        message: stepMessage,
+        walkthrough: {
+          ...DEFAULT_WALKTHROUGH,
+          isInlined: false,
+          isExpanded: true,
+        }
+      });
+      const walkthrough = target.querySelector('.walkthrough-container');
+      assert.isNull(walkthrough);
+    });
+
+    it('renders side effect confirmation when not inline and walkthrough is hidden', () => {
+      const sideEffectMessage: AiAssistance.ChatMessage.ModelChatMessage = {
+        entity: AiAssistance.ChatMessage.ChatMessageEntity.MODEL,
+        parts: [{
+          type: 'step',
+          step: {
+            isLoading: false,
+            title: 'Side Effect Step',
+            code: 'doSomethingDangerous()',
+            sideEffect: {
+              onAnswer: () => {},
+            },
+          },
+        }],
+        rpcId: 99,
+      };
+
+      const target = renderView({
+        message: sideEffectMessage,
+        walkthrough: {
+          ...DEFAULT_WALKTHROUGH,
+          isInlined: false,
+          isExpanded: false,
+        }
+      });
+      const sideEffectContainer = target.querySelector('.side-effect-container');
+      assert.isNotNull(sideEffectContainer);
+    });
+  });
+
   describe('view', () => {
     it('renders a minimal model message', async () => {
       const target = document.createElement('div');
@@ -206,6 +356,7 @@ describeWithEnvironment('ChatMessage', () => {
             userInfo: {},
             markdownRenderer: new AiAssistance.MarkdownRendererWithCodeBlock(),
             currentRating: undefined,
+            walkthrough: {...DEFAULT_WALKTHROUGH},
           },
           {}, target);
       await assertScreenshot('ai_assistance/user_action_row_minimal.png');
@@ -259,6 +410,7 @@ describeWithEnvironment('ChatMessage', () => {
             markdownRenderer: new AiAssistance.MarkdownRendererWithCodeBlock(),
             currentRating: undefined,
             suggestions: ['Fix the issue', 'Explain more'],
+            walkthrough: {...DEFAULT_WALKTHROUGH},
           },
           {}, target);
       await assertScreenshot('ai_assistance/user_action_row_complete.png');
@@ -296,6 +448,7 @@ describeWithEnvironment('ChatMessage', () => {
             },
             markdownRenderer: new AiAssistance.MarkdownRendererWithCodeBlock(),
             currentRating: undefined,
+            walkthrough: {...DEFAULT_WALKTHROUGH},
           },
           {}, target);
       await assertScreenshot('ai_assistance/user_action_row_user_message.png');

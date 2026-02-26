@@ -76,6 +76,13 @@ export interface Props {
   disclaimerText: Platform.UIString.LocalizedString;
   uploadImageInputEnabled?: boolean;
   markdownRenderer: MarkdownLitRenderer;
+  walkthrough: {
+    onOpen: (message: ModelChatMessage) => void,
+    onToggle: (isOpen: boolean) => void,
+    isExpanded: boolean,
+    isInlined: boolean,
+    activeMessage: ModelChatMessage|null,
+  };
 }
 
 interface ChatWidgetInput extends Props {
@@ -115,6 +122,9 @@ const DEFAULT_VIEW: View = (input, output, target) => {
                   onSuggestionClick: input.handleSuggestionClick,
                   onFeedbackSubmit: input.onFeedbackSubmit,
                   onCopyResponseClick: input.onCopyResponseClick,
+                  walkthrough: {
+                    ...input.walkthrough,
+                  }
                 })}></devtools-widget>`
               )}
               ${input.isLoading ? nothing : html`<devtools-widget

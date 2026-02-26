@@ -9,6 +9,7 @@ import * as Common from '../../../core/common/common.js';
 import * as Host from '../../../core/host/host.js';
 import * as i18n from '../../../core/i18n/i18n.js';
 import type * as Platform from '../../../core/platform/platform.js';
+import * as Root from '../../../core/root/root.js';
 import * as AiAssistanceModel from '../../../models/ai_assistance/ai_assistance.js';
 import * as Marked from '../../../third_party/marked/marked.js';
 import * as Buttons from '../../../ui/components/buttons/buttons.js';
@@ -21,6 +22,7 @@ import * as Lit from '../../../ui/lit/lit.js';
 import * as VisualLogging from '../../../ui/visual_logging/visual_logging.js';
 
 import chatMessageStyles from './chatMessage.css.js';
+import {WalkthroughView} from './WalkthroughView.js';
 
 const {html, Directives: {ref, ifDefined}} = Lit;
 const lockedString = i18n.i18n.lockedString;
@@ -162,6 +164,10 @@ const UIStringsNotTranslate = {
    * @description Alt text for image when it is not available.
    */
   imageUnavailable: 'Image unavailable',
+  /**
+   * @description Title for the button that shows the thinking process (walkthrough).
+   */
+  showThinking: 'Show thinking',
 } as const;
 
 export interface Step {
@@ -260,6 +266,12 @@ export interface MessageInput {
   onSuggestionClick: (suggestion: string) => void;
   onFeedbackSubmit: (rpcId: Host.AidaClient.RpcGlobalId, rate: Host.AidaClient.Rating, feedback?: string) => void;
   onCopyResponseClick: (message: ModelChatMessage) => void;
+  walkthrough: {
+    onOpen: (message: ModelChatMessage) => void,
+    isExpanded: boolean,
+    onToggle: (isOpen: boolean) => void,
+    isInlined: boolean,
+  };
 }
 
 export const DEFAULT_VIEW = (input: ChatMessageViewInput, output: ViewOutput, target: HTMLElement): void => {
@@ -298,7 +310,9 @@ export const DEFAULT_VIEW = (input: ChatMessageViewInput, output: ViewOutput, ta
     return;
   }
 
+  const steps = message.parts.filter(part => part.type === 'step').map(part => part.step);
   const icon = AiAssistanceModel.AiUtils.getIconName();
+  const aiAssistanceV2 = Root.Runtime.hostConfig.devToolsAiAssistanceV2?.enabled;
 
   // clang-format off
   Lit.render(html`
@@ -314,6 +328,7 @@ export const DEFAULT_VIEW = (input: ChatMessageViewInput, output: ViewOutput, ta
           <h2>${AiAssistanceModel.AiUtils.isGeminiBranding() ? lockedString(UIStringsNotTranslate.gemini) : lockedString(UIStringsNotTranslate.ai)}</h2>
         </div>
       </div>
+      ${aiAssistanceV2 ? renderWalkthroughUI(input, steps) : Lit.nothing}
       ${Lit.Directives.repeat(
         message.parts,
         (_, index) => index,
@@ -322,12 +337,15 @@ export const DEFAULT_VIEW = (input: ChatMessageViewInput, output: ViewOutput, ta
           if (part.type === 'answer') {
             return html`<p>${renderTextAsMarkdown(part.text, input.markdownRenderer, { animate: !input.isReadOnly && input.isLoading && isLastPart && input.isLastMessage })}</p>`;
           }
-          return renderStep({
-            step: part.step,
-            isLoading: input.isLoading,
-            markdownRenderer: input.markdownRenderer,
-            isLast: isLastPart,
-          });
+          if (!aiAssistanceV2 && part.type === 'step') {
+            return renderStep({
+              step: part.step,
+              isLoading: input.isLoading,
+              markdownRenderer: input.markdownRenderer,
+              isLast: isLastPart,
+            });
+          }
+          return Lit.nothing;
         },
       )}
       ${renderError(message)}
@@ -452,6 +470,84 @@ function renderStepDetails({
   // clang-format on
 }
 
+/**
+ * Responsible for rendering the AI Walkthrough UI. This can take different
+ * shapes and involve different parts depending on if the walkthrough is
+ * inlined, expanded, or if we have side-effect steps that need the user to
+ * view them.
+ */
+function renderWalkthroughUI(input: ChatMessageViewInput, steps: Step[]): Lit.LitTemplate {
+  if (steps.length === 0) {
+    return Lit.nothing;
+  }
+
+  const sideEffectSteps = steps.filter(s => s.sideEffect);
+
+  // If the walkthrough is in the sidebar, we render a button into the
+  // ChatView to open it.
+  // clang-format off
+  const openWalkThroughSidebarButton = !input.walkthrough.isInlined ? html`
+      <div class="walkthrough-toggle-container">
+        <devtools-button
+          .variant=${Buttons.Button.Variant.OUTLINED}
+          .size=${Buttons.Button.Size.SMALL}
+          .title=${lockedString(UIStringsNotTranslate.showThinking)}
+          .jslogContext=${'ai-show-walkthrough'}
+          @click=${() => {
+            if(input.walkthrough.isExpanded) {
+              input.walkthrough.onToggle(false);
+            } else {
+              // Can't just toggle the visibility here; we need to ensure we
+              // update the state with this message as the user could have had
+              // the walkthrough open with an alternative message.
+              input.walkthrough.onOpen(input.message as ModelChatMessage);
+            }
+          }}
+        >${lockedString(UIStringsNotTranslate.showThinking)}</devtools-button>
+      </div>
+  ` : Lit.nothing;
+  // clang-format on
+
+  // If there are side-effect steps, and the walkthrough is not open, we render
+  // those inline so that the user can see them and approve them.
+  // Note: this is a temporary approach and needs more UX discussion; b/487921578
+  // clang-format off
+  const sideEffectStepsUI = !input.walkthrough.isInlined && !input.walkthrough.isExpanded && sideEffectSteps.length > 0 ? sideEffectSteps.map(step => html`
+    <div class="side-effect-container">
+      ${renderStep({
+         step,
+         isLoading: input.isLoading,
+         markdownRenderer: input.markdownRenderer,
+         isLast: true
+      })}
+    </div> `) : Lit.nothing;
+  // clang-format on
+
+  // If the walkthrough is inlined (narrow width screens), render it here.
+  // Note that we force it open if there is a side-effect.
+  // clang-format off
+  const walkthroughInline = input.walkthrough.isInlined ? html`
+    <div class="walkthrough-container">
+      <devtools-widget .widgetConfig=${UI.Widget.widgetConfig(WalkthroughView, {
+        message: input.message as ModelChatMessage,
+        isLoading: input.isLoading && input.isLastMessage,
+        markdownRenderer: input.markdownRenderer,
+        isInlined: true,
+        isExpanded: input.isLastMessage &&
+            (input.walkthrough.isExpanded || steps.some(step => Boolean(step.sideEffect))),
+        onToggle: input.walkthrough.onToggle,
+      })}></devtools-widget>
+    </div>
+  ` : Lit.nothing;
+
+  return html`
+    ${openWalkThroughSidebarButton}
+    ${sideEffectStepsUI}
+    ${walkthroughInline}
+  `;
+  // clang-format on
+}
+
 function renderStepBadge({step, isLoading, isLast}: {
   step: Step,
   isLoading: boolean,
@@ -481,7 +577,7 @@ function renderStepBadge({step, isLoading, isLast}: {
     ></devtools-icon>`;
 }
 
-function renderStep({step, isLoading, markdownRenderer, isLast}: {
+export function renderStep({step, isLoading, markdownRenderer, isLast}: {
   step: Step,
   isLoading: boolean,
   markdownRenderer: MarkdownLitRenderer,
@@ -761,6 +857,12 @@ export class ChatMessage extends UI.Widget.Widget {
   onFeedbackSubmit:
       (rpcId: Host.AidaClient.RpcGlobalId, rate: Host.AidaClient.Rating, feedback?: string) => void = () => {};
   onCopyResponseClick: (message: ModelChatMessage) => void = () => {};
+  walkthrough: MessageInput['walkthrough'] = {
+    onOpen: () => {},
+    onToggle: () => {},
+    isInlined: false,
+    isExpanded: false,
+  };
 
   #suggestionsResizeObserver = new ResizeObserver(() => this.#handleSuggestionsScrollOrResize());
   #suggestionsEvaluateLayoutThrottler = new Common.Throttler.Throttler(50);
@@ -822,6 +924,7 @@ export class ChatMessage extends UI.Widget.Widget {
           currentRating: this.#currentRating,
           isShowingFeedbackForm: this.#isShowingFeedbackForm,
           onFeedbackSubmit: this.onFeedbackSubmit,
+          walkthrough: this.walkthrough,
         },
         this.#viewOutput, this.contentElement);
   }
