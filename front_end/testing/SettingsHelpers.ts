@@ -83,6 +83,7 @@ export const DEFAULT_SETTING_REGISTRATIONS_FOR_TEST = [
   createSettingValue(Common.Settings.SettingCategory.PERFORMANCE, 'annotations-hidden', false),
   createSettingValue(Common.Settings.SettingCategory.NETWORK, 'cache-disabled', false),
   createSettingValue(Common.Settings.SettingCategory.RENDERING, 'avif-format-disabled', false),
+  createSettingValue(Common.Settings.SettingCategory.RENDERING, 'jpeg-xl-format-disabled', false),
   createSettingValue(
       Common.Settings.SettingCategory.RENDERING, 'emulated-css-media', '', Common.Settings.SettingType.ENUM),
   createSettingValue(
