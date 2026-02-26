@@ -1332,6 +1332,8 @@ export class ElementsTreeOutline extends
       await treeElement.populateNodeContextMenu(contextMenu);
     } else if (isPseudoElement) {
       treeElement.populatePseudoElementContextMenu(contextMenu);
+    } else if (treeElement.node().nodeType() === Node.PROCESSING_INSTRUCTION_NODE) {
+      await treeElement.populateProcessingElementContextMenu(contextMenu);
     }
 
     ElementsPanel.instance().populateAdornerSettingsContextMenu(contextMenu);
