@@ -1538,6 +1538,9 @@ class TreeViewTreeElement extends TreeElement {
   static readonly CLONED_ATTRIBUTES = SDK.DOMModel.ARIA_ATTRIBUTES.union(new Set(['jslog']));
   #clonedAttributes = new Set<string>();
   #clonedClasses = new Set<string>();
+  #userExpanded = false;
+  #isProcessingAttribute = false;
+  #previousOpenAttributeValue?: string|null;
 
   static #elementToTreeElement = new WeakMap<Node, TreeViewTreeElement>();
   readonly configElement: HTMLLIElement;
@@ -1549,7 +1552,46 @@ class TreeViewTreeElement extends TreeElement {
     this.refresh();
   }
 
+  override onexpand(): void {
+    if (!this.#isProcessingAttribute) {
+      this.#userExpanded = true;
+    }
+  }
+
+  override oncollapse(): void {
+    if (!this.#isProcessingAttribute) {
+      this.#userExpanded = false;
+    }
+  }
+
+  updateExpansionFromAttribute(): void {
+    this.#isProcessingAttribute = true;
+    try {
+      const openAttr = this.configElement.getAttribute('open');
+      if (openAttr === this.#previousOpenAttributeValue) {
+        return;
+      }
+      this.#previousOpenAttributeValue = openAttr;
+      if (openAttr === null) {
+        if (this.#userExpanded) {
+          this.expand();
+        } else {
+          this.collapse();
+        }
+      } else if (openAttr === 'false') {
+        this.collapse();
+      } else {
+        this.expand();
+      }
+    } finally {
+      this.#isProcessingAttribute = false;
+    }
+  }
+
   refresh(): void {
+    const expandable = Boolean(this.configElement.querySelector('ul[role="group"]'));
+    this.setExpandable(expandable);
+
     this.titleElement.textContent = '';
     this.#clonedAttributes.forEach(attr => this.listItemElement.attributes.removeNamedItem(attr));
     this.#clonedClasses.forEach(className => this.listItemElement.classList.remove(className));
@@ -1576,6 +1618,7 @@ class TreeViewTreeElement extends TreeElement {
     }
 
     this.hidden = hasBooleanAttribute(this.configElement, 'hidden');
+    this.updateExpansionFromAttribute();
 
     Highlighting.HighlightManager.HighlightManager.instance().apply(this.titleElement);
   }
@@ -1585,7 +1628,9 @@ class TreeViewTreeElement extends TreeElement {
   }
 
   remove(): void {
-    removeNode(this);
+    removeNode(
+        this,
+        Boolean(this.parent && (this.parent as TreeViewTreeElement).configElement?.querySelector('ul[role="group"]')));
     TreeViewTreeElement.#elementToTreeElement.delete(this.configElement);
   }
 }
@@ -1623,11 +1668,13 @@ function getStyleElements(nodes: NodeList|Node[]): HTMLElement[] {
   });
 }
 
-function removeNode(node: TreeElement): void {
+function removeNode(node: TreeElement, preserveParentExpandable = false): void {
   const parent = node.parent;
   if (parent) {
     parent.removeChild(node);
-    parent.setExpandable(parent.children().length > 0);
+    if (!preserveParentExpandable) {
+      parent.setExpandable(parent.children().length > 0);
+    }
   }
 }
 
@@ -1742,8 +1789,8 @@ export class TreeViewElement extends HTMLElementWithLightDOMTemplate {
     if (subtreeRoot.role !== 'group' || !subtreeRoot.parentElement) {
       return null;
     }
-    const expanded = hasBooleanAttribute(subtreeRoot.parentElement, 'open');
     const treeElement = TreeViewTreeElement.get(subtreeRoot.parentElement);
+    const expanded = treeElement ? treeElement.expanded : hasBooleanAttribute(subtreeRoot.parentElement, 'open');
     return treeElement ? {expanded, treeElement} : null;
   }
 
@@ -1764,11 +1811,7 @@ export class TreeViewElement extends HTMLElementWithLightDOMTemplate {
       treeElement.revealAndSelect(true);
     }
     if (node === treeNode && attributeName === 'open') {
-      if (hasBooleanAttribute(treeNode, 'open')) {
-        treeElement.expand();
-      } else {
-        treeElement.collapse();
-      }
+      treeElement.updateExpansionFromAttribute();
     }
   }
 
@@ -1791,6 +1834,7 @@ export class TreeViewElement extends HTMLElementWithLightDOMTemplate {
         treeElement = new TreeViewTreeElement(this.#treeOutline, node);
         const expandable = Boolean(node.querySelector('ul[role="group"]'));
         treeElement.setExpandable(expandable);
+        treeElement.updateExpansionFromAttribute();
       } else {
         treeElement = node.treeElement;
       }
@@ -1817,7 +1861,11 @@ export class TreeViewElement extends HTMLElementWithLightDOMTemplate {
       if (node instanceof HTMLLIElement) {
         TreeViewTreeElement.get(node)?.remove();
       } else if (node.treeElement) {
-        removeNode(node.treeElement);
+        removeNode(
+            node.treeElement,
+            Boolean(
+                node.treeElement.parent &&
+                (node.treeElement.parent as TreeViewTreeElement).configElement?.querySelector('ul[role="group"]')));
       }
     }
   }

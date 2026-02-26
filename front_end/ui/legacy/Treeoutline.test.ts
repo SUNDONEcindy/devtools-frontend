@@ -194,6 +194,63 @@ describe('TreeViewElement', () => {
     assert.isTrue(nodes[1].expanded);
   });
 
+  it('keeps the node expanded after re-rendering initially expanded', async () => {
+    const component = await makeTree(html`<devtools-tree .template=${html`
+      <ul role="tree">
+        <li role="treeitem" open>subtree
+          <ul role="group">
+            <li role="treeitem">in subtree</li>
+          </ul>
+        </li>
+      </ul>`}></devtools-tree>`);
+
+    const node = component.getInternalTreeOutlineForTest().rootElement().children()[0];
+    assert.isTrue(node.expanded);
+
+    // Re-render with the same template (simulating an update that doesn't change 'open')
+    component.template = html`
+      <ul role="tree">
+        <li role="treeitem" open class="some-change">subtree
+          <ul role="group">
+            <li role="treeitem">in subtree</li>
+          </ul>
+        </li>
+      </ul>`;
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    assert.isTrue(node.expanded, 'Node should remain expanded after re-render');
+  });
+
+  it('keeps the node collapsed after re-rendering if the user has manually collapsed it', async () => {
+    const component = await makeTree(html`<devtools-tree .template=${html`
+      <ul role="tree">
+        <li role="treeitem" open>subtree
+          <ul role="group">
+            <li role="treeitem">in subtree</li>
+          </ul>
+        </li>
+      </ul>`}></devtools-tree>`);
+
+    const node = component.getInternalTreeOutlineForTest().rootElement().children()[0];
+    assert.isTrue(node.expanded);
+
+    node.collapse();
+    assert.isFalse(node.expanded);
+
+    // Re-render with the same template (simulating an update that doesn't change 'open')
+    component.template = html`
+      <ul role="tree">
+        <li role="treeitem" open class="some-change">subtree
+          <ul role="group">
+            <li role="treeitem">in subtree</li>
+          </ul>
+        </li>
+      </ul>`;
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    assert.isFalse(node.expanded, 'Node should remain collapsed after re-render');
+  });
+
   it('sends a `select` event when a node is selected', async () => {
     const onSelectFirst = sinon.stub<[UI.TreeOutline.TreeViewElement.SelectEvent]>();
     const onSelectSecond = sinon.stub<[UI.TreeOutline.TreeViewElement.SelectEvent]>();
