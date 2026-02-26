@@ -1543,6 +1543,63 @@ export namespace Audits {
   }
 
   /**
+   * Metadata about the ad script that was on the stack that caused the current
+   * script in the `AdAncestry` to be considered ad related.
+   */
+  export interface AdScriptIdentifier {
+    /**
+     * The script's v8 identifier.
+     */
+    scriptId: Runtime.ScriptId;
+    /**
+     * v8's debugging id for the v8::Context.
+     */
+    debuggerId: Runtime.UniqueDebuggerId;
+    /**
+     * The script's url (or generated name based on id if inline script).
+     */
+    name: string;
+  }
+
+  /**
+   * Providence about how an ad script was determined to be such. It is an ad
+   * because its url matched a filterlist rule, or because some other ad script
+   * was on the stack when this script was loaded.
+   */
+  export interface AdAncestry {
+    /**
+     * The ad-script in the stack when the offending script was loaded. This is
+     * recursive down to the root script that was tagged due to the filterlist
+     * rule.
+     */
+    adAncestryChain: AdScriptIdentifier[];
+    /**
+     * The filterlist rule that caused the root (last) script in
+     * `adAncestry` to be ad-tagged.
+     */
+    rootScriptFilterlistRule?: string;
+  }
+
+  /**
+   * The issue warns about blocked calls to privacy sensitive APIs via the
+   * Selective Permissions Intervention.
+   */
+  export interface SelectivePermissionsInterventionIssueDetails {
+    /**
+     * Which API was intervened on.
+     */
+    apiName: string;
+    /**
+     * Why the ad script using the API is considered an ad.
+     */
+    adAncestry: AdAncestry;
+    /**
+     * The stack trace at the time of the intervention.
+     */
+    stackTrace?: Runtime.StackTrace;
+  }
+
+  /**
    * A unique identifier for the type of issue. Each type may use one of the
    * optional fields in InspectorIssueDetails to convey more specific
    * information about the kind of issue.
@@ -1577,6 +1634,7 @@ export namespace Audits {
     UserReidentificationIssue = 'UserReidentificationIssue',
     PermissionElementIssue = 'PermissionElementIssue',
     PerformanceIssue = 'PerformanceIssue',
+    SelectivePermissionsInterventionIssue = 'SelectivePermissionsInterventionIssue',
   }
 
   /**
@@ -1617,6 +1675,7 @@ export namespace Audits {
     userReidentificationIssueDetails?: UserReidentificationIssueDetails;
     permissionElementIssueDetails?: PermissionElementIssueDetails;
     performanceIssueDetails?: PerformanceIssueDetails;
+    selectivePermissionsInterventionIssueDetails?: SelectivePermissionsInterventionIssueDetails;
   }
 
   /**
@@ -7072,6 +7131,11 @@ export namespace Emulation {
     insets: SafeAreaInsets;
   }
 
+  export const enum SetDeviceMetricsOverrideRequestScrollbarType {
+    Overlay = 'overlay',
+    Default = 'default',
+  }
+
   export interface SetDeviceMetricsOverrideRequest {
     /**
      * Overriding width value in pixels (minimum 0, maximum 10000000). 0 disables the override.
@@ -7137,6 +7201,10 @@ export namespace Emulation {
      * @deprecated
      */
     devicePosture?: DevicePosture;
+    /**
+     * Scrollbar type. Default: `default`.
+     */
+    scrollbarType?: SetDeviceMetricsOverrideRequestScrollbarType;
   }
 
   export interface SetDevicePostureOverrideRequest {
