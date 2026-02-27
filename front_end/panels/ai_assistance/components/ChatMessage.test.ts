@@ -4,7 +4,7 @@
 
 import * as Host from '../../../core/host/host.js';
 import * as Root from '../../../core/root/root.js';
-import {assertScreenshot, renderElementIntoDOM} from '../../../testing/DOMHelpers.js';
+import {assertScreenshot, querySelectorErrorOnMissing, renderElementIntoDOM} from '../../../testing/DOMHelpers.js';
 import {
   describeWithEnvironment,
 } from '../../../testing/EnvironmentHelpers.js';
@@ -250,9 +250,33 @@ describeWithEnvironment('ChatMessage', () => {
           isInlined: false,
         }
       });
-      const buttons = target.querySelectorAll('devtools-button');
-      const showThinkingButton = Array.from(buttons).find(b => b.textContent?.includes('Show thinking'));
-      assert.isNotNull(showThinkingButton);
+      const button = querySelectorErrorOnMissing(target, '[data-show-walkthrough]');
+      assert.strictEqual(button.innerText, 'Show thinking');
+    });
+
+    it('when the step is loading, the walkthrough CTA shows the title of the step', async () => {
+      const loadingMessage: AiAssistance.ChatMessage.ModelChatMessage = {
+        entity: AiAssistance.ChatMessage.ChatMessageEntity.MODEL,
+        parts: [{
+          type: 'step',
+          step: {
+            isLoading: true,
+            title: 'Investigating XYZ',
+            code: 'console.log("test")',
+          },
+        }],
+        rpcId: 99,
+      };
+      const target = renderView({
+        isLoading: true,
+        message: loadingMessage,
+        walkthrough: {
+          ...DEFAULT_WALKTHROUGH,
+          isInlined: false,
+        }
+      });
+      const button = querySelectorErrorOnMissing(target, '[data-show-walkthrough]');
+      assert.strictEqual(button.innerText, 'Investigating XYZ');
     });
 
     it('does not render "Show thinking" button when inline', () => {
@@ -263,9 +287,7 @@ describeWithEnvironment('ChatMessage', () => {
           isInlined: true,
         }
       });
-      const buttons = target.querySelectorAll('devtools-button');
-      const showThinkingButton = Array.from(buttons).find(b => b.textContent?.includes('Show thinking'));
-      assert.isUndefined(showThinkingButton);
+      assert.isNull(target.querySelector('[data-show-walkthrough]'));
     });
 
     it('renders inline walkthrough when inline', () => {

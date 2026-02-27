@@ -69,3 +69,17 @@ The key to the walkthrough feature lies in the `parts` array of a `ModelChatMess
     -   `text`: The markdown-formatted text of the answer.
 
 A single `ModelChatMessage` will typically have **zero or more `StepPart`s** followed by **one `AnswerPart`**. This structure allows the UI to first show the final answer and provide the option to progressively disclose the "thinking" steps that led to it via the `WalkthroughView`.
+
+## Understanding Step Loading States
+
+There are two distinct `isLoading` properties related to the AI's response generation, serving different purposes:
+
+1.  **`step.isLoading`**: This property resides within a single `Step` object and indicates the immediate parsing status of that specific step from the AI's response stream. It becomes `true` when a new step begins (e.g., "Querying...") and is set to `false` almost immediately once the first piece of meaningful information for that step (like a "thought" or a "code" block) is received. Essentially, it's a short-lived internal parsing state.
+
+2.  **Conversation `isLoading`** (passed down to the `ChatMessage` component): This top-level property reflects the overall state of the entire conversation's response generation process. It is set to `true` as soon as the user submits a query and remains `true` until the AI has completed its entire thought process, including all steps, and has provided the final answer.
+
+The spinner displayed next to a step in the UI is intentionally tied to the **conversation `isLoading`** property, not the individual `step.isLoading`. This design choice provides a better user experience by:
+
+*   **Providing Continuous Feedback**: Using the conversation's `isLoading` ensures a persistent visual indicator that the AI is actively working on the query, even if individual steps are quickly parsed. This prevents the UI from appearing unresponsive.
+*   **Avoiding a "Stuck" Feeling**: If the spinner were tied to `step.isLoading`, it would flicker on and off rapidly, potentially making the user feel that the AI has stopped processing or is stuck.
+*   **Clear Progress Visualization**: The spinner is dynamically moved to the *last* active step in the list as long as the overall conversation is loading. Once a step is completed, it receives a checkmark, and the spinner moves to the next active step.
