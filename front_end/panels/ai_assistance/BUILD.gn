@@ -119,6 +119,7 @@ devtools_ui_module("unittests") {
     "components/DisabledWidget.test.ts",
     "components/ExploreWidget.test.ts",
     "components/MarkdownRendererWithCodeBlock.test.ts",
+    "components/WalkthroughView.test.ts",
   ]
 
   deps = [

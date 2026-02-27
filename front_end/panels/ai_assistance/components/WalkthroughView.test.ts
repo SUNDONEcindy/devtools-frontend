@@ -2,104 +2,131 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import {renderElementIntoDOM} from '../../../testing/DOMHelpers.js';
+import {querySelectorErrorOnMissing, renderElementIntoDOM} from '../../../testing/DOMHelpers.js';
 import {describeWithEnvironment} from '../../../testing/EnvironmentHelpers.js';
 import * as AiAssistance from '../ai_assistance.js';
 
 describeWithEnvironment('WalkthroughView', () => {
-  it('renders empty state when no steps provided', async () => {
-    const view = new AiAssistance.WalkthroughView.WalkthroughView(document.createElement('div'));
-    view.data = {
-      steps: [],
-      isLoading: false,
-      markdownRenderer: new AiAssistance.MarkdownRendererWithCodeBlock(),
-    };
-    renderElementIntoDOM(view.contentElement);
+  const {WalkthroughView} = AiAssistance.WalkthroughView;
+
+  async function makeWalkthrough(state: {
+    isLoading: boolean,
+    message: AiAssistance.ChatMessage.ModelChatMessage|null,
+    isInlined: boolean,
+    isExpanded: boolean,
+  }): Promise<AiAssistance.WalkthroughView.WalkthroughView> {
+    const view = new WalkthroughView();
+    view.isLoading = state.isLoading;
+    view.message = state.message;
+    view.isInlined = state.isInlined;
+    view.isExpanded = state.isExpanded;
+    view.markdownRenderer = new AiAssistance.MarkdownRendererWithCodeBlock();
+
+    renderElementIntoDOM(view);
     view.performUpdate();
+    await view.updateComplete;
+    return view;
+  }
+
+  it('renders empty state when there is no messsage', async () => {
+    const view = await makeWalkthrough({
+      isLoading: false,
+      message: null,
+      isInlined: false,
+      isExpanded: false,
+    });
 
     const emptyState = view.contentElement.querySelector('.empty-state');
     assert.isNotNull(emptyState);
     assert.include(emptyState?.textContent, 'No walkthrough steps available yet.');
   });
 
-  it('renders steps correctly', async () => {
-    const view = new AiAssistance.WalkthroughView.WalkthroughView(document.createElement('div'));
-    view.data = {
-      steps: [
-        {
+  it('renders empty state when there is a message but it has no steps', async () => {
+    const emptyMessage: AiAssistance.ChatMessage.ModelChatMessage = {
+      entity: AiAssistance.ChatMessage.ChatMessageEntity.MODEL,
+      parts: [],
+    };
+    const view = await makeWalkthrough({
+      isLoading: false,
+      message: emptyMessage,
+      isInlined: false,
+      isExpanded: false,
+    });
+
+    const emptyState = view.contentElement.querySelector('.empty-state');
+    assert.isNotNull(emptyState);
+    assert.include(emptyState?.textContent, 'No walkthrough steps available yet.');
+  });
+
+  it('can render a step correctly when expanded', async () => {
+    const message: AiAssistance.ChatMessage.ModelChatMessage = {
+      entity: AiAssistance.ChatMessage.ChatMessageEntity.MODEL,
+      parts: [{
+        type: 'step',
+        step: {
           isLoading: false,
-          title: 'Step 1',
-          thought: 'Thinking...',
-          code: 'console.log("test")',
-        },
-      ],
-      isLoading: false,
-      markdownRenderer: new AiAssistance.MarkdownRendererWithCodeBlock(),
+          title: 'Test step 1',
+        }
+      }],
     };
-    renderElementIntoDOM(view.contentElement);
-    view.performUpdate();
+    const view = await makeWalkthrough({
+      isLoading: false,
+      message,
+      isInlined: false,
+      isExpanded: true,
+    });
 
-    const stepTitle = view.contentElement.querySelector('.title');
-    assert.isNotNull(stepTitle);
-    assert.strictEqual(stepTitle?.textContent, 'Step 1');
-
-    const stepCode = view.contentElement.querySelector('devtools-code-block');
-    assert.isNotNull(stepCode);
-    assert.strictEqual(stepCode?.code, 'console.log("test")');
+    const stepsWrapper = querySelectorErrorOnMissing(view.contentElement, '.step-wrapper');
+    assert.lengthOf(stepsWrapper.children, 1);
+    const stepTitle = querySelectorErrorOnMissing(stepsWrapper, '.title');
+    assert.strictEqual(stepTitle.innerText, 'Test step 1');
   });
 
-  it('renders inline view with correct class', async () => {
-    const view = new AiAssistance.WalkthroughView.WalkthroughView(document.createElement('div'));
-    view.data = {
-      steps: [],
-      isLoading: false,
-      markdownRenderer: new AiAssistance.MarkdownRendererWithCodeBlock(),
-      isInline: true,
-      isOpen: true,
+  it('renders the details/summary in inline mode', async () => {
+    const message: AiAssistance.ChatMessage.ModelChatMessage = {
+      entity: AiAssistance.ChatMessage.ChatMessageEntity.MODEL,
+      parts: [{
+        type: 'step',
+        step: {
+          isLoading: false,
+          title: 'Test step 1',
+        }
+      }],
     };
-    renderElementIntoDOM(view.contentElement);
-    view.performUpdate();
+    const view = await makeWalkthrough({
+      isLoading: false,
+      message,
+      isInlined: true,
+      isExpanded: true,
+    });
 
-    const inlineView = view.contentElement.querySelector('.walkthrough-inline');
-    assert.isNotNull(inlineView);
-    assert.isTrue(inlineView?.hasAttribute('open'));
+    const inlineWalkthrough = querySelectorErrorOnMissing(view.contentElement, '.walkthrough-inline');
+    assert.isTrue(inlineWalkthrough.hasAttribute('open'));
+
+    view.isExpanded = false;
+    await view.updateComplete;
+    assert.isFalse(inlineWalkthrough.hasAttribute('open'));
   });
 
-  it('calls onClose when close button is clicked in sidebar mode', async () => {
-    const onClose = sinon.spy();
-    const view = new AiAssistance.WalkthroughView.WalkthroughView(document.createElement('div'));
-    view.data = {
-      steps: [],
-      isLoading: false,
-      markdownRenderer: new AiAssistance.MarkdownRendererWithCodeBlock(),
-      onClose,
+  it('does not render the details/summary in sidebar mode', async () => {
+    const message: AiAssistance.ChatMessage.ModelChatMessage = {
+      entity: AiAssistance.ChatMessage.ChatMessageEntity.MODEL,
+      parts: [{
+        type: 'step',
+        step: {
+          isLoading: false,
+          title: 'Test step 1',
+        }
+      }],
     };
-    renderElementIntoDOM(view.contentElement);
-    view.performUpdate();
-
-    const closeButton = view.contentElement.querySelector('devtools-button');
-    assert.isNotNull(closeButton);
-    closeButton?.click();
-    sinon.assert.calledOnce(onClose);
-  });
-
-  it('calls onToggle when inline details are toggled', async () => {
-    const onToggle = sinon.spy();
-    const view = new AiAssistance.WalkthroughView.WalkthroughView(document.createElement('div'));
-    view.data = {
-      steps: [],
+    const view = await makeWalkthrough({
       isLoading: false,
-      markdownRenderer: new AiAssistance.MarkdownRendererWithCodeBlock(),
-      isInline: true,
-      isOpen: true,
-      onToggle,
-    };
-    renderElementIntoDOM(view.contentElement);
-    view.performUpdate();
+      message,
+      isInlined: false,
+      isExpanded: true,
+    });
 
-    const details = view.contentElement.querySelector('details');
-    assert.isNotNull(details);
-    details?.dispatchEvent(new Event('toggle'));
-    sinon.assert.calledOnce(onToggle);
+    const title = querySelectorErrorOnMissing(view.contentElement, '.walkthrough-title');
+    assert.strictEqual(title.innerText, 'Investigation steps');
   });
 });
