@@ -7550,6 +7550,10 @@ export namespace Emulation {
   export interface RemoveScreenRequest {
     screenId: ScreenId;
   }
+
+  export interface SetPrimaryScreenRequest {
+    screenId: ScreenId;
+  }
 }
 
 /**
