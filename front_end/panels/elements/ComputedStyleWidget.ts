@@ -299,7 +299,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
   #matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles|null = null;
   private readonly showInheritedComputedStylePropertiesSetting: Common.Settings.Setting<boolean>;
   private readonly groupComputedStylesSetting: Common.Settings.Setting<boolean>;
-  private filterRegex: RegExp|null;
+  private filterRegex: RegExp|null = null;
   private readonly linkifier: Components.Linkifier.Linkifier;
   private readonly imagePreviewPopover: ImagePreviewPopover;
   /**
@@ -324,8 +324,15 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
   #computedStylesTree = new TreeOutline.TreeOutline.TreeOutline<ComputedStyleData>();
   #treeData?: TreeOutline.TreeOutline.TreeOutlineData<ComputedStyleData>;
   readonly #view: View;
+
+  /**
+   * TODO(b/407751272): the state here is confusing (3 instance variables relating to filtering).
+   * There is also a bug where the Toolbar Input's regex flag cannot be
+   * controlled, so if you set a regex filter here, the toolbar might not
+   * reflect it.
+   */
   #filterText = '';
-  #isRegex = false;
+  #filterIsRegex = false;
   #includeToolbar = true;
 
   constructor() {
@@ -361,12 +368,31 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
     this.#computedStylesTree.classList.toggle('computed-narrow', isNarrow);
   }
 
+  get filterText(): string {
+    return this.#filterText;
+  }
+
+  get filterIsRegex(): boolean {
+    return this.#filterIsRegex;
+  }
+
+  set filterText(newFilter: RegExp|string) {
+    if (typeof newFilter === 'string') {
+      this.#filterText = newFilter;
+      this.#filterIsRegex = false;
+    } else {
+      this.#filterText = newFilter.source;
+      this.#filterIsRegex = true;
+    }
+    this.requestUpdate();
+  }
+
   get includeToolbar(): boolean {
     return this.#includeToolbar;
   }
 
-  set includeToolbar(x: boolean) {
-    this.#includeToolbar = x;
+  set includeToolbar(inc: boolean) {
+    this.#includeToolbar = inc;
     this.requestUpdate();
   }
 
@@ -668,7 +694,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
     if (!text) {
       return null;
     }
-    if (this.#isRegex) {
+    if (this.#filterIsRegex) {
       try {
         return new RegExp(text, 'i');
       } catch {
@@ -679,7 +705,7 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
   }
 
   private async onRegexToggled(): Promise<void> {
-    this.#isRegex = !this.#isRegex;
+    this.#filterIsRegex = !this.#filterIsRegex;
     await this.filterComputedStyles(this.#buildFilterRegex(this.#filterText));
   }
 
@@ -699,11 +725,6 @@ export class ComputedStyleWidget extends UI.Widget.VBox {
       return await this.filterGroupLists();
     }
     return this.filterAlphabeticalList();
-  }
-
-  setFilterInput(text: string): void {
-    this.#filterText = text;
-    this.requestUpdate();
   }
 
   private nodeFilter(node: TreeOutline.TreeOutlineUtils.TreeNode<ComputedStyleData>): boolean {

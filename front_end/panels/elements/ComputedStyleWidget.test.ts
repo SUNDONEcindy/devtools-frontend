@@ -27,6 +27,61 @@ async function waitForTraceElement(treeOutline: TreeOutline.TreeOutline.TreeOutl
   });
 }
 
+function createWidgetWithMultipleProperties(
+    properties: Map<string, string>,
+    ): Elements.ComputedStyleWidget.ComputedStyleWidget {
+  Common.Settings.Settings.instance().createSetting('group-computed-styles', false).set(false);
+
+  const node = sinon.createStubInstance(SDK.DOMModel.DOMNode);
+  node.id = 1 as Protocol.DOM.NodeId;
+
+  const cssMatchedStyles = sinon.createStubInstance(SDK.CSSMatchedStyles.CSSMatchedStyles, {
+    node,
+    propertyState: SDK.CSSMatchedStyles.PropertyState.ACTIVE,
+    nodeStyles: [],
+  });
+
+  const computedStyleModel = new ComputedStyle.ComputedStyleModel.ComputedStyleModel(node);
+  sinon.stub(computedStyleModel, 'fetchComputedStyle').callsFake(() => {
+    return Promise.resolve({node, computedStyle: properties});
+  });
+  sinon.stub(computedStyleModel, 'cssModel').callsFake(() => {
+    return sinon.createStubInstance(
+        SDK.CSSModel.CSSModel, {cachedMatchedCascadeForNode: Promise.resolve(cssMatchedStyles)});
+  });
+  const widget = new Elements.ComputedStyleWidget.ComputedStyleWidget();
+  widget.computedStyleModel = computedStyleModel;
+  widget.nodeStyle = {node, computedStyle: properties};
+  widget.matchedStyles = cssMatchedStyles;
+  renderElementIntoDOM(widget);
+  return widget;
+}
+
+async function getDisplayedProperties(computedStyleWidget: Elements.ComputedStyleWidget.ComputedStyleWidget):
+    Promise<string[]> {
+  const treeOutline = computedStyleWidget.contentElement.querySelector('devtools-tree-outline') as
+      TreeOutline.TreeOutline.TreeOutline<unknown>;
+  type TreeNodeData = {tag: 'property', propertyName: string}|{tag: 'category'};
+  const matchedPropertyNames: string[] = [];
+  for (const node of treeOutline.data.tree) {
+    const data = node.treeNodeData as TreeNodeData;
+    if (data.tag === 'property') {
+      matchedPropertyNames.push(data.propertyName);
+      continue;
+    }
+    if (data.tag === 'category' && node.children) {
+      const children = await node.children();
+      for (const child of children) {
+        const childData = child.treeNodeData as TreeNodeData;
+        if (childData.tag === 'property') {
+          matchedPropertyNames.push(childData.propertyName);
+        }
+      }
+    }
+  }
+  return matchedPropertyNames;
+}
+
 describeWithMockConnection('ComputedStyleWidget', () => {
   let computedStyleWidget: Elements.ComputedStyleWidget.ComputedStyleWidget;
 
@@ -181,36 +236,39 @@ describeWithMockConnection('ComputedStyleWidget', () => {
     });
   });
 
-  describe('regex filter toggle', () => {
-    function createWidgetWithMultipleProperties(
-        properties: Map<string, string>,
-        ): Elements.ComputedStyleWidget.ComputedStyleWidget {
-      Common.Settings.Settings.instance().createSetting('group-computed-styles', false).set(false);
+  describe('filtering', () => {
+    it('can take a filter that is passed as a string', async () => {
+      const properties = new Map([
+        ['display', 'block'],
+        ['height', '100px'],
+        ['width', '200px'],
+      ]);
+      computedStyleWidget = createWidgetWithMultipleProperties(properties);
+      computedStyleWidget.requestUpdate();
+      computedStyleWidget.filterText = 'display|height';
+      await computedStyleWidget.updateComplete;
+      await UI.Widget.Widget.allUpdatesComplete;
+      const matchedPropertyNames = await getDisplayedProperties(computedStyleWidget);
+      // We filtered for the exact string `display|height`, not the regex
+      assert.lengthOf(matchedPropertyNames, 0);
+      assert.isFalse(computedStyleWidget.filterIsRegex);
+    });
 
-      const node = sinon.createStubInstance(SDK.DOMModel.DOMNode);
-      node.id = 1 as Protocol.DOM.NodeId;
-
-      const cssMatchedStyles = sinon.createStubInstance(SDK.CSSMatchedStyles.CSSMatchedStyles, {
-        node,
-        propertyState: SDK.CSSMatchedStyles.PropertyState.ACTIVE,
-        nodeStyles: [],
-      });
-
-      const computedStyleModel = new ComputedStyle.ComputedStyleModel.ComputedStyleModel(node);
-      sinon.stub(computedStyleModel, 'fetchComputedStyle').callsFake(() => {
-        return Promise.resolve({node, computedStyle: properties});
-      });
-      sinon.stub(computedStyleModel, 'cssModel').callsFake(() => {
-        return sinon.createStubInstance(
-            SDK.CSSModel.CSSModel, {cachedMatchedCascadeForNode: Promise.resolve(cssMatchedStyles)});
-      });
-      const widget = new Elements.ComputedStyleWidget.ComputedStyleWidget();
-      widget.computedStyleModel = computedStyleModel;
-      widget.nodeStyle = {node, computedStyle: properties};
-      widget.matchedStyles = cssMatchedStyles;
-      renderElementIntoDOM(widget);
-      return widget;
-    }
+    it('can take a filter that is passed as a regexp', async () => {
+      const properties = new Map([
+        ['display', 'block'],
+        ['height', '100px'],
+        ['width', '200px'],
+      ]);
+      computedStyleWidget = createWidgetWithMultipleProperties(properties);
+      computedStyleWidget.requestUpdate();
+      computedStyleWidget.filterText = new RegExp('display|height');
+      await computedStyleWidget.updateComplete;
+      await UI.Widget.Widget.allUpdatesComplete;
+      const matchedPropertyNames = await getDisplayedProperties(computedStyleWidget);
+      assert.sameMembers(matchedPropertyNames, ['display', 'height']);
+      assert.isTrue(computedStyleWidget.filterIsRegex);
+    });
 
     it('renders a regex toggle button that is off by default', async () => {
       const properties = new Map([
@@ -256,28 +314,7 @@ describeWithMockConnection('ComputedStyleWidget', () => {
 
       // When regex mode is on, "display|width" is a real regex OR.
       await computedStyleWidget.filterComputedStyles(new RegExp('display|width', 'i'));
-      const treeOutline = computedStyleWidget.contentElement.querySelector('devtools-tree-outline') as
-          TreeOutline.TreeOutline.TreeOutline<unknown>;
-
-      type TreeNodeData = {tag: 'property', propertyName: string}|{tag: 'category'};
-      const matchedPropertyNames: string[] = [];
-      for (const node of treeOutline.data.tree) {
-        const data = node.treeNodeData as TreeNodeData;
-        if (data.tag === 'property') {
-          matchedPropertyNames.push(data.propertyName);
-          continue;
-        }
-        if (data.tag === 'category' && node.children) {
-          const children = await node.children();
-          for (const child of children) {
-            const childData = child.treeNodeData as TreeNodeData;
-            if (childData.tag === 'property') {
-              matchedPropertyNames.push(childData.propertyName);
-            }
-          }
-        }
-      }
-
+      const matchedPropertyNames = await getDisplayedProperties(computedStyleWidget);
       assert.sameMembers(matchedPropertyNames, ['display', 'width']);
     });
   });
