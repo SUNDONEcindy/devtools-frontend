@@ -8,12 +8,12 @@ import * as SDK from '../core/sdk/sdk.js';
 import * as Logs from '../models/logs/logs.js';
 import * as Workspace from '../models/workspace/workspace.js';
 import * as PanelCommon from '../panels/common/common.js';
-import { describeWithEnvironment, setupActionRegistry } from './EnvironmentHelpers.js';
+import { deinitializeGlobalVars, initializeGlobalVars, setupActionRegistry, } from './EnvironmentHelpers.js';
 import { MockDebuggerBackend } from './MockScopeChain.js';
 export function getExtensionOrigin() {
     return window.location.origin;
 }
-export function describeWithDevtoolsExtension(title, extension, fn) {
+export function setupDevtoolsExtensionHooks(extension = {}) {
     const extensionDescriptor = {
         startPage: `${getExtensionOrigin()}/blank.html`,
         name: 'TestExtension',
@@ -45,28 +45,25 @@ export function describeWithDevtoolsExtension(title, extension, fn) {
         context.chrome = chrome;
         sinon.restore();
     }
-    return describeWithEnvironment(`with-extension-${title}`, function () {
-        setupActionRegistry();
-        let backend;
-        beforeEach(() => {
-            cleanupExtensionHelper();
-            backend = new MockDebuggerBackend();
-            context.backend = backend;
-            sinon.stub(Workspace.Workspace.WorkspaceImpl, 'instance').returns(backend.universe.workspace);
-            sinon.stub(SDK.TargetManager.TargetManager, 'instance').returns(backend.universe.targetManager);
-            sinon.stub(Common.Settings.Settings, 'instance').returns(backend.universe.settings);
-            const networkLog = new Logs.NetworkLog.NetworkLog();
-            sinon.stub(Logs.NetworkLog.NetworkLog, 'instance').returns(networkLog);
-            setupExtensionHelper();
-        });
-        afterEach(cleanupExtensionHelper);
-        fn.call(this, context);
+    beforeEach(async () => {
+        await initializeGlobalVars();
     });
+    setupActionRegistry();
+    beforeEach(() => {
+        cleanupExtensionHelper();
+        const backend = new MockDebuggerBackend();
+        context.backend = backend;
+        sinon.stub(Workspace.Workspace.WorkspaceImpl, 'instance').returns(backend.universe.workspace);
+        sinon.stub(SDK.TargetManager.TargetManager, 'instance').returns(backend.universe.targetManager);
+        sinon.stub(Common.Settings.Settings, 'instance').returns(backend.universe.settings);
+        const networkLog = new Logs.NetworkLog.NetworkLog();
+        sinon.stub(Logs.NetworkLog.NetworkLog, 'instance').returns(networkLog);
+        setupExtensionHelper();
+    });
+    afterEach(async () => {
+        cleanupExtensionHelper();
+        await deinitializeGlobalVars();
+    });
+    return context;
 }
-describeWithDevtoolsExtension.only = function (title, extension, fn) {
-    // eslint-disable-next-line mocha/no-exclusive-tests
-    return describe.only('.only', function () {
-        return describeWithDevtoolsExtension(title, extension, fn);
-    });
-};
 //# sourceMappingURL=ExtensionHelpers.js.map

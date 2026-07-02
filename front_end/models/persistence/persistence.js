@@ -2251,10 +2251,15 @@ var FileSystem2 = class {
   async searchInFileContent(_uiSourceCode, _query, _caseSensitive, _isRegex) {
     return [];
   }
-  async findFilesMatchingSearchRequest(_searchConfig, _filesMatchingFileQuery, _progress) {
+  async findFilesMatchingSearchRequest(_searchConfig, _filesMatchingFileQuery, progress) {
+    await Promise.resolve();
+    progress.done = true;
     return /* @__PURE__ */ new Map();
   }
-  indexContent(_progress) {
+  indexContent(progress) {
+    queueMicrotask(() => {
+      progress.done = true;
+    });
   }
   uiSourceCodeForURL(_url) {
     return null;

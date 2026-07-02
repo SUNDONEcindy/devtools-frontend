@@ -6887,14 +6887,15 @@ var InspectorDrawerView = class {
     const wasDrawerVisible = this.isVisibleForEvents();
     this.tabbedPane.setAutoSelectFirstItemOnShow(!hasTargetDrawer);
     this.#splitWidget.showBoth();
+    this.#updatePresentation(this.isMinimized());
     this.#dispatchPaneVisibilityChangedIfNeeded(wasDrawerVisible);
   }
   hide() {
     const wasDrawerVisible = this.isVisibleForEvents();
     const wasMinimized = this.isMinimized();
     this.#splitWidget.hideSidebar(!wasMinimized);
+    this.#updatePresentation(false);
     if (wasMinimized) {
-      this.#updatePresentation(false);
       this.#splitWidget.setSidebarMinimized(false);
       this.#splitWidget.setResizable(true);
     }
@@ -6966,8 +6967,9 @@ var InspectorDrawerView = class {
     this.#minimizeExpandButton.setTitle(i18nString8(UIStrings8.minimizeDrawer));
   }
   #updatePresentation(minimized) {
+    const requireVerticalMinimumWidth = this.#splitWidget.isVertical() && this.#splitWidget.sidebarIsShowing() && !minimized;
+    this.#setInspectorMinimumSize(requireVerticalMinimumWidth ? this.#minimumSizes.inspectorWidthWhenVertical : this.#minimumSizes.inspectorWidthWhenHorizontal, this.#minimumSizes.inspectorHeight);
     const drawerIsVertical = this.#splitWidget.isVertical();
-    this.#setInspectorMinimumSize(drawerIsVertical ? this.#minimumSizes.inspectorWidthWhenVertical : this.#minimumSizes.inspectorWidthWhenHorizontal, this.#minimumSizes.inspectorHeight);
     this.updatePresentation({
       isVertical: drawerIsVertical,
       isMinimized: minimized,
@@ -7284,6 +7286,7 @@ var SplitWidget = class extends Common10.ObjectWrapper.eventMixin(Widget) {
   #showMode = "Both";
   #savedShowMode;
   #autoAdjustOrientation = false;
+  #zoomManager = ZoomManager.instance();
   constructor(isVertical, secondIsSidebar, settingName, defaultSidebarWidth, defaultSidebarHeight, constraintsInDip, element) {
     super(element, { useShadowDom: true });
     this.element.classList.add("split-widget");
@@ -7565,18 +7568,18 @@ var SplitWidget = class extends Common10.ObjectWrapper.eventMixin(Widget) {
     return this.#resizerWidget.isEnabled();
   }
   setSidebarSize(size) {
-    const sizeDIP = ZoomManager.instance().cssToDIP(size);
+    const sizeDIP = this.#zoomManager.cssToDIP(size);
     this.#savedSidebarSizeDIP = sizeDIP;
     this.#saveSetting();
     this.#setSidebarSizeDIP(sizeDIP, false, true);
   }
   sidebarSize() {
     const sizeDIP = Math.max(0, this.#sidebarSizeDIP);
-    return ZoomManager.instance().dipToCSS(sizeDIP);
+    return this.#zoomManager.dipToCSS(sizeDIP);
   }
   totalSize() {
     const sizeDIP = Math.max(0, this.#totalSizeDIP());
-    return ZoomManager.instance().dipToCSS(sizeDIP);
+    return this.#zoomManager.dipToCSS(sizeDIP);
   }
   /**
    * Returns total size in DIP.
@@ -7587,7 +7590,7 @@ var SplitWidget = class extends Common10.ObjectWrapper.eventMixin(Widget) {
       this.#totalSizeCSS = this.#isVertical ? width : height;
       this.#totalSizeOtherDimensionCSS = this.#isVertical ? height : width;
     }
-    return ZoomManager.instance().cssToDIP(this.#totalSizeCSS);
+    return this.#zoomManager.cssToDIP(this.#totalSizeCSS);
   }
   #updateShowMode(showMode) {
     this.#showMode = showMode;
@@ -7608,7 +7611,7 @@ var SplitWidget = class extends Common10.ObjectWrapper.eventMixin(Widget) {
       this.#resizerElementSize = this.#isVertical ? this.#resizerElement.offsetWidth : this.#resizerElement.offsetHeight;
     }
     this.#removeAllLayoutProperties();
-    const sizeCSS = ZoomManager.instance().dipToCSS(sizeDIP);
+    const sizeCSS = this.#zoomManager.dipToCSS(sizeDIP);
     const sidebarSizeValue = sizeCSS + "px";
     const mainSizeValue = this.#totalSizeCSS - sizeCSS + "px";
     this.#sidebarElement.style.flexBasis = sidebarSizeValue;
@@ -7655,8 +7658,8 @@ var SplitWidget = class extends Common10.ObjectWrapper.eventMixin(Widget) {
     } else {
       animatedMarginPropertyName = this.#secondIsSidebar ? "margin-bottom" : "margin-top";
     }
-    const marginFrom = reverse ? "0" : "-" + ZoomManager.instance().dipToCSS(this.#sidebarSizeDIP) + "px";
-    const marginTo = reverse ? "-" + ZoomManager.instance().dipToCSS(this.#sidebarSizeDIP) + "px" : "0";
+    const marginFrom = reverse ? "0" : "-" + this.#zoomManager.dipToCSS(this.#sidebarSizeDIP) + "px";
+    const marginTo = reverse ? "-" + this.#zoomManager.dipToCSS(this.#sidebarSizeDIP) + "px" : "0";
     this.contentElement.style.setProperty(animatedMarginPropertyName, marginFrom);
     this.contentElement.style.setProperty("overflow", "hidden");
     if (!reverse) {
@@ -7708,7 +7711,7 @@ var SplitWidget = class extends Common10.ObjectWrapper.eventMixin(Widget) {
   }
   #applyConstraints(sidebarSize, userAction) {
     const totalSize = this.#totalSizeDIP();
-    const zoomFactor = this.#constraintsInDip ? 1 : ZoomManager.instance().zoomFactor();
+    const zoomFactor = this.#constraintsInDip ? 1 : this.#zoomManager.zoomFactor();
     let constraints = this.#sidebarWidget ? this.#sidebarWidget.constraints() : new Geometry3.Constraints();
     let minSidebarSize = this.isVertical() ? constraints.minimum.width : constraints.minimum.height;
     if (!minSidebarSize) {
@@ -7760,11 +7763,11 @@ var SplitWidget = class extends Common10.ObjectWrapper.eventMixin(Widget) {
   wasShown() {
     super.wasShown();
     this.#forceUpdateLayout();
-    ZoomManager.instance().addEventListener("ZoomChanged", this.onZoomChanged, this);
+    this.#zoomManager.addEventListener("ZoomChanged", this.onZoomChanged, this);
   }
   willHide() {
     super.willHide();
-    ZoomManager.instance().removeEventListener("ZoomChanged", this.onZoomChanged, this);
+    this.#zoomManager.removeEventListener("ZoomChanged", this.onZoomChanged, this);
   }
   onResize() {
     this.#maybeAutoAdjustOrientation();
@@ -7808,7 +7811,7 @@ var SplitWidget = class extends Common10.ObjectWrapper.eventMixin(Widget) {
   }
   #onResizeUpdate(event) {
     const offset = event.data.currentPosition - event.data.startPosition;
-    const offsetDIP = ZoomManager.instance().cssToDIP(offset);
+    const offsetDIP = this.#zoomManager.cssToDIP(offset);
     const newSizeDIP = this.#secondIsSidebar ? this.#resizeStartSizeDIP - offsetDIP : this.#resizeStartSizeDIP + offsetDIP;
     const constrainedSizeDIP = this.#applyConstraints(newSizeDIP, true);
     this.#savedSidebarSizeDIP = constrainedSizeDIP;
@@ -21769,7 +21772,7 @@ ol.tree-outline:not(.hide-selection-when-blurred) li.selected:focus {
     color: currentcolor;
   }
 
-  & *:not(devtools-icon) {
+  & *:not(devtools-icon, .new-badge) {
     color: inherit;
   }
 }
