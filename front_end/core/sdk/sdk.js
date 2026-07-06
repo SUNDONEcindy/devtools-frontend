@@ -19535,12 +19535,11 @@ __export(SourceMapCache_exports, {
   SourceMapCache: () => SourceMapCache
 });
 var SourceMapCache = class _SourceMapCache {
-  static #INSTANCE = new _SourceMapCache("devtools-source-map-cache");
-  static instance() {
+  static create() {
     if (typeof window === "undefined") {
       return IN_MEMORY_INSTANCE;
     }
-    return this.#INSTANCE;
+    return new _SourceMapCache("devtools-source-map-cache");
   }
   static createForTest(name) {
     return new _SourceMapCache(name);
@@ -19837,6 +19836,7 @@ var SourceMapManager = class _SourceMapManager extends Common10.ObjectWrapper.Ob
   #clientData = /* @__PURE__ */ new Map();
   #sourceMaps = /* @__PURE__ */ new Map();
   #attachingClient = null;
+  #sourceMapCache = SourceMapCache.create();
   constructor(target, factory) {
     super();
     this.#target = target;
@@ -19905,7 +19905,7 @@ var SourceMapManager = class _SourceMapManager extends Common10.ObjectWrapper.Ob
           this.#attachingClient = null;
           const initiator = client.createPageResourceLoadInitiator();
           const resourceLoader = this.#target.targetManager().context.get(PageResourceLoader);
-          clientData.sourceMapPromise = loadSourceMap(resourceLoader, sourceMapURL, client.debugId(), initiator).then((payload) => {
+          clientData.sourceMapPromise = loadSourceMap(resourceLoader, this.#sourceMapCache, sourceMapURL, client.debugId(), initiator).then((payload) => {
             const sourceMap = this.#factory(sourceURL, sourceMapURL, payload, client);
             if (this.#clientData.get(client) === clientData) {
               clientData.sourceMap = sourceMap;
@@ -19962,11 +19962,11 @@ var SourceMapManager = class _SourceMapManager extends Common10.ObjectWrapper.Ob
     return Promise.all(this.#sourceMaps.keys().map((sourceMap) => sourceMap.waitForScopeInfo()));
   }
 };
-async function loadSourceMap(resourceLoader, url, debugId, initiator) {
+async function loadSourceMap(resourceLoader, sourceMapCache, url, debugId, initiator) {
   try {
     if (debugId) {
       const securityOrigin = initiator.initiatorUrl ? Common10.ParsedURL.ParsedURL.extractOrigin(initiator.initiatorUrl) : Platform7.DevToolsPath.EmptyUrlString;
-      const cachedSourceMap = await SourceMapCache.instance().get(debugId, securityOrigin);
+      const cachedSourceMap = await sourceMapCache.get(debugId, securityOrigin);
       if (cachedSourceMap) {
         return cachedSourceMap;
       }
@@ -19975,7 +19975,7 @@ async function loadSourceMap(resourceLoader, url, debugId, initiator) {
     const sourceMap = parseSourceMap(content);
     if (debugId && "debugId" in sourceMap && sourceMap.debugId === debugId) {
       const securityOrigin = initiator.initiatorUrl ? Common10.ParsedURL.ParsedURL.extractOrigin(initiator.initiatorUrl) : Platform7.DevToolsPath.EmptyUrlString;
-      await SourceMapCache.instance().set(sourceMap.debugId, securityOrigin, sourceMap).catch();
+      await sourceMapCache.set(sourceMap.debugId, securityOrigin, sourceMap).catch();
     }
     return sourceMap;
   } catch (cause) {
@@ -19984,7 +19984,7 @@ async function loadSourceMap(resourceLoader, url, debugId, initiator) {
 }
 async function tryLoadSourceMap(resourceLoader, url, initiator) {
   try {
-    return await loadSourceMap(resourceLoader, url, null, initiator);
+    return await loadSourceMap(resourceLoader, SourceMapCache.create(), url, null, initiator);
   } catch (cause) {
     console.error(cause);
     return null;
@@ -22124,7 +22124,7 @@ var DebuggerModel = class _DebuggerModel extends SDKModel {
       resourceTreeModel.addEventListener(Events.FrameNavigated, this.onFrameNavigated, this);
     }
   }
-  static selectSymbolSource(debugSymbols) {
+  static selectSymbolSource(debugSymbols, devToolsConsole) {
     if (!debugSymbols || debugSymbols.length === 0) {
       return null;
     }
@@ -22144,7 +22144,7 @@ var DebuggerModel = class _DebuggerModel extends SDKModel {
     }
     console.assert(debugSymbolsSource !== null, "Unknown symbol types. Front-end and back-end should be kept in sync regarding Protocol.Debugger.DebugSymbolTypes");
     if (debugSymbolsSource && debugSymbols.length > 1) {
-      Common14.Console.Console.instance().warn(`Multiple debug symbols for script were found. Using ${debugSymbolsSource.type}`);
+      devToolsConsole.warn(`Multiple debug symbols for script were found. Using ${debugSymbolsSource.type}`);
     }
     return debugSymbolsSource;
   }
@@ -22510,7 +22510,7 @@ var DebuggerModel = class _DebuggerModel extends SDKModel {
     if (executionContextAuxData && "isDefault" in executionContextAuxData) {
       isContentScript = !executionContextAuxData["isDefault"];
     }
-    const selectedDebugSymbol = _DebuggerModel.selectSymbolSource(debugSymbols);
+    const selectedDebugSymbol = _DebuggerModel.selectSymbolSource(debugSymbols, this.target().targetManager().getConsole());
     const script = new Script(this, scriptId, sourceURL, startLine, startColumn, endLine, endColumn, executionContextId, hash, isContentScript, isLiveEdit, sourceMapURL, hasSourceURLComment, length, isModule, originStackTrace, codeOffset, scriptLanguage, selectedDebugSymbol, embedderName, buildId);
     this.registerScript(script);
     this.dispatchEventToListeners(Events5.ParsedScriptSource, script);
@@ -24427,6 +24427,7 @@ var DOMNodeEvents;
 })(DOMNodeEvents || (DOMNodeEvents = {}));
 var DOMNode = class _DOMNode extends Common18.ObjectWrapper.ObjectWrapper {
   #domModel;
+  #frameManager;
   #agent;
   ownerDocument;
   #isInShadowTree;
@@ -24491,6 +24492,7 @@ var DOMNode = class _DOMNode extends Common18.ObjectWrapper.ObjectWrapper {
   constructor(domModel) {
     super();
     this.#domModel = domModel;
+    this.#frameManager = domModel.target().targetManager().getFrameManager();
     this.#agent = this.#domModel.getAgent();
   }
   static create(domModel, doc, isInShadowTree, payload, retainedNodes) {
@@ -24585,7 +24587,7 @@ var DOMNode = class _DOMNode extends Common18.ObjectWrapper.ObjectWrapper {
     }
   }
   async requestChildDocument(frameId, notInTarget) {
-    const frame = await FrameManager.instance().getOrWaitForFrame(frameId, notInTarget);
+    const frame = await this.#frameManager.getOrWaitForFrame(frameId, notInTarget);
     const childModel = frame.resourceTreeModel()?.target().model(DOMModel);
     return await (childModel?.requestDocument() || null);
   }
@@ -24606,7 +24608,7 @@ var DOMNode = class _DOMNode extends Common18.ObjectWrapper.ObjectWrapper {
     if (!this.isIframe() || !this.#frameOwnerFrameId) {
       return void 0;
     }
-    const frame = FrameManager.instance().getFrame(this.#frameOwnerFrameId);
+    const frame = this.#frameManager.getFrame(this.#frameOwnerFrameId);
     if (frame && frame.adFrameType() !== "none") {
       return {};
     }
@@ -25596,7 +25598,7 @@ var DOMModel = class _DOMModel extends SDKModel {
   overlayModel() {
     return this.target().model(OverlayModel);
   }
-  static cancelSearch(targetManager = TargetManager.instance()) {
+  static cancelSearch(targetManager) {
     for (const domModel of targetManager.models(_DOMModel)) {
       domModel.cancelSearch();
     }
@@ -27685,6 +27687,13 @@ var TargetManager = class _TargetManager extends Common23.ObjectWrapper.ObjectWr
       return FrameManager.instance();
     }
     return this.context.get(FrameManager);
+  }
+  // TODO(crbug.com/493763857): Remove fallback once all unit tests use TestUniverse.
+  getNetworkManager() {
+    if ("has" in this.context && typeof this.context.has === "function" && !this.context.has(MultitargetNetworkManager)) {
+      return MultitargetNetworkManager.instance();
+    }
+    return this.context.get(MultitargetNetworkManager);
   }
   /* eslint-disable @typescript-eslint/no-explicit-any */
   #modelListeners;
@@ -35827,6 +35836,7 @@ __export(EmulationModel_exports, {
   Location: () => Location2
 });
 var EmulationModel = class extends SDKModel {
+  #multitargetNetworkManager;
   #emulationAgent;
   #deviceOrientationAgent;
   #cssModel;
@@ -35842,6 +35852,7 @@ var EmulationModel = class extends SDKModel {
   #lockedOrientation;
   constructor(target) {
     super(target);
+    this.#multitargetNetworkManager = target.targetManager().getNetworkManager();
     this.#emulationAgent = target.emulationAgent();
     this.#deviceOrientationAgent = target.deviceOrientationAgent();
     this.#screenOrientationLocked = false;
@@ -36050,14 +36061,14 @@ var EmulationModel = class extends SDKModel {
         this.#emulationAgent.invoke_clearGeolocationOverride(),
         this.#emulationAgent.invoke_setTimezoneOverride({ timezoneId: "" }),
         this.#emulationAgent.invoke_setLocaleOverride({ locale: "" }),
-        this.#emulationAgent.invoke_setUserAgentOverride({ userAgent: MultitargetNetworkManager.instance().currentUserAgent() })
+        this.#emulationAgent.invoke_setUserAgentOverride({ userAgent: this.#multitargetNetworkManager.currentUserAgent() })
       ]);
     } else if (location.unavailable) {
       await Promise.all([
         this.#emulationAgent.invoke_setGeolocationOverride({}),
         this.#emulationAgent.invoke_setTimezoneOverride({ timezoneId: "" }),
         this.#emulationAgent.invoke_setLocaleOverride({ locale: "" }),
-        this.#emulationAgent.invoke_setUserAgentOverride({ userAgent: MultitargetNetworkManager.instance().currentUserAgent() })
+        this.#emulationAgent.invoke_setUserAgentOverride({ userAgent: this.#multitargetNetworkManager.currentUserAgent() })
       ]);
     } else {
       let processEmulationResult = function(errorType, result) {
@@ -36083,7 +36094,7 @@ var EmulationModel = class extends SDKModel {
           locale: location.locale
         }).then((result) => processEmulationResult("emulation-set-locale", result)),
         this.#emulationAgent.invoke_setUserAgentOverride({
-          userAgent: MultitargetNetworkManager.instance().currentUserAgent(),
+          userAgent: this.#multitargetNetworkManager.currentUserAgent(),
           acceptLanguage: location.locale
         }).then((result) => processEmulationResult("emulation-set-user-agent", result))
       ]);
