@@ -252,15 +252,15 @@ var ThrottlingManager = class _ThrottlingManager extends Common.ObjectWrapper.Ob
   get hardwareConcurrencyOverrideEnabled() {
     return this.#hardwareConcurrencyOverrideEnabled;
   }
-  constructor() {
+  constructor(settings) {
     super();
     this.cpuThrottlingManager = SDK2.CPUThrottlingManager.CPUThrottlingManager.instance();
     this.cpuThrottlingManager.addEventListener("RateChanged", (event) => this.onCPUThrottlingRateChangedOnSDK(event.data));
     this.cpuThrottlingControls = /* @__PURE__ */ new Set();
     this.cpuThrottlingOptions = ThrottlingPresets.cpuThrottlingPresets;
-    this.customNetworkConditionsSetting = SDK2.NetworkManager.customUserNetworkConditionsSetting();
-    this.currentNetworkThrottlingConditionKeySetting = SDK2.NetworkManager.activeNetworkThrottlingKeySetting();
-    this.calibratedCpuThrottlingSetting = Common.Settings.Settings.instance().createSetting(
+    this.customNetworkConditionsSetting = SDK2.NetworkManager.customUserNetworkConditionsSetting(settings);
+    this.currentNetworkThrottlingConditionKeySetting = SDK2.NetworkManager.activeNetworkThrottlingKeySetting(settings);
+    this.calibratedCpuThrottlingSetting = settings.createSetting(
       "calibrated-cpu-throttling",
       {},
       "Global"
@@ -286,9 +286,9 @@ var ThrottlingManager = class _ThrottlingManager extends Common.ObjectWrapper.Ob
     return custom ?? SDK2.NetworkManager.NoThrottlingConditions;
   }
   static instance(opts = { forceNew: null }) {
-    const { forceNew } = opts;
+    const { forceNew, settings } = opts;
     if (!throttlingManagerInstance || forceNew) {
-      throttlingManagerInstance = new _ThrottlingManager();
+      throttlingManagerInstance = new _ThrottlingManager(settings ?? Common.Settings.Settings.instance());
     }
     return throttlingManagerInstance;
   }
@@ -1584,8 +1584,8 @@ var CPUThrottlingCard = class {
   progress;
   state = "cta";
   warnings = [];
-  constructor() {
-    this.setting = Common4.Settings.Settings.instance().createSetting(
+  constructor(settings) {
+    this.setting = settings.createSetting(
       "calibrated-cpu-throttling",
       {},
       "Global"
@@ -1782,7 +1782,7 @@ var ThrottlingSettingsTab = class extends UI4.Widget.VBox {
    * profile; we always use this counter which is only ever incremented.
    */
   #customUserConditionsCount;
-  constructor() {
+  constructor(settings) {
     super({
       jslog: `${VisualLogging3.pane("throttling-conditions")}`,
       useShadowDom: true
@@ -1790,7 +1790,7 @@ var ThrottlingSettingsTab = class extends UI4.Widget.VBox {
     this.registerRequiredCSS(throttlingSettingsTab_css_default);
     const settingsContent = this.contentElement.createChild("div", "settings-card-container-wrapper").createChild("div");
     settingsContent.classList.add("settings-card-container", "throttling-conditions-settings");
-    this.cpuThrottlingCard = new CPUThrottlingCard();
+    this.cpuThrottlingCard = new CPUThrottlingCard(settings);
     settingsContent.append(this.cpuThrottlingCard.element);
     const addButton = new Buttons.Button.Button();
     addButton.classList.add("add-conditions-button");
@@ -1812,7 +1812,7 @@ var ThrottlingSettingsTab = class extends UI4.Widget.VBox {
     this.customList.setHeader(createHeaderRow());
     const customContainer = createProfilesCard(i18nString7(UIStrings7.customProfiles), this.customList, settingsContent);
     customContainer.appendChild(addButton);
-    this.customUserConditions = SDK7.NetworkManager.customUserNetworkConditionsSetting();
+    this.customUserConditions = SDK7.NetworkManager.customUserNetworkConditionsSetting(settings);
     this.customUserConditions.addChangeListener(this.conditionsUpdated, this);
     const customConditions = this.customUserConditions.get();
     const lastCondition = customConditions.at(-1);

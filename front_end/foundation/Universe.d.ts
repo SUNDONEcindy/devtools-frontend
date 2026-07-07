@@ -5,24 +5,31 @@ import * as SDK from '../core/sdk/sdk.js';
 import * as AutofillManager from '../models/autofill_manager/autofill_manager.js';
 import * as Breakpoints from '../models/breakpoints/breakpoints.js';
 import * as CrUXManager from '../models/crux-manager/crux-manager.js';
+import * as Emulation from '../models/emulation/emulation.js';
 import * as Persistence from '../models/persistence/persistence.js';
 import * as ProjectSettings from '../models/project_settings/project_settings.js';
+import * as Workspace from '../models/workspace/workspace.js';
 export interface CreationOptions {
     settingsCreationOptions: Omit<Common.Settings.SettingsCreationOptions, 'console'>;
     overrideAutoStartModels?: Set<SDK.SDKModel.SDKModelConstructor>;
     hostConfig: Root.Runtime.HostConfig;
     inspectorFrontendHost: Host.InspectorFrontendHostAPI.InspectorFrontendHostAPI;
+    supportsEmulation: boolean;
 }
 export declare class Universe {
     readonly context: Root.DevToolsContext.DevToolsContext;
     readonly autofillManager: AutofillManager.AutofillManager.AutofillManager;
+    readonly supportsEmulation: boolean;
     constructor(options: CreationOptions);
     get automaticFileSystemManager(): Persistence.AutomaticFileSystemManager.AutomaticFileSystemManager;
     get automaticFileSystemWorkspaceBinding(): Persistence.AutomaticFileSystemWorkspaceBinding.AutomaticFileSystemWorkspaceBinding;
     get breakpointManager(): Breakpoints.BreakpointManager.BreakpointManager;
     get cpuThrottlingManager(): SDK.CPUThrottlingManager.CPUThrottlingManager;
     get cruxManager(): CrUXManager.CrUXManager;
+    get deviceModeModel(): Emulation.DeviceModeModel.DeviceModeModel | null;
     get domDebuggerManager(): SDK.DOMDebuggerModel.DOMDebuggerManager;
+    get domModelUndoStack(): SDK.DOMModel.DOMModelUndoStack;
+    get eventBreakpointsManager(): SDK.EventBreakpointsModel.EventBreakpointsManager;
     get isolatedFileSystemManager(): Persistence.IsolatedFileSystemManager.IsolatedFileSystemManager;
     get isolateManager(): SDK.IsolateManager.IsolateManager;
     get networkPersistenceManager(): Persistence.NetworkPersistenceManager.NetworkPersistenceManager;
@@ -31,4 +38,5 @@ export declare class Universe {
     get projectSettingsModel(): ProjectSettings.ProjectSettingsModel.ProjectSettingsModel;
     get settings(): Common.Settings.Settings;
     get targetManager(): SDK.TargetManager.TargetManager;
+    get workspace(): Workspace.Workspace.WorkspaceImpl;
 }

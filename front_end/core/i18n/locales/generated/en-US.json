@@ -93,7 +93,7 @@
     "message": "Changes drawer"
   },
   "core/common/Revealer.ts | developerResourcesPanel": {
-    "message": "Developer Resources panel"
+    "message": "Developer resources panel"
   },
   "core/common/Revealer.ts | elementsPanel": {
     "message": "Elements panel"
@@ -117,7 +117,7 @@
     "message": "Sources panel"
   },
   "core/common/Revealer.ts | stylesSidebar": {
-    "message": "styles sidebar"
+    "message": "Styles sidebar"
   },
   "core/common/Revealer.ts | timelinePanel": {
     "message": "Performance panel"
@@ -1500,13 +1500,13 @@
     "message": "XSLTProcessor and XSLT Processing Instructions have been deprecated by all browsers. These features will be removed from this browser soon."
   },
   "models/ai_assistance/AiUtils.ts | ageRestricted": {
-    "message": "This feature is only available to users who are 18 years of age or older."
+    "message": "This feature is only available to users 18 years or older."
   },
   "models/ai_assistance/AiUtils.ts | notAvailableInIncognitoMode": {
-    "message": "AI assistance is not available in Incognito mode or Guest mode."
+    "message": "AI assistance isn't available in Incognito mode or Guest mode."
   },
   "models/ai_assistance/AiUtils.ts | notLoggedIn": {
-    "message": "This feature is only available when you sign into Chrome with your Google account."
+    "message": "This feature is only available when you sign in to Chrome with your Google account."
   },
   "models/ai_assistance/AiUtils.ts | offline": {
     "message": "This feature is only available with an active internet connection."
@@ -3394,6 +3394,9 @@
   },
   "panels/application/ApplicationPanelSidebar.ts | documentNotAvailable": {
     "message": "No document detected"
+  },
+  "panels/application/ApplicationPanelSidebar.ts | experimental": {
+    "message": "Experimental"
   },
   "panels/application/ApplicationPanelSidebar.ts | explainCookies": {
     "message": "Explain cookies"
@@ -8216,8 +8219,14 @@
   "panels/elements/ElementsTreeElement.ts | scrollIntoView": {
     "message": "Scroll into view"
   },
+  "panels/elements/ElementsTreeElement.ts | selectAll": {
+    "message": "Select all"
+  },
   "panels/elements/ElementsTreeElement.ts | showCommandForTarget": {
     "message": "Show element associated with the commandfor attribute"
+  },
+  "panels/elements/ElementsTreeElement.ts | showCustomElementDefinition": {
+    "message": "Show custom element definition"
   },
   "panels/elements/ElementsTreeElement.ts | showFrameDetails": {
     "message": "Show iframe details"
