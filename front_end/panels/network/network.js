@@ -6076,7 +6076,7 @@ table.network-timing-table > tr:not(.network-timing-table-header, .network-timin
 
 .network-timing-bar.blocking,
 .-theme-preserve {
-  background-color: var(--network-overview-blocking); /* stylelint-disable-line plugin/use_theme_colors */
+  background-color: var(--network-waterfall-blocking); /* stylelint-disable-line plugin/use_theme_colors */
 }
 
 .network-timing-bar.proxy,
@@ -7878,6 +7878,7 @@ import * as Logs5 from "./../../models/logs/logs.js";
 import * as NetworkTimeCalculator4 from "./../../models/network_time_calculator/network_time_calculator.js";
 import * as Persistence2 from "./../../models/persistence/persistence.js";
 import * as TextUtils7 from "./../../models/text_utils/text_utils.js";
+import * as Workspace3 from "./../../models/workspace/workspace.js";
 import * as NetworkForward4 from "./forward/forward.js";
 import * as Sources2 from "./../sources/sources.js";
 import * as Adorners from "./../../ui/components/adorners/adorners.js";
@@ -9169,10 +9170,7 @@ var NetworkWaterfallColumn = class _NetworkWaterfallColumn extends UI23.Widget.V
       "proxy"
       /* NetworkTimeCalculator.RequestTimeRangeNames.PROXY */
     ] });
-    styleMap.set("blocking", { fillStyle: RequestTimeRangeNameToColor[
-      "blocking"
-      /* NetworkTimeCalculator.RequestTimeRangeNames.BLOCKING */
-    ] });
+    styleMap.set("blocking", { fillStyle: "--network-waterfall-blocking" });
     styleMap.set("push", { fillStyle: RequestTimeRangeNameToColor[
       "push"
       /* NetworkTimeCalculator.RequestTimeRangeNames.PUSH */
@@ -12346,7 +12344,7 @@ var NetworkLogView = class _NetworkLogView extends Common19.ObjectWrapper.eventM
     const url = mainTarget.inspectedURL();
     const parsedURL = Common19.ParsedURL.ParsedURL.fromString(url);
     const filename = parsedURL ? parsedURL.host : "network-log";
-    const stream = new Bindings3.FileUtils.FileOutputStream();
+    const stream = new Bindings3.FileUtils.FileOutputStream(Workspace3.FileManager.FileManager.instance());
     if (!await stream.open(Common19.ParsedURL.ParsedURL.concatenate(filename, ".har"))) {
       return;
     }
@@ -13159,7 +13157,7 @@ import * as SDK17 from "./../../core/sdk/sdk.js";
 import * as Logs6 from "./../../models/logs/logs.js";
 import * as NetworkTimeCalculator5 from "./../../models/network_time_calculator/network_time_calculator.js";
 import * as Trace2 from "./../../models/trace/trace.js";
-import * as Workspace3 from "./../../models/workspace/workspace.js";
+import * as Workspace4 from "./../../models/workspace/workspace.js";
 import * as NetworkForward6 from "./forward/forward.js";
 import * as Tracing from "./../../services/tracing/tracing.js";
 import * as PerfUI5 from "./../../ui/legacy/components/perf_ui/perf_ui.js";
@@ -13202,6 +13200,7 @@ var networkPanel_css_default = `/*
 :root {
   --network-overview-total: var(--sys-color-neutral-bright);
   --network-overview-blocking: var(--ref-palette-neutral0);
+  --network-waterfall-blocking: var(--sys-color-neutral-bright);
   --network-overview-connecting: var(--ref-palette-yellow60);
   --network-overview-service-worker: var(--sys-color-orange-bright);
   --network-overview-service-worker-respond-with: var(--sys-color-cyan-bright);
@@ -13946,7 +13945,7 @@ var NetworkPanel = class _NetworkPanel extends UI26.Panel.Panel {
       }
       return;
     }
-    if (target instanceof Workspace3.UISourceCode.UISourceCode) {
+    if (target instanceof Workspace4.UISourceCode.UISourceCode) {
       const resource = SDK17.ResourceTreeModel.ResourceTreeModel.resourceForURL(target.url());
       if (resource?.request) {
         appendRevealItem(resource.request);

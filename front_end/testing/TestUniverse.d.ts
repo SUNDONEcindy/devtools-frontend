@@ -9,6 +9,7 @@ import * as Breakpoints from '../models/breakpoints/breakpoints.js';
 import * as CrUXManager from '../models/crux-manager/crux-manager.js';
 import * as Emulation from '../models/emulation/emulation.js';
 import * as JavaScriptMetadata from '../models/javascript_metadata/javascript_metadata.js';
+import * as LiveMetrics from '../models/live-metrics/live-metrics.js';
 import * as Logs from '../models/logs/logs.js';
 import * as Persistence from '../models/persistence/persistence.js';
 import * as ProjectSettings from '../models/project_settings/project_settings.js';
@@ -62,6 +63,7 @@ export declare class TestUniverse implements Foundation.Universe.Universe {
     get logManager(): Logs.LogManager.LogManager;
     get isolatedFileSystemManager(): Persistence.IsolatedFileSystemManager.IsolatedFileSystemManager;
     get javaScriptMetadata(): JavaScriptMetadata.JavaScriptMetadata.JavaScriptMetadataImpl;
+    get liveMetrics(): LiveMetrics.LiveMetrics;
     get multitargetNetworkManager(): SDK.NetworkManager.MultitargetNetworkManager;
     get networkLog(): Logs.NetworkLog.NetworkLog;
     get networkPersistenceManager(): Persistence.NetworkPersistenceManager.NetworkPersistenceManager;

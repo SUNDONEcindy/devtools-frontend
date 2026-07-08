@@ -18,6 +18,7 @@ import * as Breakpoints from "./../models/breakpoints/breakpoints.js";
 import * as CrUXManager from "./../models/crux-manager/crux-manager.js";
 import * as Emulation from "./../models/emulation/emulation.js";
 import * as JavaScriptMetadata from "./../models/javascript_metadata/javascript_metadata.js";
+import * as LiveMetrics from "./../models/live-metrics/live-metrics.js";
 import * as Logs from "./../models/logs/logs.js";
 import * as Persistence from "./../models/persistence/persistence.js";
 import * as ProjectSettings from "./../models/project_settings/project_settings.js";
@@ -49,8 +50,9 @@ var Universe = class {
     const multitargetNetworkManager = new SDK.NetworkManager.MultitargetNetworkManager(targetManager);
     context.set(SDK.NetworkManager.MultitargetNetworkManager, multitargetNetworkManager);
     this.supportsEmulation = options.supportsEmulation;
+    let deviceModeModel = null;
     if (options.supportsEmulation) {
-      const deviceModeModel = new Emulation.DeviceModeModel.DeviceModeModel(targetManager, settings, multitargetNetworkManager);
+      deviceModeModel = new Emulation.DeviceModeModel.DeviceModeModel(targetManager, settings, multitargetNetworkManager);
       context.set(Emulation.DeviceModeModel.DeviceModeModel, deviceModeModel);
     }
     const pageResourceLoader = new SDK.PageResourceLoader.PageResourceLoader(targetManager, settings, multitargetNetworkManager, null);
@@ -94,6 +96,8 @@ var Universe = class {
     context.set(Logs.LogManager.LogManager, logManager);
     const javaScriptMetadata = new JavaScriptMetadata.JavaScriptMetadata.JavaScriptMetadataImpl();
     context.set(JavaScriptMetadata.JavaScriptMetadata.JavaScriptMetadataImpl, javaScriptMetadata);
+    const liveMetrics = new LiveMetrics.LiveMetrics(targetManager, deviceModeModel);
+    context.set(LiveMetrics.LiveMetrics, liveMetrics);
     this.autofillManager = new AutofillManager.AutofillManager.AutofillManager(targetManager, frameManager);
   }
   get automaticFileSystemManager() {
@@ -132,6 +136,9 @@ var Universe = class {
   }
   get networkPersistenceManager() {
     return this.context.get(Persistence.NetworkPersistenceManager.NetworkPersistenceManager);
+  }
+  get liveMetrics() {
+    return this.context.get(LiveMetrics.LiveMetrics);
   }
   get pageResourceLoader() {
     return this.context.get(SDK.PageResourceLoader.PageResourceLoader);

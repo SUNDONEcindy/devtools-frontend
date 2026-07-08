@@ -73,6 +73,9 @@
       "path": "../models/javascript_metadata/bundle-tsconfig.json"
     },
     {
+      "path": "../models/live-metrics/bundle-tsconfig.json"
+    },
+    {
       "path": "../models/logs/bundle-tsconfig.json"
     },
     {

@@ -12,6 +12,7 @@ import * as Breakpoints from '../models/breakpoints/breakpoints.js';
 import * as CrUXManager from '../models/crux-manager/crux-manager.js';
 import * as Emulation from '../models/emulation/emulation.js';
 import * as JavaScriptMetadata from '../models/javascript_metadata/javascript_metadata.js';
+import * as LiveMetrics from '../models/live-metrics/live-metrics.js';
 import * as Logs from '../models/logs/logs.js';
 import * as Persistence from '../models/persistence/persistence.js';
 import * as ProjectSettings from '../models/project_settings/project_settings.js';
@@ -158,6 +159,12 @@ export class TestUniverse {
             this.#context.set(JavaScriptMetadata.JavaScriptMetadata.JavaScriptMetadataImpl, new JavaScriptMetadata.JavaScriptMetadata.JavaScriptMetadataImpl());
         }
         return this.#context.get(JavaScriptMetadata.JavaScriptMetadata.JavaScriptMetadataImpl);
+    }
+    get liveMetrics() {
+        if (!this.#context.has(LiveMetrics.LiveMetrics)) {
+            this.#context.set(LiveMetrics.LiveMetrics, new LiveMetrics.LiveMetrics(this.targetManager, this.deviceModeModel));
+        }
+        return this.#context.get(LiveMetrics.LiveMetrics);
     }
     get multitargetNetworkManager() {
         if (!this.#context.has(SDK.NetworkManager.MultitargetNetworkManager)) {

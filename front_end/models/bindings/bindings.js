@@ -4633,31 +4633,33 @@ var ChunkedFileReader = class {
   }
 };
 var FileOutputStream = class {
+  #fileManager;
   #writeCallbacks;
   #fileName;
   #closed;
-  constructor() {
+  constructor(fileManager) {
+    this.#fileManager = fileManager;
     this.#writeCallbacks = [];
   }
   async open(fileName) {
     this.#closed = false;
     this.#writeCallbacks = [];
     this.#fileName = fileName;
-    const saveResponse = await Workspace19.FileManager.FileManager.instance().save(
+    const saveResponse = await this.#fileManager.save(
       this.#fileName,
       TextUtils7.ContentData.EMPTY_TEXT_CONTENT_DATA,
       /* forceSaveAs=*/
       true
     );
     if (saveResponse) {
-      Workspace19.FileManager.FileManager.instance().addEventListener("AppendedToURL", this.onAppendDone, this);
+      this.#fileManager.addEventListener("AppendedToURL", this.onAppendDone, this);
     }
     return Boolean(saveResponse);
   }
   write(data) {
     return new Promise((resolve) => {
       this.#writeCallbacks.push(resolve);
-      Workspace19.FileManager.FileManager.instance().append(this.#fileName, data);
+      this.#fileManager.append(this.#fileName, data);
     });
   }
   async close() {
@@ -4665,8 +4667,8 @@ var FileOutputStream = class {
     if (this.#writeCallbacks.length) {
       return;
     }
-    Workspace19.FileManager.FileManager.instance().removeEventListener("AppendedToURL", this.onAppendDone, this);
-    Workspace19.FileManager.FileManager.instance().close(this.#fileName);
+    this.#fileManager.removeEventListener("AppendedToURL", this.onAppendDone, this);
+    this.#fileManager.close(this.#fileName);
   }
   onAppendDone(event) {
     if (event.data !== this.#fileName) {
@@ -4682,8 +4684,8 @@ var FileOutputStream = class {
     if (!this.#closed) {
       return;
     }
-    Workspace19.FileManager.FileManager.instance().removeEventListener("AppendedToURL", this.onAppendDone, this);
-    Workspace19.FileManager.FileManager.instance().close(this.#fileName);
+    this.#fileManager.removeEventListener("AppendedToURL", this.onAppendDone, this);
+    this.#fileManager.close(this.#fileName);
   }
 };
 

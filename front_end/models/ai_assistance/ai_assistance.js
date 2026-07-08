@@ -275,11 +275,11 @@ import * as i18n from "./../../core/i18n/i18n.js";
 import * as Root from "./../../core/root/root.js";
 var UIStrings = {
   /**
-   * @description Message shown to the user if the age check isn't successful.
+   * @description Message shown to the user if the age check isn’t successful.
    */
   ageRestricted: "This feature is only available to users 18 years or older.",
   /**
-   * @description The error message when the user isn't logged in to Chrome.
+   * @description The error message when the user isn’t logged in to Chrome.
    */
   notLoggedIn: "This feature is only available when you sign in to Chrome with your Google account.",
   /**
@@ -287,9 +287,9 @@ var UIStrings = {
    */
   offline: "This feature is only available with an active internet connection.",
   /**
-   * @description Text informing the user that AI assistance isn't available in Incognito mode or Guest mode.
+   * @description Text informing the user that AI assistance isn’t available in Incognito mode or Guest mode.
    */
-  notAvailableInIncognitoMode: "AI assistance isn't available in Incognito mode or Guest mode."
+  notAvailableInIncognitoMode: "AI assistance isn\u2019t available in Incognito mode or Guest mode."
 };
 var str_ = i18n.i18n.registerUIStrings("models/ai_assistance/AiUtils.ts", UIStrings);
 var i18nString = i18n.i18n.getLocalizedString.bind(void 0, str_);

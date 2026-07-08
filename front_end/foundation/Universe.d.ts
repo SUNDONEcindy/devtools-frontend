@@ -6,6 +6,7 @@ import * as AutofillManager from '../models/autofill_manager/autofill_manager.js
 import * as Breakpoints from '../models/breakpoints/breakpoints.js';
 import * as CrUXManager from '../models/crux-manager/crux-manager.js';
 import * as Emulation from '../models/emulation/emulation.js';
+import * as LiveMetrics from '../models/live-metrics/live-metrics.js';
 import * as Persistence from '../models/persistence/persistence.js';
 import * as ProjectSettings from '../models/project_settings/project_settings.js';
 import * as Workspace from '../models/workspace/workspace.js';
@@ -33,6 +34,7 @@ export declare class Universe {
     get isolatedFileSystemManager(): Persistence.IsolatedFileSystemManager.IsolatedFileSystemManager;
     get isolateManager(): SDK.IsolateManager.IsolateManager;
     get networkPersistenceManager(): Persistence.NetworkPersistenceManager.NetworkPersistenceManager;
+    get liveMetrics(): LiveMetrics.LiveMetrics;
     get pageResourceLoader(): SDK.PageResourceLoader.PageResourceLoader;
     get persistence(): Persistence.Persistence.PersistenceImpl;
     get projectSettingsModel(): ProjectSettings.ProjectSettingsModel.ProjectSettingsModel;
