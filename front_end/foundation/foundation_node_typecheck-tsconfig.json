@@ -91,6 +91,9 @@
     },
     {
       "path": "../models/workspace/bundle-tsconfig.json"
+    },
+    {
+      "path": "../models/workspace_diff/bundle-tsconfig.json"
     }
   ]
 }

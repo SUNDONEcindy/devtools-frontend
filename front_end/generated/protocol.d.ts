@@ -6509,6 +6509,10 @@ export declare namespace DigitalCredentials {
          * Required when |action| is "respond", forbidden otherwise.
          */
         response?: any;
+        /**
+         * The frame to scope the virtual wallet behavior to.
+         */
+        frameId?: Page.FrameId;
     }
 }
 /**
@@ -11237,7 +11241,10 @@ export declare namespace Network {
         InvalidFederatedSessionProviderFailedToRestoreKey = "InvalidFederatedSessionProviderFailedToRestoreKey",
         FailedToUnwrapKey = "FailedToUnwrapKey",
         SessionDeletedDuringRefresh = "SessionDeletedDuringRefresh",
-        CrossOriginRegistrationSiteNotIncluded = "CrossOriginRegistrationSiteNotIncluded"
+        CrossOriginRegistrationSiteNotIncluded = "CrossOriginRegistrationSiteNotIncluded",
+        InvalidPreProvisionedKeyInitiatorMissing = "InvalidPreProvisionedKeyInitiatorMissing",
+        PreProvisionedKeyAccessNotGranted = "PreProvisionedKeyAccessNotGranted",
+        PreProvisionedKeyNotFound = "PreProvisionedKeyNotFound"
     }
     /**
      * Details about a failed device bound session network request.

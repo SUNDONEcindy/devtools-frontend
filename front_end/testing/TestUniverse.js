@@ -17,6 +17,7 @@ import * as Logs from '../models/logs/logs.js';
 import * as Persistence from '../models/persistence/persistence.js';
 import * as ProjectSettings from '../models/project_settings/project_settings.js';
 import * as Workspace from '../models/workspace/workspace.js';
+import * as WorkspaceDiff from '../models/workspace_diff/workspace_diff.js';
 import { DEFAULT_SETTING_REGISTRATIONS_FOR_TEST } from './SettingsHelpers.js';
 import { createTarget } from './TargetHelpers.js';
 /**
@@ -118,17 +119,47 @@ export class TestUniverse {
         }
         return this.#context.get(SDK.DOMModel.DOMModelUndoStack);
     }
+    get emulatedDevicesList() {
+        if (!this.#context.has(Emulation.EmulatedDevices.EmulatedDevicesList)) {
+            this.#context.set(Emulation.EmulatedDevices.EmulatedDevicesList, new Emulation.EmulatedDevices.EmulatedDevicesList(this.settings));
+        }
+        return this.#context.get(Emulation.EmulatedDevices.EmulatedDevicesList);
+    }
     get eventBreakpointsManager() {
         if (!this.#context.has(SDK.EventBreakpointsModel.EventBreakpointsManager)) {
             this.#context.set(SDK.EventBreakpointsModel.EventBreakpointsManager, new SDK.EventBreakpointsModel.EventBreakpointsManager(this.targetManager));
         }
         return this.#context.get(SDK.EventBreakpointsModel.EventBreakpointsManager);
     }
+    get fileManager() {
+        if (!this.#context.has(Workspace.FileManager.FileManager)) {
+            this.#context.set(Workspace.FileManager.FileManager, new Workspace.FileManager.FileManager());
+        }
+        return this.#context.get(Workspace.FileManager.FileManager);
+    }
+    get fileSystemWorkspaceBinding() {
+        if (!this.#context.has(Persistence.FileSystemWorkspaceBinding.FileSystemWorkspaceBinding)) {
+            this.#context.set(Persistence.FileSystemWorkspaceBinding.FileSystemWorkspaceBinding, new Persistence.FileSystemWorkspaceBinding.FileSystemWorkspaceBinding(this.isolatedFileSystemManager, this.workspace));
+        }
+        return this.#context.get(Persistence.FileSystemWorkspaceBinding.FileSystemWorkspaceBinding);
+    }
     get frameManager() {
         if (!this.#context.has(SDK.FrameManager.FrameManager)) {
             this.#context.set(SDK.FrameManager.FrameManager, new SDK.FrameManager.FrameManager(this.targetManager));
         }
         return this.#context.get(SDK.FrameManager.FrameManager);
+    }
+    get gdpClient() {
+        if (!this.#context.has(Host.GdpClient.GdpClient)) {
+            this.#context.set(Host.GdpClient.GdpClient, new Host.GdpClient.GdpClient());
+        }
+        return this.#context.get(Host.GdpClient.GdpClient);
+    }
+    get hostConfigTracker() {
+        if (!this.#context.has(Host.AidaClient.HostConfigTracker)) {
+            this.#context.set(Host.AidaClient.HostConfigTracker, new Host.AidaClient.HostConfigTracker());
+        }
+        return this.#context.get(Host.AidaClient.HostConfigTracker);
     }
     get ignoreListManager() {
         if (!this.#context.has(Workspace.IgnoreListManager.IgnoreListManager)) {
@@ -184,6 +215,12 @@ export class TestUniverse {
             this.#context.set(Persistence.NetworkPersistenceManager.NetworkPersistenceManager, new Persistence.NetworkPersistenceManager.NetworkPersistenceManager(this.workspace, this.persistence, this.breakpointManager, this.targetManager, this.settings, this.isolatedFileSystemManager, this.multitargetNetworkManager));
         }
         return this.#context.get(Persistence.NetworkPersistenceManager.NetworkPersistenceManager);
+    }
+    get networkProjectManager() {
+        if (!this.#context.has(Bindings.NetworkProject.NetworkProjectManager)) {
+            this.#context.set(Bindings.NetworkProject.NetworkProjectManager, new Bindings.NetworkProject.NetworkProjectManager());
+        }
+        return this.#context.get(Bindings.NetworkProject.NetworkProjectManager);
     }
     get pageResourceLoader() {
         if (!this.#context.has(SDK.PageResourceLoader.PageResourceLoader)) {
@@ -268,6 +305,12 @@ export class TestUniverse {
             this.#context.set(Workspace.Workspace.WorkspaceImpl, new Workspace.Workspace.WorkspaceImpl());
         }
         return this.#context.get(Workspace.Workspace.WorkspaceImpl);
+    }
+    get workspaceDiff() {
+        if (!this.#context.has(WorkspaceDiff.WorkspaceDiff.WorkspaceDiffImpl)) {
+            this.#context.set(WorkspaceDiff.WorkspaceDiff.WorkspaceDiffImpl, new WorkspaceDiff.WorkspaceDiff.WorkspaceDiffImpl(this.workspace, this.persistence, this.networkPersistenceManager));
+        }
+        return this.#context.get(WorkspaceDiff.WorkspaceDiff.WorkspaceDiffImpl);
     }
     get #resourceMapping() {
         if (!this.#context.has(Bindings.ResourceMapping.ResourceMapping)) {
