@@ -276,6 +276,9 @@ export class TestUniverse {
                     if (ctor === SDK.NetworkManager.MultitargetNetworkManager.prototype.constructor) {
                         return universe.multitargetNetworkManager;
                     }
+                    if (ctor === Bindings.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.prototype.constructor) {
+                        return universe.debuggerWorkspaceBinding;
+                    }
                     throw new Error(`Class ${ctor.name} not set-up as a dependency for SDKModels in TestUniverse.ts. Add it to LazyContext#get in TestUniverse.ts`);
                 }
             })();
@@ -291,7 +294,7 @@ export class TestUniverse {
                 syncedStorage: storage,
                 globalStorage: storage,
                 localStorage: storage,
-                settingRegistrations: DEFAULT_SETTING_REGISTRATIONS_FOR_TEST,
+                settingRegistrations: [...DEFAULT_SETTING_REGISTRATIONS_FOR_TEST],
                 console: this.console,
                 ...this.#creationOptions?.settingsCreationOptions,
             };

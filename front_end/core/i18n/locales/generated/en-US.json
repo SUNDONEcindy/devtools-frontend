@@ -11892,13 +11892,13 @@
     "message": "CPU usage"
   },
   "panels/performance_monitor/PerformanceMonitor.ts | documentFrames": {
-    "message": "Document Frames"
+    "message": "Document frames"
   },
   "panels/performance_monitor/PerformanceMonitor.ts | documents": {
     "message": "Documents"
   },
   "panels/performance_monitor/PerformanceMonitor.ts | domNodes": {
-    "message": "DOM Nodes"
+    "message": "DOM nodes"
   },
   "panels/performance_monitor/PerformanceMonitor.ts | graphsDisplayingARealtimeViewOf": {
     "message": "Graphs displaying a real-time view of performance metrics"
@@ -13644,7 +13644,7 @@
     "message": "Debug styling, network, performance, source code, accessibility and storage issues with DevTools AI assistance"
   },
   "panels/settings/AISettingsTab.ts | aiAssistanceWhenOnItem2V2": {
-    "message": "Follow the agent's reasoning step-by-step and quickly jump to the relevant source data"
+    "message": "Follow the agent’s reasoning step-by-step and quickly jump to the relevant source data"
   },
   "panels/settings/AISettingsTab.ts | asYouTypeCodeSuggestions": {
     "message": "As you type in the Console or Sources panel, you’ll get code suggestions. Press Tab to accept one."
@@ -13701,7 +13701,7 @@
     "message": "Understand CSS styles with AI-powered insights"
   },
   "panels/settings/AISettingsTab.ts | explainStylingAndNetworkRequest": {
-    "message": "Understand CSS styles, and network activity with AI-powered insights"
+    "message": "Understand CSS styles and network activity with AI-powered insights"
   },
   "panels/settings/AISettingsTab.ts | explainStylingNetworkAndFile": {
     "message": "Understand CSS styles, network activity, and file origins with AI-powered insights"
@@ -13734,7 +13734,7 @@
     "message": "Get help with understanding CSS styles"
   },
   "panels/settings/AISettingsTab.ts | helpUnderstandStylingAndNetworkRequest": {
-    "message": "Get help with understanding CSS styles, and network requests"
+    "message": "Get help with understanding CSS styles and network requests"
   },
   "panels/settings/AISettingsTab.ts | helpUnderstandStylingNetworkAndFile": {
     "message": "Get help with understanding CSS styles, network requests, and files"
@@ -13803,7 +13803,7 @@
     "message": "Unknown plan"
   },
   "panels/settings/components/SyncSection.ts | notSignedIn": {
-    "message": "You're not signed into Chrome."
+    "message": "You’re not signed into Chrome."
   },
   "panels/settings/components/SyncSection.ts | preferencesSyncDisabled": {
     "message": "You need to first enable saving Chrome settings in your Google account."
@@ -13839,7 +13839,7 @@
     "message": "URL"
   },
   "panels/settings/emulation/components/UserAgentClientHintsForm.ts | addBrand": {
-    "message": "Add Brand"
+    "message": "Add brand"
   },
   "panels/settings/emulation/components/UserAgentClientHintsForm.ts | addedBrand": {
     "message": "Added brand row"
@@ -13893,10 +13893,10 @@
     "message": "Mobile"
   },
   "panels/settings/emulation/components/UserAgentClientHintsForm.ts | formFactorsGroupAriaLabel": {
-    "message": "Available Form Factors"
+    "message": "Available form factors"
   },
   "panels/settings/emulation/components/UserAgentClientHintsForm.ts | formFactorsTitle": {
-    "message": "Form Factors (Sec-CH-UA-Form-Factors)"
+    "message": "Form factors (Sec-CH-UA-Form-Factors)"
   },
   "panels/settings/emulation/components/UserAgentClientHintsForm.ts | formFactorTablet": {
     "message": "Tablet"
@@ -13968,10 +13968,10 @@
     "message": "Device {PH1} successfully added/updated."
   },
   "panels/settings/emulation/DevicesSettingsTab.ts | deviceName": {
-    "message": "Device Name"
+    "message": "Device name"
   },
   "panels/settings/emulation/DevicesSettingsTab.ts | deviceNameCannotBeEmpty": {
-    "message": "Device name cannot be empty."
+    "message": "Device name can’t be empty."
   },
   "panels/settings/emulation/DevicesSettingsTab.ts | deviceNameMustBeLessThanS": {
     "message": "Device name must be less than {PH1} characters."
@@ -13986,7 +13986,7 @@
     "message": "User agent string"
   },
   "panels/settings/emulation/DevicesSettingsTab.ts | userAgentStringCannotBeEmpty": {
-    "message": "User agent string cannot be empty."
+    "message": "User agent string can’t be empty."
   },
   "panels/settings/emulation/DevicesSettingsTab.ts | userAgentType": {
     "message": "User agent type"
@@ -14001,7 +14001,7 @@
     "message": "Show Devices"
   },
   "panels/settings/FrameworkIgnoreListSettingsTab.ts | addFilenamePattern": {
-    "message": "Add a regular expression rule for the script's URL"
+    "message": "Add a regular expression rule for the script’s URL"
   },
   "panels/settings/FrameworkIgnoreListSettingsTab.ts | addPattern": {
     "message": "Add regex rule"
@@ -14040,13 +14040,13 @@
     "message": "Learn more"
   },
   "panels/settings/FrameworkIgnoreListSettingsTab.ts | pattern": {
-    "message": "Add a regular expression rule for the script's URL"
+    "message": "Add a regular expression rule for the script’s URL"
   },
   "panels/settings/FrameworkIgnoreListSettingsTab.ts | patternAlreadyExists": {
     "message": "Rule already exists"
   },
   "panels/settings/FrameworkIgnoreListSettingsTab.ts | patternCannotBeEmpty": {
-    "message": "Rule can't be empty"
+    "message": "Rule can’t be empty"
   },
   "panels/settings/FrameworkIgnoreListSettingsTab.ts | patternMustBeAValidRegular": {
     "message": "Rule must be a valid regular expression"
@@ -14076,7 +14076,7 @@
     "message": "No shortcut for action"
   },
   "panels/settings/KeybindsSettingsTab.ts | recordingKeys": {
-    "message": "Recoding keys"
+    "message": "Recording keys"
   },
   "panels/settings/KeybindsSettingsTab.ts | removeShortcut": {
     "message": "Remove shortcut"
@@ -14106,7 +14106,7 @@
     "message": "Shortcuts"
   },
   "panels/settings/KeybindsSettingsTab.ts | shortcutsCannotContainOnly": {
-    "message": "Shortcuts cannot contain only modifier keys."
+    "message": "Shortcuts can’t contain only modifier keys."
   },
   "panels/settings/KeybindsSettingsTab.ts | thisShortcutIsInUseByS": {
     "message": "This shortcut is in use by {PH1}: {PH2}."

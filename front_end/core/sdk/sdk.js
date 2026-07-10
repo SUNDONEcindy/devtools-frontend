@@ -29788,6 +29788,7 @@ var RequestConditions = class extends Common24.ObjectWrapper.ObjectWrapper {
       promises.push(agent.invoke_setBlockedURLs({ urlPatterns }));
       promises.push(agent.invoke_emulateNetworkConditionsByRule({
         offline,
+        emulateOfflineServiceWorker: offline,
         matchedNetworkConditions: matchedNetworkConditions.map(({ urlPattern, conditions }) => ({
           urlPattern: urlPattern ?? "",
           latency: conditions.latency,
@@ -29796,7 +29797,8 @@ var RequestConditions = class extends Common24.ObjectWrapper.ObjectWrapper {
           packetLoss: (conditions.packetLoss ?? 0) < 0 ? 0 : conditions.packetLoss,
           packetQueueLength: conditions.packetQueueLength,
           packetReordering: conditions.packetReordering,
-          connectionType: NetworkManager.connectionType(conditions)
+          connectionType: NetworkManager.connectionType(conditions),
+          offline
         }))
       }).then((response) => {
         if (!response.getError()) {
@@ -32754,6 +32756,7 @@ __export(AccessibilityModel_exports, {
 });
 var AccessibilityNode = class {
   #accessibilityModel;
+  #frameManager;
   #id;
   #backendDOMNodeId;
   #deferredDOMNode;
@@ -32769,6 +32772,7 @@ var AccessibilityNode = class {
   #childIds;
   constructor(accessibilityModel, payload) {
     this.#accessibilityModel = accessibilityModel;
+    this.#frameManager = accessibilityModel.target().targetManager().getFrameManager();
     this.#id = payload.nodeId;
     accessibilityModel.setAXNodeForAXId(this.#id, this);
     if (payload.backendDOMNodeId) {
@@ -32900,7 +32904,7 @@ var AccessibilityNode = class {
   getNodeId() {
     return this.getFrameId() + "#" + this.id();
   }
-  async getChildren(frameManager = FrameManager.instance()) {
+  async getChildren() {
     if (this.role()?.value === "Iframe") {
       const domNode = await this.deferredDOMNode()?.resolvePromise();
       if (!domNode) {
@@ -32910,12 +32914,12 @@ var AccessibilityNode = class {
       if (!frameId) {
         throw new Error("No owner frameId on iframe node");
       }
-      const localRoot = await getRootNode(frameId, frameManager);
+      const localRoot = await getRootNode(frameId, this.#frameManager);
       return [localRoot];
     }
     return await this.accessibilityModel().requestAXChildren(this.id(), this.getFrameId() || void 0);
   }
-  async axNodeToText(depth = 0, frameManager = FrameManager.instance()) {
+  async axNodeToText(depth = 0) {
     const indent = "  ".repeat(depth);
     const role = this.role()?.value || "";
     const name = this.name()?.value || "";
@@ -32938,9 +32942,9 @@ var AccessibilityNode = class {
       }
       lines.push(line + "\n");
     }
-    const children = await this.getChildren(frameManager);
+    const children = await this.getChildren();
     for (const child of children) {
-      lines.push(await child.axNodeToText(childDepth, frameManager));
+      lines.push(await child.axNodeToText(childDepth));
     }
     return lines.join("");
   }
@@ -33112,7 +33116,8 @@ function getFrameIdForNodeOrDocument(node) {
   }
   return frameId;
 }
-async function getNodeAndAncestorsFromDOMNode(domNode, frameManager = FrameManager.instance()) {
+async function getNodeAndAncestorsFromDOMNode(domNode) {
+  const frameManager = domNode.domModel().target().targetManager().getFrameManager();
   let frameId = getFrameIdForNodeOrDocument(domNode);
   const model = getModel(frameId, frameManager);
   const result = await model.requestAndLoadSubTreeToNode(domNode);
@@ -39485,7 +39490,12 @@ var ServiceWorkerManager = class extends SDKModel {
       this.forceUpdateSettingChanged();
     }
     this.#forceUpdateSetting.addChangeListener(this.forceUpdateSettingChanged, this);
+    MultitargetNetworkManager.instance().addEventListener("ConditionsChanged", this.forceUpdateSettingChanged, this);
     new ServiceWorkerContextNamer(target, this);
+  }
+  dispose() {
+    MultitargetNetworkManager.instance().removeEventListener("ConditionsChanged", this.forceUpdateSettingChanged, this);
+    super.dispose();
   }
   async enable() {
     if (this.#enabled) {
@@ -39619,7 +39629,7 @@ var ServiceWorkerManager = class extends SDKModel {
     this.dispatchEventToListeners("RegistrationErrorAdded", { registration, error: payload });
   }
   forceUpdateSettingChanged() {
-    const forceUpdateOnPageLoad = this.#forceUpdateSetting.get();
+    const forceUpdateOnPageLoad = this.#forceUpdateSetting.get() && !MultitargetNetworkManager.instance().isOffline();
     void this.#agent.invoke_setForceUpdateOnPageLoad({ forceUpdateOnPageLoad });
   }
 };
