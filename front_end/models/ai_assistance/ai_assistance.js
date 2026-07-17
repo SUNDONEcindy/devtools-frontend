@@ -4175,8 +4175,8 @@ var AICallTree = class _AICallTree {
       doNotAggregate: true,
       includeInstantEvents: true
     });
-    const instance2 = new _AICallTree(null, rootNode, parsedTrace);
-    return instance2;
+    const instance = new _AICallTree(null, rootNode, parsedTrace);
+    return instance;
   }
   /**
    * Attempts to build an AICallTree from a given selected event. It also
@@ -4237,8 +4237,8 @@ var AICallTree = class _AICallTree {
       console.warn(`Selected event ${selectedEvent} not found within its own tree.`);
       return null;
     }
-    const instance2 = new _AICallTree(selectedNode, rootNode, parsedTrace);
-    return instance2;
+    const instance = new _AICallTree(selectedNode, rootNode, parsedTrace);
+    return instance;
   }
   /**
    * Iterates through nodes level by level using a Breadth-First Search (BFS) algorithm.
@@ -9793,7 +9793,7 @@ __export(AiConversation_exports, {
 import * as Common13 from "./../../core/common/common.js";
 import * as Host20 from "./../../core/host/host.js";
 import * as Platform4 from "./../../core/platform/platform.js";
-import * as Root13 from "./../../core/root/root.js";
+import * as Root14 from "./../../core/root/root.js";
 import * as SDK14 from "./../../core/sdk/sdk.js";
 
 // gen/front_end/models/ai_assistance/AiHistoryStorage.js
@@ -9805,7 +9805,7 @@ __export(AiHistoryStorage_exports, {
   RECENT_PROMPTS_SIZE_LIMIT: () => RECENT_PROMPTS_SIZE_LIMIT
 });
 import * as Common12 from "./../../core/common/common.js";
-var instance = null;
+import * as Root13 from "./../../core/root/root.js";
 var DEFAULT_MAX_STORAGE_SIZE = 50 * 1024 * 1024;
 var MAX_RECENT_PROMPTS_COUNT = 20;
 var MAX_CONVERSATIONS_COUNT = 50;
@@ -9816,11 +9816,11 @@ var AiHistoryStorage = class _AiHistoryStorage extends Common12.ObjectWrapper.Ob
   #recentPromptsSetting;
   #mutex = new Common12.Mutex.Mutex();
   #maxStorageSize;
-  constructor(maxStorageSize = DEFAULT_MAX_STORAGE_SIZE) {
+  constructor(settings = Common12.Settings.Settings.instance(), maxStorageSize = DEFAULT_MAX_STORAGE_SIZE) {
     super();
-    this.#historySetting = Common12.Settings.Settings.instance().createSetting("ai-assistance-history-entries", []);
-    this.#imageHistorySettings = Common12.Settings.Settings.instance().createSetting("ai-assistance-history-images", []);
-    this.#recentPromptsSetting = Common12.Settings.Settings.instance().createSetting("ai-assistance-recent-prompts", []);
+    this.#historySetting = settings.createSetting("ai-assistance-history-entries", []);
+    this.#imageHistorySettings = settings.createSetting("ai-assistance-history-images", []);
+    this.#recentPromptsSetting = settings.createSetting("ai-assistance-recent-prompts", []);
     this.#maxStorageSize = maxStorageSize;
   }
   clearForTest() {
@@ -9953,11 +9953,14 @@ var AiHistoryStorage = class _AiHistoryStorage extends Common12.ObjectWrapper.Ob
     return structuredClone(this.#imageHistorySettings.get());
   }
   static instance(opts = { forceNew: false, maxStorageSize: DEFAULT_MAX_STORAGE_SIZE }) {
-    const { forceNew, maxStorageSize } = opts;
-    if (!instance || forceNew) {
-      instance = new _AiHistoryStorage(maxStorageSize);
+    const { forceNew, maxStorageSize, settings } = opts;
+    if (!Root13.DevToolsContext.globalInstance().has(_AiHistoryStorage) || forceNew) {
+      Root13.DevToolsContext.globalInstance().set(_AiHistoryStorage, new _AiHistoryStorage(settings ?? Common12.Settings.Settings.instance(), maxStorageSize));
     }
-    return instance;
+    return Root13.DevToolsContext.globalInstance().get(_AiHistoryStorage);
+  }
+  static removeInstance() {
+    Root13.DevToolsContext.globalInstance().delete(_AiHistoryStorage);
   }
 };
 
@@ -10012,14 +10015,18 @@ var AiConversation = class _AiConversation {
   #lighthouseRecording;
   #onInspectElement;
   #networkTimeCalculator;
+  #aiHistoryStorage;
+  #targetManager;
   constructor(options) {
-    const { type, data = [], id = crypto.randomUUID(), isReadOnly = true, aidaClient = new Host20.AidaClient.AidaClient(), changeManager, performanceRecordAndReload, onInspectElement, networkTimeCalculator, lighthouseRecording } = options;
+    const { type, data = [], id = crypto.randomUUID(), isReadOnly = true, aidaClient = new Host20.AidaClient.AidaClient(), changeManager, performanceRecordAndReload, onInspectElement, networkTimeCalculator, lighthouseRecording, aiHistoryStorage = AiHistoryStorage.instance(), targetManager = SDK14.TargetManager.TargetManager.instance() } = options;
     this.#changeManager = changeManager;
     this.#aidaClient = aidaClient;
     this.#performanceRecordAndReload = performanceRecordAndReload;
     this.#onInspectElement = onInspectElement;
     this.#networkTimeCalculator = networkTimeCalculator;
     this.#lighthouseRecording = lighthouseRecording;
+    this.#aiHistoryStorage = aiHistoryStorage;
+    this.#targetManager = targetManager;
     this.id = id;
     this.#isReadOnly = isReadOnly;
     this.history = this.#reconstructHistory(data);
@@ -10109,7 +10116,7 @@ var AiConversation = class _AiConversation {
     return this.#contexts.at(0);
   }
   #reconstructHistory(historyWithoutImages) {
-    const imageHistory = AiHistoryStorage.instance().getImageHistory();
+    const imageHistory = this.#aiHistoryStorage.getImageHistory();
     if (imageHistory && imageHistory.length > 0) {
       const history = [];
       for (const data of historyWithoutImages) {
@@ -10192,12 +10199,12 @@ ${item.text.trim()}`);
   }
   async addHistoryItem(item) {
     this.history.push(item);
-    await AiHistoryStorage.instance().upsertHistoryEntry(this.serialize());
+    await this.#aiHistoryStorage.upsertHistoryEntry(this.serialize());
     if (item.type === "user-query") {
-      void AiHistoryStorage.instance().addRecentPrompt(item.query);
+      void this.#aiHistoryStorage.addRecentPrompt(item.query);
       if (item.imageId && item.imageInput && "inlineData" in item.imageInput) {
         const inlineData = item.imageInput.inlineData;
-        await AiHistoryStorage.instance().upsertImage({
+        await this.#aiHistoryStorage.upsertImage({
           id: item.imageId,
           data: inlineData.data,
           mimeType: inlineData.mimeType
@@ -10255,9 +10262,10 @@ ${item.text.trim()}`);
       networkTimeCalculator: this.#networkTimeCalculator,
       lighthouseRecording: this.#lighthouseRecording,
       allowedOrigin: this.allowedOrigin,
-      history
+      history,
+      targetManager: this.#targetManager
     };
-    this.#agent = Root13.Runtime.hostConfig.devToolsAiV2Architecture?.enabled ? new AiAgent2(options) : this.#createV1Agent(type, options);
+    this.#agent = Root14.Runtime.hostConfig.devToolsAiV2Architecture?.enabled ? new AiAgent2(options) : this.#createV1Agent(type, options);
   }
   #createV1Agent(type, options) {
     switch (type) {
@@ -10281,14 +10289,14 @@ ${item.text.trim()}`);
   }
   async *run(initialQuery, options = {}) {
     this.#navigationOccurredDuringRun = false;
-    const originAtRunStart = getPrimaryPageOrigin();
+    const originAtRunStart = getPrimaryPageOrigin(this.#targetManager);
     const listener = () => {
-      const newOrigin = getPrimaryPageOrigin();
+      const newOrigin = getPrimaryPageOrigin(this.#targetManager);
       if (originAtRunStart !== newOrigin && newOrigin && !ALLOWED_PAGE_NAVIGATIONS.includes(newOrigin)) {
         this.#navigationOccurredDuringRun = true;
       }
     };
-    const targetManager = SDK14.TargetManager.TargetManager.instance();
+    const targetManager = this.#targetManager;
     targetManager.addModelListener(SDK14.ResourceTreeModel.ResourceTreeModel, SDK14.ResourceTreeModel.Events.PrimaryPageChanged, listener, this);
     try {
       if (this.isBlockedByOrigin) {
@@ -10367,18 +10375,18 @@ Original user query: ${initialQuery}`;
     if (this.#origin) {
       return { origin: this.#origin };
     }
-    this.#origin = getPrimaryPageOrigin();
+    this.#origin = getPrimaryPageOrigin(this.#targetManager);
     return { origin: this.#origin };
   };
 };
 function isAiAssistanceServerSideLoggingEnabled() {
-  return !Root13.Runtime.hostConfig.aidaAvailability?.disallowLogging;
+  return !Root14.Runtime.hostConfig.aidaAvailability?.disallowLogging;
 }
 function isAiAssistanceContextSelectionAgentEnabled() {
-  return Boolean(Root13.Runtime.hostConfig.devToolsAiAssistanceContextSelectionAgent?.enabled);
+  return Boolean(Root14.Runtime.hostConfig.devToolsAiAssistanceContextSelectionAgent?.enabled);
 }
-function getPrimaryPageOrigin() {
-  const target = SDK14.TargetManager.TargetManager.instance().primaryPageTarget();
+function getPrimaryPageOrigin(targetManager) {
+  const target = targetManager.primaryPageTarget();
   const inspectedURL = target?.inspectedURL();
   return inspectedURL ? new Common13.ParsedURL.ParsedURL(inspectedURL).securityOrigin() : void 0;
 }
@@ -10390,7 +10398,7 @@ __export(BuiltInAi_exports, {
 });
 import * as Common14 from "./../../core/common/common.js";
 import * as Host21 from "./../../core/host/host.js";
-import * as Root14 from "./../../core/root/root.js";
+import * as Root15 from "./../../core/root/root.js";
 var builtInAiInstance;
 var BuiltInAi = class _BuiltInAi extends Common14.ObjectWrapper.ObjectWrapper {
   #availability = null;
@@ -10411,7 +10419,7 @@ var BuiltInAi = class _BuiltInAi extends Common14.ObjectWrapper.ObjectWrapper {
     this.initDoneForTesting = this.getLanguageModelAvailability().then(() => this.#sendAvailabilityMetrics()).then(() => this.initialize());
   }
   async getLanguageModelAvailability() {
-    if (!Root14.Runtime.hostConfig.devToolsConsoleInsightsTeasers?.enabled) {
+    if (!Root15.Runtime.hostConfig.devToolsConsoleInsightsTeasers?.enabled) {
       this.#availability = "disabled";
       return this.#availability;
     }
@@ -10435,7 +10443,7 @@ var BuiltInAi = class _BuiltInAi extends Common14.ObjectWrapper.ObjectWrapper {
     return this.#availability === "downloading";
   }
   isEventuallyAvailable() {
-    if (!this.#hasGpu && !Boolean(Root14.Runtime.hostConfig.devToolsConsoleInsightsTeasers?.allowWithoutGpu)) {
+    if (!this.#hasGpu && !Boolean(Root15.Runtime.hostConfig.devToolsConsoleInsightsTeasers?.allowWithoutGpu)) {
       return false;
     }
     return this.#availability === "available" || this.#availability === "downloading" || this.#availability === "downloadable";
@@ -10448,7 +10456,7 @@ var BuiltInAi = class _BuiltInAi extends Common14.ObjectWrapper.ObjectWrapper {
     return this.#downloadProgress;
   }
   startDownloadingModel() {
-    if (!Root14.Runtime.hostConfig.devToolsConsoleInsightsTeasers?.allowWithoutGpu && !this.#hasGpu) {
+    if (!Root15.Runtime.hostConfig.devToolsConsoleInsightsTeasers?.allowWithoutGpu && !this.#hasGpu) {
       return;
     }
     if (this.#availability !== "downloadable") {
@@ -10483,7 +10491,7 @@ var BuiltInAi = class _BuiltInAi extends Common14.ObjectWrapper.ObjectWrapper {
     return Boolean(this.#consoleInsightsSession);
   }
   async initialize() {
-    if (!Root14.Runtime.hostConfig.devToolsConsoleInsightsTeasers?.allowWithoutGpu && !this.#hasGpu) {
+    if (!Root15.Runtime.hostConfig.devToolsConsoleInsightsTeasers?.allowWithoutGpu && !this.#hasGpu) {
       return;
     }
     if (this.#availability !== "available" && this.#availability !== "downloading") {
@@ -10643,7 +10651,7 @@ __export(ConversationSummary_exports, {
   ConversationSummary: () => ConversationSummary
 });
 import * as Host22 from "./../../core/host/host.js";
-import * as Root15 from "./../../core/root/root.js";
+import * as Root16 from "./../../core/root/root.js";
 var preamble10 = `### Role
 You are a Conversation Summarizer. Your task is to take a transcript of a conversation between a user and a DevTools AI agent and produce a succinct, actionable Markdown summary. This summary will be used to help apply fixes in an IDE, so it must capture all relevant technical details, findings, and proposed code changes without any conversational fluff.
 
@@ -10745,9 +10753,9 @@ var ConversationSummary = class {
     const enhancedQuery = `Summarize the following conversation:
 
 ${conversation}`;
-    const temperature = Root15.Runtime.hostConfig.devToolsFreestyler?.temperature;
-    const modelId = Root15.Runtime.hostConfig.devToolsFreestyler?.modelId;
-    const userTier = Root15.Runtime.hostConfig.devToolsFreestyler?.userTier;
+    const temperature = Root16.Runtime.hostConfig.devToolsFreestyler?.temperature;
+    const modelId = Root16.Runtime.hostConfig.devToolsFreestyler?.modelId;
+    const userTier = Root16.Runtime.hostConfig.devToolsFreestyler?.userTier;
     const resultText = await runOneShotPrompt({
       aidaClient: this.#aidaClient,
       preamble: preamble10,
@@ -10774,7 +10782,7 @@ __export(PerformanceAnnotations_exports, {
   PerformanceAnnotations: () => PerformanceAnnotations
 });
 import * as Host23 from "./../../core/host/host.js";
-import * as Root16 from "./../../core/root/root.js";
+import * as Root17 from "./../../core/root/root.js";
 var callTreePreamble = `You are an expert performance analyst embedded within Chrome DevTools.
 You meticulously examine web application behavior captured by the Chrome DevTools Performance Panel and Chrome tracing.
 You will receive a structured text representation of a call tree, derived from a user-selected call frame within a performance trace's flame chart.
@@ -10865,9 +10873,9 @@ var PerformanceAnnotations = class {
 # User request
 
 ${AI_LABEL_GENERATION_PROMPT}`;
-    const temperature = Root16.Runtime.hostConfig.devToolsAiAssistancePerformanceAgent?.temperature;
-    const modelId = Root16.Runtime.hostConfig.devToolsAiAssistancePerformanceAgent?.modelId;
-    const userTier = Root16.Runtime.hostConfig.devToolsAiAssistancePerformanceAgent?.userTier;
+    const temperature = Root17.Runtime.hostConfig.devToolsAiAssistancePerformanceAgent?.temperature;
+    const modelId = Root17.Runtime.hostConfig.devToolsAiAssistancePerformanceAgent?.modelId;
+    const userTier = Root17.Runtime.hostConfig.devToolsAiAssistancePerformanceAgent?.userTier;
     const resultText = await runOneShotPrompt({
       aidaClient: this.#aidaClient,
       preamble: callTreePreamble,
