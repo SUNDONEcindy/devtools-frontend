@@ -258,7 +258,7 @@ __export(AccessibilityAgent_exports, {
 import * as Host11 from "./../../core/host/host.js";
 import * as i18n13 from "./../../core/i18n/i18n.js";
 import * as Root5 from "./../../core/root/root.js";
-import * as SDK8 from "./../../core/sdk/sdk.js";
+import * as SDK9 from "./../../core/sdk/sdk.js";
 
 // gen/front_end/models/ai_assistance/AiUtils.js
 var AiUtils_exports = {};
@@ -365,8 +365,8 @@ var ChangeManager = class {
   #cssModelToStylesheetId = /* @__PURE__ */ new Map();
   #stylesheetChanges = /* @__PURE__ */ new Map();
   #backupStylesheetChanges = /* @__PURE__ */ new Map();
-  constructor() {
-    SDK.TargetManager.TargetManager.instance().addModelListener(SDK.ResourceTreeModel.ResourceTreeModel, SDK.ResourceTreeModel.Events.PrimaryPageChanged, this.clear, this);
+  constructor(targetManager = SDK.TargetManager.TargetManager.instance()) {
+    targetManager.addModelListener(SDK.ResourceTreeModel.ResourceTreeModel, SDK.ResourceTreeModel.Events.PrimaryPageChanged, this.clear, this);
   }
   async stashChanges() {
     for (const [cssModel, stylesheetMap] of this.#cssModelToStylesheetId.entries()) {
@@ -1141,7 +1141,7 @@ var ExtensionScope = class {
     }
     return node.localName() || node.nodeName().toLowerCase();
   }
-  static getSourceLocation(styleRule) {
+  static getSourceLocation(styleRule, cssWorkspaceBinding = Bindings.CSSWorkspaceBinding.CSSWorkspaceBinding.instance()) {
     const styleSheetHeader = styleRule.header;
     if (!styleSheetHeader) {
       return;
@@ -1153,7 +1153,7 @@ var ExtensionScope = class {
     const lineNumber = styleSheetHeader.lineNumberInSource(range.startLine);
     const columnNumber = styleSheetHeader.columnNumberInSource(range.startLine, range.startColumn);
     const location = new SDK2.CSSModel.CSSLocation(styleSheetHeader, lineNumber, columnNumber);
-    const uiLocation = Bindings.CSSWorkspaceBinding.CSSWorkspaceBinding.instance().rawLocationToUILocation(location);
+    const uiLocation = cssWorkspaceBinding.rawLocationToUILocation(location);
     return uiLocation?.linkText(
       /* skipTrim= */
       true,
@@ -1716,7 +1716,7 @@ __export(GetElementAccessibilityDetails_exports, {
 });
 import * as Host5 from "./../../core/host/host.js";
 import * as i18n5 from "./../../core/i18n/i18n.js";
-import * as SDK5 from "./../../core/sdk/sdk.js";
+import * as SDK6 from "./../../core/sdk/sdk.js";
 
 // gen/front_end/models/ai_assistance/contexts/DOMNodeContext.js
 var DOMNodeContext_exports = {};
@@ -1734,6 +1734,7 @@ __export(AiAgent_exports, {
 });
 import * as Host4 from "./../../core/host/host.js";
 import * as Root4 from "./../../core/root/root.js";
+import * as SDK5 from "./../../core/sdk/sdk.js";
 
 // gen/front_end/models/ai_assistance/AiOrigins.js
 var AiOrigins_exports = {};
@@ -1849,6 +1850,7 @@ var AiAgent = class {
   confirmSideEffect;
   #functionDeclarations = /* @__PURE__ */ new Map();
   #allowedOrigin;
+  #targetManager;
   /**
    * Used in the debug mode and evals.
    */
@@ -1871,6 +1873,7 @@ var AiAgent = class {
     this.confirmSideEffect = opts.confirmSideEffectForTest ?? (() => Promise.withResolvers());
     this.#history = opts.history ?? [];
     this.#allowedOrigin = opts.allowedOrigin;
+    this.#targetManager = opts.targetManager ?? SDK5.TargetManager.TargetManager.instance();
   }
   async enhanceQuery(query) {
     return query;
@@ -1880,6 +1883,9 @@ var AiAgent = class {
   }
   get history() {
     return [...this.#history];
+  }
+  get targetManager() {
+    return this.#targetManager;
   }
   /**
    * Add a fact which will be sent for any subsequent requests.
@@ -2591,7 +2597,7 @@ var GetElementAccessibilityDetailsTool = class {
     if (!target) {
       return { error: "Error: Inspected target not found." };
     }
-    const deferredNode = new SDK5.DOMModel.DeferredDOMNode(target, params.element);
+    const deferredNode = new SDK6.DOMModel.DeferredDOMNode(target, params.element);
     const resolved = await deferredNode.resolvePromise();
     if (!resolved) {
       return { error: "Error: Could not resolve element by ID." };
@@ -2600,7 +2606,7 @@ var GetElementAccessibilityDetailsTool = class {
     if (!nodeContext.isOriginAllowed(establishedOrigin)) {
       return { error: "Error: Node does not belong to the locked origin." };
     }
-    const axModel = target.model(SDK5.AccessibilityModel.AccessibilityModel);
+    const axModel = target.model(SDK6.AccessibilityModel.AccessibilityModel);
     if (!axModel) {
       return { error: "Error: Accessibility model not found." };
     }
@@ -3243,7 +3249,7 @@ __export(GetStyles_exports, {
   GetStylesTool: () => GetStylesTool
 });
 import * as Host8 from "./../../core/host/host.js";
-import * as SDK6 from "./../../core/sdk/sdk.js";
+import * as SDK7 from "./../../core/sdk/sdk.js";
 var GetStylesTool = class {
   name = "getStyles";
   description = `Get computed and source styles for one or multiple elements on the inspected page for multiple elements at once by uid.
@@ -3301,7 +3307,7 @@ var GetStylesTool = class {
     for (const uid of params.elements) {
       result[uid] = { computed: {}, authored: {} };
       debugLog(`Action to execute: uid=${uid}`);
-      const node = new SDK6.DOMModel.DeferredDOMNode(target, uid);
+      const node = new SDK7.DOMModel.DeferredDOMNode(target, uid);
       const resolved = await node.resolvePromise();
       if (!resolved) {
         return { error: "Error: Could not find the element with uid=" + uid };
@@ -3431,7 +3437,7 @@ __export(ResolveDevtoolsNodePath_exports, {
   ResolveDevtoolsNodePathTool: () => ResolveDevtoolsNodePathTool
 });
 import * as Host10 from "./../../core/host/host.js";
-import * as SDK7 from "./../../core/sdk/sdk.js";
+import * as SDK8 from "./../../core/sdk/sdk.js";
 var ResolveDevtoolsNodePathTool = class {
   name = "resolveDevtoolsNodePath";
   description = "Resolves a DevTools node path to a backend node ID.";
@@ -3473,7 +3479,7 @@ var ResolveDevtoolsNodePathTool = class {
       return { error: "Error: Origin lock is not established." };
     }
     const target = context.getTarget();
-    const domModel = target?.model(SDK7.DOMModel.DOMModel);
+    const domModel = target?.model(SDK8.DOMModel.DOMModel);
     if (!domModel) {
       return { error: "Error: Inspected target not found." };
     }
@@ -3591,7 +3597,7 @@ var AccessibilityAgent = class extends AiAgent {
   constructor(opts) {
     super(opts);
     this.#lighthouseRecording = opts.lighthouseRecording;
-    this.#changes = opts.changeManager || new ChangeManager();
+    this.#changes = opts.changeManager || new ChangeManager(opts.targetManager);
     this.#execJs = opts.execJs ?? executeJsCode;
     this.#createExtensionScope = opts.createExtensionScope ?? ((changes) => {
       return new ExtensionScope(changes, this.sessionId, this.#getDocumentBodyNode());
@@ -3612,8 +3618,8 @@ var AccessibilityAgent = class extends AiAgent {
     };
   }
   async preRun() {
-    const target = SDK8.TargetManager.TargetManager.instance().primaryPageTarget();
-    const domModel = target?.model(SDK8.DOMModel.DOMModel);
+    const target = this.targetManager.primaryPageTarget();
+    const domModel = target?.model(SDK9.DOMModel.DOMModel);
     if (domModel && !domModel.existingDocument()) {
       try {
         await domModel.requestDocument();
@@ -3628,7 +3634,7 @@ var AccessibilityAgent = class extends AiAgent {
    * so that the AI has a valid $0 to start with.
    */
   #getDocumentBodyNode() {
-    const document2 = SDK8.TargetManager.TargetManager.instance().primaryPageTarget()?.model(SDK8.DOMModel.DOMModel)?.existingDocument();
+    const document2 = this.targetManager.primaryPageTarget()?.model(SDK9.DOMModel.DOMModel)?.existingDocument();
     return document2?.body ?? document2 ?? null;
   }
   async *handleContextDetails(lhr) {
@@ -3644,11 +3650,11 @@ var AccessibilityAgent = class extends AiAgent {
     }
   }
   async #resolvePathToNode(path) {
-    const target = SDK8.TargetManager.TargetManager.instance().primaryPageTarget();
+    const target = this.targetManager.primaryPageTarget();
     if (!target) {
       return null;
     }
-    const domModel = target.model(SDK8.DOMModel.DOMModel);
+    const domModel = target.model(SDK9.DOMModel.DOMModel);
     if (!domModel) {
       return null;
     }
@@ -3893,7 +3899,7 @@ var AccessibilityAgent = class extends AiAgent {
         if (!node) {
           return { error: `Could not find the element with path: ${params.path}` };
         }
-        const accessibilityModel = node.domModel().target().model(SDK8.AccessibilityModel.AccessibilityModel);
+        const accessibilityModel = node.domModel().target().model(SDK9.AccessibilityModel.AccessibilityModel);
         if (!accessibilityModel) {
           return { error: "Accessibility model not found." };
         }
@@ -4081,7 +4087,7 @@ __export(PerformanceTraceContext_exports, {
   PerformanceTraceContext: () => PerformanceTraceContext
 });
 import * as Common8 from "./../../core/common/common.js";
-import * as SDK9 from "./../../core/sdk/sdk.js";
+import * as SDK10 from "./../../core/sdk/sdk.js";
 import * as Tracing from "./../../services/tracing/tracing.js";
 import * as SourceMapScopes from "./../source_map_scopes/source_map_scopes.js";
 import * as Trace6 from "./../trace/trace.js";
@@ -6471,7 +6477,7 @@ var PerformanceTraceContext = class _PerformanceTraceContext extends Conversatio
    */
   createFormatter() {
     const focus = this.#focus;
-    const target = SDK9.TargetManager.TargetManager.instance().primaryPageTarget();
+    const target = SDK10.TargetManager.TargetManager.instance().primaryPageTarget();
     const formatter = new PerformanceTraceFormatter(focus);
     const isFresh = Tracing.FreshRecording.Tracker.instance().recordingIsFresh(focus.parsedTrace);
     formatter.resolveFunctionCode = async (url, line, column) => {
@@ -6712,7 +6718,7 @@ import * as Common9 from "./../../core/common/common.js";
 import * as Host12 from "./../../core/host/host.js";
 import * as i18n15 from "./../../core/i18n/i18n.js";
 import * as Root6 from "./../../core/root/root.js";
-import * as SDK10 from "./../../core/sdk/sdk.js";
+import * as SDK11 from "./../../core/sdk/sdk.js";
 var lockedString6 = i18n15.i18n.lockedString;
 var preamble2 = `You are a Senior Software Engineer specializing in state audit and storage analysis within Chrome DevTools. Your mission is to help developers debug storage-related issues faster by analyzing the evidence in LocalStorage, SessionStorage, and Cookies.
 
@@ -6751,8 +6757,8 @@ var preamble2 = `You are a Senior Software Engineer specializing in state audit 
  -   **CRITICAL**: Use the precision of Strunk & White, the brevity of Hemingway, and the simple clarity of Vonnegut. Don't add repeated information, and keep the whole answer short.
  -   **CRITICAL**: You are a storage debugging assistant. NEVER answer unrelated topics (legal, financial, race, sexuality, medical, religion, politics). If asked, respond: "Sorry, I can't answer that. I'm best at questions about debugging web pages."
  `;
-function isSamePrimaryPageOrigin(context) {
-  const primaryPageTarget = SDK10.TargetManager.TargetManager.instance().primaryPageTarget();
+function isSamePrimaryPageOrigin(targetManager, context) {
+  const primaryPageTarget = targetManager.primaryPageTarget();
   return isSamePageOrigin(primaryPageTarget, context);
 }
 function isSamePageOrigin(target, context) {
@@ -6860,11 +6866,11 @@ var StorageAgent = class _StorageAgent extends AiAgent {
         };
       },
       handler: async () => {
-        if (!isSamePrimaryPageOrigin(this.context)) {
+        if (!isSamePrimaryPageOrigin(this.targetManager, this.context)) {
           return { error: "No origin available or not allowed." };
         }
         const origins = /* @__PURE__ */ new Set();
-        for (const frame of SDK10.ResourceTreeModel.ResourceTreeModel.frames(SDK10.TargetManager.TargetManager.instance())) {
+        for (const frame of SDK11.ResourceTreeModel.ResourceTreeModel.frames(this.targetManager)) {
           if (!isSamePageOrigin(frame.resourceTreeModel().target().outermostTarget(), this.context)) {
             continue;
           }
@@ -6910,10 +6916,10 @@ var StorageAgent = class _StorageAgent extends AiAgent {
       },
       handler: async (args) => {
         this.disableServerSideLogging();
-        if (!isSamePrimaryPageOrigin(this.context)) {
+        if (!isSamePrimaryPageOrigin(this.targetManager, this.context)) {
           return { error: "No origin available or not allowed." };
         }
-        const storages = resolveDOMStorages(this.context, args.type, args.origin, args.storageKey);
+        const storages = resolveDOMStorages(this.context, args.type, args.origin, args.storageKey, this.targetManager);
         const keyAndItems = await Promise.all(storages.map(async (storage) => {
           const items = await storage.getItems();
           return { storageKey: storage.storageKey, items };
@@ -6970,17 +6976,17 @@ var StorageAgent = class _StorageAgent extends AiAgent {
       },
       handler: async (args, options) => {
         this.disableServerSideLogging();
-        if (!isSamePrimaryPageOrigin(this.context)) {
+        if (!isSamePrimaryPageOrigin(this.targetManager, this.context)) {
           return { error: "No origin available or not allowed." };
         }
-        const storages = resolveDOMStorages(this.context, args.type, args.origin, args.storageKey);
+        const storages = resolveDOMStorages(this.context, args.type, args.origin, args.storageKey, this.targetManager);
         if (storages.length === 0) {
           return { error: "No matching storage partitions found." };
         }
         if (options?.approved !== true) {
           const keyString = args.keys.map((k) => `\`${k}\``).join(", ");
           const uniqueTargetOrigins = Array.from(new Set(storages.map((storage) => {
-            const parsed = SDK10.StorageKeyManager.parseStorageKey(storage.storageKey || "");
+            const parsed = SDK11.StorageKeyManager.parseStorageKey(storage.storageKey || "");
             return parsed.origin;
           })));
           const targetsDesc = uniqueTargetOrigins.join(", ");
@@ -7036,10 +7042,10 @@ var StorageAgent = class _StorageAgent extends AiAgent {
       },
       handler: async (args) => {
         this.disableServerSideLogging();
-        if (!isSamePrimaryPageOrigin(this.context)) {
+        if (!isSamePrimaryPageOrigin(this.targetManager, this.context)) {
           return { error: "No origin available or not allowed." };
         }
-        const frame = findFrameForOrigin(this.context, args.origin);
+        const frame = findFrameForOrigin(this.context, args.origin, this.targetManager);
         if (!frame) {
           return { result: { cookies: [] } };
         }
@@ -7078,10 +7084,10 @@ var StorageAgent = class _StorageAgent extends AiAgent {
       },
       handler: async (args, options) => {
         this.disableServerSideLogging();
-        if (!isSamePrimaryPageOrigin(this.context)) {
+        if (!isSamePrimaryPageOrigin(this.targetManager, this.context)) {
           return { error: "No origin available or not allowed." };
         }
-        const frame = findFrameForOrigin(this.context, args.origin);
+        const frame = findFrameForOrigin(this.context, args.origin, this.targetManager);
         if (!frame) {
           return { result: { cookies: [] } };
         }
@@ -7133,7 +7139,7 @@ var StorageAgent = class _StorageAgent extends AiAgent {
         };
       },
       handler: async () => {
-        const target = SDK10.TargetManager.TargetManager.instance().primaryPageTarget();
+        const target = this.targetManager.primaryPageTarget();
         if (!target || !this.context || !isSamePageOrigin(target, this.context)) {
           return { error: "No origin available or not allowed." };
         }
@@ -7209,7 +7215,7 @@ ${query}`;
   }
 };
 async function getCookiesForDomain(target, origin) {
-  const cookieModel = target.model(SDK10.CookieModel.CookieModel);
+  const cookieModel = target.model(SDK11.CookieModel.CookieModel);
   if (!cookieModel) {
     return null;
   }
@@ -7219,8 +7225,8 @@ async function getCookiesForDomain(target, origin) {
   }
   return allCookies.filter((cookie) => !cookie.httpOnly());
 }
-function findFrameForOrigin(context, origin) {
-  for (const frame of SDK10.ResourceTreeModel.ResourceTreeModel.frames(SDK10.TargetManager.TargetManager.instance())) {
+function findFrameForOrigin(context, origin, targetManager = SDK11.TargetManager.TargetManager.instance()) {
+  for (const frame of SDK11.ResourceTreeModel.ResourceTreeModel.frames(targetManager)) {
     if (frame.securityOrigin === origin) {
       const target = frame.resourceTreeModel().target();
       if (isSamePageOrigin(target.outermostTarget(), context)) {
@@ -7230,10 +7236,10 @@ function findFrameForOrigin(context, origin) {
   }
   return null;
 }
-function resolveDOMStorages(context, type, origin, storageKey) {
+function resolveDOMStorages(context, type, origin, storageKey, targetManager = SDK11.TargetManager.TargetManager.instance()) {
   const resolvedStorages = [];
   const isLocalStorage = type === "localStorage";
-  const domStorageModels = SDK10.TargetManager.TargetManager.instance().models(SDK10.DOMStorageModel.DOMStorageModel);
+  const domStorageModels = targetManager.models(SDK11.DOMStorageModel.DOMStorageModel);
   for (const domStorageModel of domStorageModels) {
     if (!isSamePageOrigin(domStorageModel.target().outermostTarget(), context)) {
       continue;
@@ -7248,14 +7254,14 @@ function resolveDOMStorages(context, type, origin, storageKey) {
       }
       if (storageKey) {
         if (storageKey === currentStorageKey) {
-          const parsedKey2 = SDK10.StorageKeyManager.parseStorageKey(currentStorageKey);
+          const parsedKey2 = SDK11.StorageKeyManager.parseStorageKey(currentStorageKey);
           if (parsedKey2.origin === origin) {
             resolvedStorages.push(storage);
           }
         }
         continue;
       }
-      const parsedKey = SDK10.StorageKeyManager.parseStorageKey(currentStorageKey);
+      const parsedKey = SDK11.StorageKeyManager.parseStorageKey(currentStorageKey);
       if (parsedKey.origin === origin) {
         resolvedStorages.push(storage);
       }
@@ -8182,7 +8188,7 @@ import * as Common11 from "./../../core/common/common.js";
 import * as Host17 from "./../../core/host/host.js";
 import * as i18n19 from "./../../core/i18n/i18n.js";
 import * as Root11 from "./../../core/root/root.js";
-import * as SDK11 from "./../../core/sdk/sdk.js";
+import * as SDK12 from "./../../core/sdk/sdk.js";
 import * as Tracing2 from "./../../services/tracing/tracing.js";
 import * as Logs5 from "./../logs/logs.js";
 import * as TextUtils4 from "./../text_utils/text_utils.js";
@@ -8346,6 +8352,13 @@ function getLabelName(label, focus) {
 }
 var PerformanceAgent = class extends AiAgent {
   preamble = preamble7;
+  #tracker;
+  #networkLog;
+  constructor(opts) {
+    super(opts);
+    this.#tracker = opts.tracker ?? Tracing2.FreshRecording.Tracker.instance();
+    this.#networkLog = opts.networkLog ?? Logs5.NetworkLog.NetworkLog.instance();
+  }
   #formatter = null;
   #lastEventForEnhancedQuery;
   #lastInsightForEnhancedQuery;
@@ -8691,14 +8704,14 @@ ${text}`, metadata: { source: "devtools", score: ScorePriority.REQUIRED } });
   async #addFacts(context) {
     const focus = context.getItem();
     this.addFact(this.#notExternalExtraPreambleFact);
-    const isFresh = Tracing2.FreshRecording.Tracker.instance().recordingIsFresh(focus.parsedTrace);
+    const isFresh = this.#tracker.recordingIsFresh(focus.parsedTrace);
     if (isFresh) {
       this.addFact(this.#freshTraceExtraPreambleFact);
     }
     this.addFact(this.#callFrameDataDescriptionFact);
     this.addFact(this.#networkDataDescriptionFact);
     if (!this.#traceFacts.length) {
-      const target = SDK11.TargetManager.TargetManager.instance().primaryPageTarget();
+      const target = this.targetManager.primaryPageTarget();
       if (!target) {
         throw new Error("missing target");
       }
@@ -8765,7 +8778,7 @@ ${result}`,
   #declareFunctions(context) {
     const focus = context.getItem();
     const { parsedTrace } = focus;
-    const isFresh = Tracing2.FreshRecording.Tracker.instance().recordingIsFresh(parsedTrace);
+    const isFresh = this.#tracker.recordingIsFresh(parsedTrace);
     this.declareFunction("getInsightDetails", {
       description: "Returns detailed information about a specific insight of an insight set. Use this before commenting on any specific issue to get more information.",
       parameters: {
@@ -8812,8 +8825,8 @@ ${result}`,
           if (lcpEvent && Trace7.Types.Events.isAnyLargestContentfulPaintCandidate(lcpEvent)) {
             const nodeId = lcpEvent.args.data?.nodeId;
             if (nodeId) {
-              const target = SDK11.TargetManager.TargetManager.instance().primaryPageTarget();
-              const domModel = target?.model(SDK11.DOMModel.DOMModel);
+              const target = this.targetManager.primaryPageTarget();
+              const domModel = target?.model(SDK12.DOMModel.DOMModel);
               if (domModel) {
                 const nodeMap = await domModel.pushNodesByBackendIdsToFrontend(/* @__PURE__ */ new Set([nodeId]));
                 const node = nodeMap?.get(nodeId);
@@ -9103,7 +9116,7 @@ ${result}`,
         if (!this.#formatter) {
           throw new Error("missing formatter");
         }
-        const target = SDK11.TargetManager.TargetManager.instance().primaryPageTarget();
+        const target = this.targetManager.primaryPageTarget();
         if (!target) {
           throw new Error("missing target");
         }
@@ -9163,7 +9176,7 @@ ${result}`,
         if (script?.content !== void 0) {
           content = script.content;
         } else if (isFresh || isTraceApp) {
-          const resource = SDK11.ResourceTreeModel.ResourceTreeModel.resourceForURL(SDK11.TargetManager.TargetManager.instance(), url);
+          const resource = SDK12.ResourceTreeModel.ResourceTreeModel.resourceForURL(this.targetManager, url);
           if (!resource) {
             return { error: "Resource not found" };
           }
@@ -9216,7 +9229,7 @@ ${result}`,
         if (!event) {
           return { error: "Invalid eventKey" };
         }
-        const revealable = new SDK11.TraceObject.RevealableEvent(event);
+        const revealable = new SDK12.TraceObject.RevealableEvent(event);
         await Common11.Revealer.reveal(revealable);
         return {
           result: { success: true },
@@ -9283,12 +9296,12 @@ ${result}`,
     return null;
   }
   async #getNetworkRequestImageData(lcpRequest) {
-    const target = SDK11.TargetManager.TargetManager.instance().primaryPageTarget();
-    const networkManager = target?.model(SDK11.NetworkManager.NetworkManager);
+    const target = this.targetManager.primaryPageTarget();
+    const networkManager = target?.model(SDK12.NetworkManager.NetworkManager);
     if (!target || !networkManager) {
       return void 0;
     }
-    const networkLog = Logs5.NetworkLog.NetworkLog.instance();
+    const networkLog = this.#networkLog;
     const requestId = lcpRequest.args.data.requestId;
     const sdkRequest = networkLog.requestByManagerAndId(networkManager, requestId);
     if (sdkRequest?.contentType().isImage()) {
@@ -9365,7 +9378,6 @@ __export(StylingAgent_exports, {
 });
 import * as Host18 from "./../../core/host/host.js";
 import * as Root12 from "./../../core/root/root.js";
-import * as SDK12 from "./../../core/sdk/sdk.js";
 var preamble8 = `You are the most advanced CSS/DOM/HTML debugging assistant integrated into Chrome DevTools.
 You always suggest considering the best web development practices and the newest platform features such as view transitions.
 The user selected a DOM element in the browser's DevTools and sends a query about the page or the selected DOM element.
@@ -9457,7 +9469,7 @@ var StylingAgent = class extends AiAgent {
   #createExtensionScope;
   constructor(opts) {
     super(opts);
-    this.#changes = opts.changeManager || new ChangeManager();
+    this.#changes = opts.changeManager || new ChangeManager(opts.targetManager);
     this.#execJs = opts.execJs ?? executeJsCode;
     this.#createExtensionScope = opts.createExtensionScope ?? ((changes) => {
       return new ExtensionScope(changes, this.sessionId, this.context?.getItem() ?? null);
@@ -9480,7 +9492,7 @@ var StylingAgent = class extends AiAgent {
         }
         return await getStylesTool.handler(args, {
           conversationContext: context,
-          getTarget: () => SDK12.TargetManager.TargetManager.instance().primaryPageTarget() ?? context.getItem().domModel().target(),
+          getTarget: () => this.targetManager.primaryPageTarget() ?? context.getItem().domModel().target(),
           getEstablishedOrigin: () => context.getOrigin()
         });
       }
@@ -9537,7 +9549,6 @@ __export(AiAgent2_exports, {
   AiAgent2: () => AiAgent2
 });
 import * as Host19 from "./../../core/host/host.js";
-import * as SDK13 from "./../../core/sdk/sdk.js";
 
 // gen/front_end/models/ai_assistance/skills/accessibility.skill.js
 var skill = {
@@ -9618,7 +9629,7 @@ var AiAgent2 = class extends AiAgent {
   preamble = preamble9;
   clientFeature = Host19.AidaClient.ClientFeature.CHROME_DEVTOOLS_V2_AGENT;
   userTier = "TESTERS";
-  #changes = new ChangeManager();
+  #changes;
   #execJs;
   #allowedOrigin;
   #lighthouseRecording;
@@ -9629,6 +9640,7 @@ var AiAgent2 = class extends AiAgent {
   #declaredTools = /* @__PURE__ */ new Set();
   constructor(opts) {
     super(opts);
+    this.#changes = new ChangeManager(opts.targetManager);
     this.#lighthouseRecording = opts.lighthouseRecording;
     this.#execJs = opts.execJs ?? executeJsCode;
     this.#allowedOrigin = opts.allowedOrigin;
@@ -9764,7 +9776,7 @@ ${skillObj.instructions}
           createExtensionScope: this.#createExtensionScope.bind(this),
           execJs: this.#execJs,
           getExecutionContextNode: () => this.context instanceof DOMNodeContext ? this.context.getItem() : null,
-          getTarget: () => SDK13.TargetManager.TargetManager.instance().primaryPageTarget(),
+          getTarget: () => this.targetManager.primaryPageTarget(),
           getEstablishedOrigin: () => this.#getConversationOrigin(),
           lighthouseRecording: this.#lighthouseRecording
         };
@@ -9794,7 +9806,7 @@ import * as Common13 from "./../../core/common/common.js";
 import * as Host20 from "./../../core/host/host.js";
 import * as Platform4 from "./../../core/platform/platform.js";
 import * as Root14 from "./../../core/root/root.js";
-import * as SDK14 from "./../../core/sdk/sdk.js";
+import * as SDK13 from "./../../core/sdk/sdk.js";
 
 // gen/front_end/models/ai_assistance/AiHistoryStorage.js
 var AiHistoryStorage_exports = {};
@@ -10018,7 +10030,7 @@ var AiConversation = class _AiConversation {
   #aiHistoryStorage;
   #targetManager;
   constructor(options) {
-    const { type, data = [], id = crypto.randomUUID(), isReadOnly = true, aidaClient = new Host20.AidaClient.AidaClient(), changeManager, performanceRecordAndReload, onInspectElement, networkTimeCalculator, lighthouseRecording, aiHistoryStorage = AiHistoryStorage.instance(), targetManager = SDK14.TargetManager.TargetManager.instance() } = options;
+    const { type, data = [], id = crypto.randomUUID(), isReadOnly = true, aidaClient = new Host20.AidaClient.AidaClient(), changeManager, performanceRecordAndReload, onInspectElement, networkTimeCalculator, lighthouseRecording, aiHistoryStorage = AiHistoryStorage.instance(), targetManager = SDK13.TargetManager.TargetManager.instance() } = options;
     this.#changeManager = changeManager;
     this.#aidaClient = aidaClient;
     this.#performanceRecordAndReload = performanceRecordAndReload;
@@ -10297,14 +10309,14 @@ ${item.text.trim()}`);
       }
     };
     const targetManager = this.#targetManager;
-    targetManager.addModelListener(SDK14.ResourceTreeModel.ResourceTreeModel, SDK14.ResourceTreeModel.Events.PrimaryPageChanged, listener, this);
+    targetManager.addModelListener(SDK13.ResourceTreeModel.ResourceTreeModel, SDK13.ResourceTreeModel.Events.PrimaryPageChanged, listener, this);
     try {
       if (this.isBlockedByOrigin) {
         throw new Error("cross-origin context data should not be included");
       }
       yield* this.#runAgent(initialQuery, options, { isInitialCall: true });
     } finally {
-      targetManager.removeModelListener(SDK14.ResourceTreeModel.ResourceTreeModel, SDK14.ResourceTreeModel.Events.PrimaryPageChanged, listener, this);
+      targetManager.removeModelListener(SDK13.ResourceTreeModel.ResourceTreeModel, SDK13.ResourceTreeModel.Events.PrimaryPageChanged, listener, this);
     }
   }
   #getQueryAfterSelection(initialQuery, selection) {
