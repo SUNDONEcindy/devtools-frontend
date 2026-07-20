@@ -21,6 +21,7 @@ export declare class PerformanceTraceFormatter {
     formatLongestTasks(): Promise<string>;
     formatMainThreadTrackSummary(bounds: Trace.Types.Timing.TraceWindowMicro): Promise<string>;
     formatNetworkTrackSummary(bounds: Trace.Types.Timing.TraceWindowMicro): string;
+    formatExtensionTrackSummary(bounds: Trace.Types.Timing.TraceWindowMicro): string;
     formatCallTree(tree: AICallTree, headerLevel?: number): Promise<string>;
     formatNetworkRequests(requests: readonly Trace.Types.Events.SyntheticNetworkRequest[], options?: NetworkRequestFormatOptions): string;
     static callFrameDataFormatDescription: string;

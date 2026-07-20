@@ -3370,6 +3370,13 @@ var lockedString5 = i18n11.i18n.lockedString;
 var ListNetworkRequestsTool = class {
   name = "listNetworkRequests";
   description = "Gives a list of network requests including URL, status code, and duration.";
+  #networkLog;
+  constructor(networkLog) {
+    this.#networkLog = networkLog;
+  }
+  #getNetworkLog() {
+    return this.#networkLog ?? Logs3.NetworkLog.NetworkLog.instance();
+  }
   parameters = {
     type: 6,
     description: "",
@@ -3397,7 +3404,7 @@ var ListNetworkRequestsTool = class {
     }
     let hasCrossOriginRequest = false;
     const requestsToShow = [];
-    for (const request of Logs3.NetworkLog.NetworkLog.instance().requests()) {
+    for (const request of this.#getNetworkLog().requests()) {
       const requestOrigin = getRequestContextOrigin(request);
       if (origin && requestOrigin !== origin) {
         hasCrossOriginRequest = true;
@@ -4016,12 +4023,13 @@ var FileFormatter = class _FileFormatter {
     return sourceMapDetails;
   }
   #file;
-  constructor(file) {
+  #debuggerWorkspaceBinding;
+  constructor(file, debuggerWorkspaceBinding = Bindings2.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance()) {
     this.#file = file;
+    this.#debuggerWorkspaceBinding = debuggerWorkspaceBinding;
   }
   formatFile() {
-    const debuggerWorkspaceBinding = Bindings2.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance();
-    const sourceMapDetails = _FileFormatter.formatSourceMapDetails(this.#file, debuggerWorkspaceBinding);
+    const sourceMapDetails = _FileFormatter.formatSourceMapDetails(this.#file, this.#debuggerWorkspaceBinding);
     const lines = [
       `File name: ${this.#file.displayName()}`,
       `URL: ${this.#file.url()}`,
@@ -4051,9 +4059,11 @@ ${truncated}
 // gen/front_end/models/ai_assistance/contexts/FileContext.js
 var FileContext = class extends ConversationContext {
   #file;
-  constructor(file) {
+  #debuggerWorkspaceBinding;
+  constructor(file, debuggerWorkspaceBinding) {
     super();
     this.#file = file;
+    this.#debuggerWorkspaceBinding = debuggerWorkspaceBinding;
   }
   getURL() {
     return this.#file.url();
@@ -4066,13 +4076,13 @@ var FileContext = class extends ConversationContext {
   }
   async getPromptDetails() {
     return `# Selected file
-${new FileFormatter(this.#file).formatFile()}`;
+${new FileFormatter(this.#file, this.#debuggerWorkspaceBinding).formatFile()}`;
   }
   async getUserFacingDetails() {
     return [
       {
         title: "Selected file",
-        text: new FileFormatter(this.#file).formatFile()
+        text: new FileFormatter(this.#file, this.#debuggerWorkspaceBinding).formatFile()
       }
     ];
   }
@@ -4768,6 +4778,25 @@ var PerformanceTraceFormatter = class {
         parts.push(`  - ${insightPartsText}`);
       }
     }
+    const extensionTrackData = parsedTrace.data.ExtensionTraceData?.extensionTrackData;
+    if (extensionTrackData && extensionTrackData.length > 0) {
+      parts.push("\n# Custom tracks\n");
+      parts.push("The following is a list of custom tracks or track groups from the extensibility API.");
+      for (const trackData of extensionTrackData) {
+        if (trackData.isTrackGroup) {
+          parts.push(`
+## Group: ${trackData.name}
+`);
+          for (const trackName of Object.keys(trackData.entriesByTrack)) {
+            parts.push(`  - Track: ${trackName}`);
+          }
+        } else {
+          parts.push(`
+## Track: ${trackData.name}
+`);
+        }
+      }
+    }
     return parts.join("\n");
   }
   async #formatFactByInsightSet(options) {
@@ -4975,6 +5004,50 @@ var PerformanceTraceFormatter = class {
       results.push("# Related insights");
       results.push("Here are all the insights that contain some related request from the given range.");
       results.push(relatedInsightsText);
+    }
+    return results.join("\n\n");
+  }
+  formatExtensionTrackSummary(bounds) {
+    const extensionTrackData = this.#parsedTrace.data.ExtensionTraceData?.extensionTrackData;
+    if (!extensionTrackData || extensionTrackData.length === 0) {
+      return "No custom track activity found";
+    }
+    const results = [];
+    for (const trackData of extensionTrackData) {
+      const trackLines = [];
+      const header = trackData.isTrackGroup ? `# Track Group: ${trackData.name}` : `# Track: ${trackData.name}`;
+      trackLines.push(header);
+      let hasEntriesInBounds = false;
+      for (const trackName of Object.keys(trackData.entriesByTrack)) {
+        const entries = trackData.entriesByTrack[trackName];
+        const filteredEntries = entries.filter((entry) => Trace3.Helpers.Timing.eventIsInBounds(entry, bounds));
+        if (filteredEntries.length === 0) {
+          continue;
+        }
+        hasEntriesInBounds = true;
+        if (trackData.isTrackGroup) {
+          trackLines.push(`## Track: ${trackName}`);
+        }
+        for (const entry of filteredEntries) {
+          const entryKey = this.serializeEvent(entry);
+          const parts = [
+            `Name: ${entry.name}`,
+            `eventKey: ${entryKey}`,
+            `duration: ${micros(entry.dur ?? Trace3.Types.Timing.Micro(0))}`
+          ];
+          if (entry.devtoolsObj.properties) {
+            const props = entry.devtoolsObj.properties.map((prop) => `${prop[0]}: ${JSON.stringify(prop[1])}`).join(", ");
+            parts.push(`properties: {${props}}`);
+          }
+          trackLines.push(`- ${parts.join(", ")}`);
+        }
+      }
+      if (hasEntriesInBounds) {
+        results.push(trackLines.join("\n"));
+      }
+    }
+    if (results.length === 0) {
+      return "No custom track activity found in the given bounds";
     }
     return results.join("\n\n");
   }
@@ -6453,19 +6526,23 @@ function getPerformanceAgentFocusFromModel(model) {
 
 // gen/front_end/models/ai_assistance/contexts/PerformanceTraceContext.js
 var PerformanceTraceContext = class _PerformanceTraceContext extends ConversationContext {
-  static fromParsedTrace(parsedTrace) {
-    return new _PerformanceTraceContext(AgentFocus.fromParsedTrace(parsedTrace));
+  static fromParsedTrace(parsedTrace, targetManager = SDK10.TargetManager.TargetManager.instance(), freshRecordingTracker = Tracing.FreshRecording.Tracker.instance()) {
+    return new _PerformanceTraceContext(AgentFocus.fromParsedTrace(parsedTrace), targetManager, freshRecordingTracker);
   }
-  static fromInsight(parsedTrace, insight) {
-    return new _PerformanceTraceContext(AgentFocus.fromInsight(parsedTrace, insight));
+  static fromInsight(parsedTrace, insight, targetManager = SDK10.TargetManager.TargetManager.instance(), freshRecordingTracker = Tracing.FreshRecording.Tracker.instance()) {
+    return new _PerformanceTraceContext(AgentFocus.fromInsight(parsedTrace, insight), targetManager, freshRecordingTracker);
   }
-  static fromCallTree(callTree) {
-    return new _PerformanceTraceContext(AgentFocus.fromCallTree(callTree));
+  static fromCallTree(callTree, targetManager = SDK10.TargetManager.TargetManager.instance(), freshRecordingTracker = Tracing.FreshRecording.Tracker.instance()) {
+    return new _PerformanceTraceContext(AgentFocus.fromCallTree(callTree), targetManager, freshRecordingTracker);
   }
   #focus;
-  constructor(focus) {
+  #targetManager;
+  #freshRecordingTracker;
+  constructor(focus, targetManager = SDK10.TargetManager.TargetManager.instance(), freshRecordingTracker = Tracing.FreshRecording.Tracker.instance()) {
     super();
     this.#focus = focus;
+    this.#targetManager = targetManager;
+    this.#freshRecordingTracker = freshRecordingTracker;
   }
   /**
    * Returns a PerformanceTraceFormatter configured to resolve function
@@ -6477,9 +6554,9 @@ var PerformanceTraceContext = class _PerformanceTraceContext extends Conversatio
    */
   createFormatter() {
     const focus = this.#focus;
-    const target = SDK10.TargetManager.TargetManager.instance().primaryPageTarget();
+    const target = this.#targetManager.primaryPageTarget();
     const formatter = new PerformanceTraceFormatter(focus);
-    const isFresh = Tracing.FreshRecording.Tracker.instance().recordingIsFresh(focus.parsedTrace);
+    const isFresh = this.#freshRecordingTracker.recordingIsFresh(focus.parsedTrace);
     formatter.resolveFunctionCode = async (url, line, column) => {
       if (!target || !isFresh) {
         return null;
@@ -6511,7 +6588,7 @@ var PerformanceTraceContext = class _PerformanceTraceContext extends Conversatio
     const parsedTrace = this.#focus.parsedTrace;
     const url = this.getURL();
     const origin = extractContextOrigin(url);
-    const isFresh = Tracing.FreshRecording.Tracker.instance().recordingIsFresh(parsedTrace);
+    const isFresh = this.#freshRecordingTracker.recordingIsFresh(parsedTrace);
     if (!isFresh) {
       const parsed = Common8.ParsedURL.ParsedURL.fromString(origin);
       return `imported-trace://${parsed ? parsed.domain() : origin}`;
@@ -6919,7 +6996,7 @@ var StorageAgent = class _StorageAgent extends AiAgent {
         if (!isSamePrimaryPageOrigin(this.targetManager, this.context)) {
           return { error: "No origin available or not allowed." };
         }
-        const storages = resolveDOMStorages(this.context, args.type, args.origin, args.storageKey, this.targetManager);
+        const storages = resolveDOMStorages(this.context, args.type, args.origin, this.targetManager, args.storageKey);
         const keyAndItems = await Promise.all(storages.map(async (storage) => {
           const items = await storage.getItems();
           return { storageKey: storage.storageKey, items };
@@ -6979,7 +7056,7 @@ var StorageAgent = class _StorageAgent extends AiAgent {
         if (!isSamePrimaryPageOrigin(this.targetManager, this.context)) {
           return { error: "No origin available or not allowed." };
         }
-        const storages = resolveDOMStorages(this.context, args.type, args.origin, args.storageKey, this.targetManager);
+        const storages = resolveDOMStorages(this.context, args.type, args.origin, this.targetManager, args.storageKey);
         if (storages.length === 0) {
           return { error: "No matching storage partitions found." };
         }
@@ -7225,7 +7302,7 @@ async function getCookiesForDomain(target, origin) {
   }
   return allCookies.filter((cookie) => !cookie.httpOnly());
 }
-function findFrameForOrigin(context, origin, targetManager = SDK11.TargetManager.TargetManager.instance()) {
+function findFrameForOrigin(context, origin, targetManager) {
   for (const frame of SDK11.ResourceTreeModel.ResourceTreeModel.frames(targetManager)) {
     if (frame.securityOrigin === origin) {
       const target = frame.resourceTreeModel().target();
@@ -7236,7 +7313,7 @@ function findFrameForOrigin(context, origin, targetManager = SDK11.TargetManager
   }
   return null;
 }
-function resolveDOMStorages(context, type, origin, storageKey, targetManager = SDK11.TargetManager.TargetManager.instance()) {
+function resolveDOMStorages(context, type, origin, targetManager, storageKey) {
   const resolvedStorages = [];
   const isLocalStorage = type === "localStorage";
   const domStorageModels = targetManager.models(SDK11.DOMStorageModel.DOMStorageModel);
@@ -7326,8 +7403,12 @@ var ContextSelectionAgent = class _ContextSelectionAgent extends AiAgent {
   #networkTimeCalculator;
   #lighthouseRecording;
   #allowedOrigin;
+  #networkLog;
+  #workspace;
   constructor(opts) {
     super(opts);
+    this.#networkLog = opts.networkLog ?? Logs4.NetworkLog.NetworkLog.instance();
+    this.#workspace = opts.workspace ?? Workspace3.Workspace.WorkspaceImpl.instance();
     this.#performanceRecordAndReload = opts.performanceRecordAndReload;
     this.#lighthouseRecording = opts.lighthouseRecording;
     this.#onInspectElement = opts.onInspectElement;
@@ -7364,7 +7445,7 @@ var ContextSelectionAgent = class _ContextSelectionAgent extends AiAgent {
         }
         let hasCrossOriginRequest = false;
         const requestsToShow = [];
-        for (const request of Logs4.NetworkLog.NetworkLog.instance().requests()) {
+        for (const request of this.#networkLog.requests()) {
           const requestOrigin = getRequestContextOrigin(request);
           if (origin && requestOrigin !== origin) {
             hasCrossOriginRequest = true;
@@ -7429,7 +7510,7 @@ var ContextSelectionAgent = class _ContextSelectionAgent extends AiAgent {
             error: "No request found"
           };
         }
-        const request = Logs4.NetworkLog.NetworkLog.instance().requests().find((req) => {
+        const request = this.#networkLog.requests().find((req) => {
           if (req.requestId() !== id) {
             return false;
           }
@@ -7479,7 +7560,7 @@ var ContextSelectionAgent = class _ContextSelectionAgent extends AiAgent {
         const origin = allowedOriginResult.origin;
         const files = [];
         const uiSourceCodes = [];
-        for (const file of _ContextSelectionAgent.getUISourceCodes()) {
+        for (const file of _ContextSelectionAgent.getUISourceCodes(this.#workspace)) {
           const fileUrl = file.url();
           const fileOrigin = Common10.ParsedURL.ParsedURL.extractOrigin(fileUrl);
           if (origin && fileOrigin !== origin) {
@@ -7531,7 +7612,7 @@ var ContextSelectionAgent = class _ContextSelectionAgent extends AiAgent {
           };
         }
         const origin = allowedOriginResult.origin;
-        const file = _ContextSelectionAgent.getUISourceCodes().find((file2) => {
+        const file = _ContextSelectionAgent.getUISourceCodes(this.#workspace).find((file2) => {
           if (_ContextSelectionAgent.uiSourceCodeId.get(file2) !== params.id) {
             return false;
           }
@@ -7725,8 +7806,7 @@ var ContextSelectionAgent = class _ContextSelectionAgent extends AiAgent {
    * coming from SourceMaps (usually only one) as that has simple code and
    * usually is what the user authored.
    */
-  static getUISourceCodes() {
-    const workspace = Workspace3.Workspace.WorkspaceImpl.instance();
+  static getUISourceCodes(workspace = Workspace3.Workspace.WorkspaceImpl.instance()) {
     const projects = workspace.projects().filter((project) => project.type() === Workspace3.Workspace.projectTypes.Network);
     const uiSourceCodes = /* @__PURE__ */ new Map();
     for (const project of projects) {
