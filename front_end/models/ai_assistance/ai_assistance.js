@@ -9,9 +9,9 @@ var AgentProject_exports = {};
 __export(AgentProject_exports, {
   AgentProject: () => AgentProject
 });
+import * as TextUtils from "./../../core/text_utils/text_utils.js";
 import * as Diff from "./../../third_party/diff/diff.js";
 import * as Persistence from "./../persistence/persistence.js";
-import * as TextUtils from "./../text_utils/text_utils.js";
 
 // gen/front_end/models/ai_assistance/debug.js
 var debug_exports = {};
@@ -2758,9 +2758,9 @@ __export(NetworkRequestFormatter_exports, {
   sanitizeHeaders: () => sanitizeHeaders
 });
 import * as Common5 from "./../../core/common/common.js";
+import * as TextUtils3 from "./../../core/text_utils/text_utils.js";
 import * as Logs from "./../logs/logs.js";
 import * as NetworkTimeCalculator from "./../network_time_calculator/network_time_calculator.js";
-import * as TextUtils3 from "./../text_utils/text_utils.js";
 var _a2;
 var MAX_HEADERS_SIZE = 1e3;
 var MAX_BODY_SIZE = 1e4;
@@ -4619,12 +4619,14 @@ var PerformanceTraceFormatter = class {
   #formattedFunctionCodes = /* @__PURE__ */ new Set();
   #deviceScope;
   resolveFunctionCode;
-  constructor(focus, deviceScope = null) {
+  #cruxManager;
+  constructor(focus, deviceScope = null, cruxManager = CrUXManager.CrUXManager.instance()) {
     this.#focus = focus;
     this.#parsedTrace = focus.parsedTrace;
     this.#insightSet = focus.primaryInsightSet;
     this.#eventsSerializer = focus.eventsSerializer;
     this.#deviceScope = deviceScope;
+    this.#cruxManager = cruxManager;
   }
   serializeEvent(event) {
     const key = this.#eventsSerializer.keyForEvent(event);
@@ -4642,7 +4644,7 @@ var PerformanceTraceFormatter = class {
       return [];
     }
     try {
-      const cruxScope = this.#deviceScope ? { pageScope: "url", deviceScope: this.#deviceScope } : CrUXManager.CrUXManager.instance().getSelectedScope();
+      const cruxScope = this.#deviceScope ? { pageScope: "url", deviceScope: this.#deviceScope } : this.#cruxManager.getSelectedScope();
       const parts = [];
       const fieldMetrics = Trace3.Insights.Common.getFieldMetricsForInsightSet(insightSet, this.#parsedTrace.metadata, cruxScope);
       const fieldLcp = fieldMetrics?.lcp;
@@ -8269,9 +8271,9 @@ import * as Host17 from "./../../core/host/host.js";
 import * as i18n19 from "./../../core/i18n/i18n.js";
 import * as Root11 from "./../../core/root/root.js";
 import * as SDK12 from "./../../core/sdk/sdk.js";
+import * as TextUtils4 from "./../../core/text_utils/text_utils.js";
 import * as Tracing2 from "./../../services/tracing/tracing.js";
 import * as Logs5 from "./../logs/logs.js";
-import * as TextUtils4 from "./../text_utils/text_utils.js";
 import * as Trace7 from "./../trace/trace.js";
 var UIStringsNotTranslated = {
   /**

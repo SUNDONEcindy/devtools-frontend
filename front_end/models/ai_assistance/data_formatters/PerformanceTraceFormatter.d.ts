@@ -11,7 +11,7 @@ export interface NetworkRequestFormatOptions {
 export declare class PerformanceTraceFormatter {
     #private;
     resolveFunctionCode?: (url: Platform.DevToolsPath.UrlString, line: number, column: number) => Promise<SourceMapScopes.FunctionCodeResolver.FunctionCode | null>;
-    constructor(focus: AgentFocus, deviceScope?: CrUXManager.DeviceScope | null);
+    constructor(focus: AgentFocus, deviceScope?: CrUXManager.DeviceScope | null, cruxManager?: CrUXManager.CrUXManager);
     serializeEvent(event: Trace.Types.Events.Event): string;
     serializeBounds(bounds: Trace.Types.Timing.TraceWindowMicro): string;
     formatTraceSummary(): string;

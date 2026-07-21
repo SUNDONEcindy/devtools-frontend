@@ -814,9 +814,9 @@ import * as i18n7 from "./../../core/i18n/i18n.js";
 import * as Platform2 from "./../../core/platform/platform.js";
 import { assertNotNullOrUndefined as assertNotNullOrUndefined2 } from "./../../core/platform/platform.js";
 import * as SDK2 from "./../../core/sdk/sdk.js";
+import * as TextUtils from "./../../core/text_utils/text_utils.js";
 import * as Bindings from "./../../models/bindings/bindings.js";
 import * as Breakpoints from "./../../models/breakpoints/breakpoints.js";
-import * as TextUtils from "./../../models/text_utils/text_utils.js";
 import * as Workspace2 from "./../../models/workspace/workspace.js";
 import * as Input from "./../../ui/components/input/input.js";
 import * as RenderCoordinator from "./../../ui/components/render_coordinator/render_coordinator.js";
@@ -2934,10 +2934,10 @@ import * as Host3 from "./../../core/host/host.js";
 import * as i18n13 from "./../../core/i18n/i18n.js";
 import * as Platform5 from "./../../core/platform/platform.js";
 import * as SDK5 from "./../../core/sdk/sdk.js";
+import * as TextUtils4 from "./../../core/text_utils/text_utils.js";
 import * as AiAssistance from "./../../models/ai_assistance/ai_assistance.js";
 import * as Bindings3 from "./../../models/bindings/bindings.js";
 import * as Persistence3 from "./../../models/persistence/persistence.js";
-import * as TextUtils4 from "./../../models/text_utils/text_utils.js";
 import * as Workspace6 from "./../../models/workspace/workspace.js";
 import * as Buttons2 from "./../../ui/components/buttons/buttons.js";
 import * as Spinners from "./../../ui/components/spinners/spinners.js";
@@ -3146,9 +3146,9 @@ __export(SourcesSearchScope_exports, {
 });
 import * as Common4 from "./../../core/common/common.js";
 import * as Platform3 from "./../../core/platform/platform.js";
+import * as TextUtils2 from "./../../core/text_utils/text_utils.js";
 import * as Bindings2 from "./../../models/bindings/bindings.js";
 import * as Persistence from "./../../models/persistence/persistence.js";
-import * as TextUtils2 from "./../../models/text_utils/text_utils.js";
 import * as Workspace4 from "./../../models/workspace/workspace.js";
 var SourcesSearchScope = class _SourcesSearchScope {
   searchId;
@@ -5390,8 +5390,8 @@ __export(TabbedEditorContainer_exports, {
 import * as Common10 from "./../../core/common/common.js";
 import * as i18n29 from "./../../core/i18n/i18n.js";
 import * as Platform9 from "./../../core/platform/platform.js";
+import * as TextUtils10 from "./../../core/text_utils/text_utils.js";
 import * as Persistence7 from "./../../models/persistence/persistence.js";
-import * as TextUtils10 from "./../../models/text_utils/text_utils.js";
 import * as Workspace18 from "./../../models/workspace/workspace.js";
 import * as Tooltips2 from "./../../ui/components/tooltips/tooltips.js";
 import * as uiI18n2 from "./../../ui/i18n/i18n.js";
@@ -5411,6 +5411,7 @@ __export(UISourceCodeFrame_exports, {
 import * as Common9 from "./../../core/common/common.js";
 import * as Host6 from "./../../core/host/host.js";
 import * as i18n27 from "./../../core/i18n/i18n.js";
+import * as TextUtils8 from "./../../core/text_utils/text_utils.js";
 
 // gen/front_end/entrypoints/formatter_worker/FormatterActions.js
 var FORMATTABLE_MEDIA_TYPES = [
@@ -5427,7 +5428,6 @@ import * as AiCodeCompletion3 from "./../../models/ai_code_completion/ai_code_co
 import * as Formatter2 from "./../../models/formatter/formatter.js";
 import * as IssuesManager from "./../../models/issues_manager/issues_manager.js";
 import * as Persistence5 from "./../../models/persistence/persistence.js";
-import * as TextUtils8 from "./../../models/text_utils/text_utils.js";
 import * as Workspace16 from "./../../models/workspace/workspace.js";
 import * as CodeMirror6 from "./../../third_party/codemirror.next/codemirror.next.js";
 import * as IssueCounter from "./../../ui/components/issue_counter/issue_counter.js";
@@ -5443,7 +5443,7 @@ __export(CoveragePlugin_exports, {
 });
 import * as i18n15 from "./../../core/i18n/i18n.js";
 import * as SDK6 from "./../../core/sdk/sdk.js";
-import * as TextUtils5 from "./../../models/text_utils/text_utils.js";
+import * as TextUtils5 from "./../../core/text_utils/text_utils.js";
 import * as Workspace10 from "./../../models/workspace/workspace.js";
 import * as CodeMirror2 from "./../../third_party/codemirror.next/codemirror.next.js";
 import * as UI9 from "./../../ui/legacy/legacy.js";
@@ -6075,13 +6075,13 @@ import * as Host4 from "./../../core/host/host.js";
 import * as i18n19 from "./../../core/i18n/i18n.js";
 import * as Platform6 from "./../../core/platform/platform.js";
 import * as SDK8 from "./../../core/sdk/sdk.js";
+import * as TextUtils6 from "./../../core/text_utils/text_utils.js";
 import * as Badges from "./../../models/badges/badges.js";
 import * as Bindings5 from "./../../models/bindings/bindings.js";
 import * as Breakpoints2 from "./../../models/breakpoints/breakpoints.js";
 import * as Formatter from "./../../models/formatter/formatter.js";
 import * as SourceMapScopes from "./../../models/source_map_scopes/source_map_scopes.js";
 import * as StackTrace from "./../../models/stack_trace/stack_trace.js";
-import * as TextUtils6 from "./../../models/text_utils/text_utils.js";
 import * as Workspace13 from "./../../models/workspace/workspace.js";
 import * as CodeMirror4 from "./../../third_party/codemirror.next/codemirror.next.js";
 import * as Buttons3 from "./../../ui/components/buttons/buttons.js";
@@ -13088,9 +13088,9 @@ import * as Common16 from "./../../core/common/common.js";
 import * as Host11 from "./../../core/host/host.js";
 import * as i18n45 from "./../../core/i18n/i18n.js";
 import * as SDK12 from "./../../core/sdk/sdk.js";
+import * as TextUtils11 from "./../../core/text_utils/text_utils.js";
 import * as Bindings10 from "./../../models/bindings/bindings.js";
 import * as Persistence14 from "./../../models/persistence/persistence.js";
-import * as TextUtils11 from "./../../models/text_utils/text_utils.js";
 import * as Workspace27 from "./../../models/workspace/workspace.js";
 import * as UI22 from "./../../ui/legacy/legacy.js";
 var UIStrings23 = {
@@ -13598,9 +13598,9 @@ import * as Host12 from "./../../core/host/host.js";
 import * as i18n49 from "./../../core/i18n/i18n.js";
 import * as Platform15 from "./../../core/platform/platform.js";
 import * as SDK13 from "./../../core/sdk/sdk.js";
+import * as TextUtils12 from "./../../core/text_utils/text_utils.js";
 import * as Bindings11 from "./../../models/bindings/bindings.js";
 import * as Persistence16 from "./../../models/persistence/persistence.js";
-import * as TextUtils12 from "./../../models/text_utils/text_utils.js";
 import * as Workspace29 from "./../../models/workspace/workspace.js";
 import * as uiI18n3 from "./../../ui/i18n/i18n.js";
 import { Link as Link2 } from "./../../ui/kit/kit.js";
