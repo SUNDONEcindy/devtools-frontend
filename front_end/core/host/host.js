@@ -10,6 +10,7 @@ __export(AidaClient_exports, {
   AidaAbortError: () => AidaAbortError,
   AidaBlockError: () => AidaBlockError,
   AidaClient: () => AidaClient,
+  AidaPayloadTooLargeError: () => AidaPayloadTooLargeError,
   AidaQuotaError: () => AidaQuotaError,
   CLIENT_NAME: () => CLIENT_NAME,
   CitationSourceType: () => CitationSourceType,
@@ -1713,6 +1714,8 @@ var AidaBlockError = class extends Error {
 };
 var AidaQuotaError = class extends Error {
 };
+var AidaPayloadTooLargeError = class extends Error {
+};
 var AidaClient = class {
   // Delegate client
   #gcaClient = new GcaClient();
@@ -1815,10 +1818,12 @@ var AidaClient = class {
           return;
         }
         if ("error" in result && result.error) {
-          const errorStr = typeof result.error === "string" ? result.error : "";
-          const detailStr = typeof result.detail === "string" ? result.detail : "";
-          if (errorStr.toLowerCase().includes("quota") || detailStr.toLowerCase().includes("quota")) {
+          if (isQuotaError(result.error, result.detail)) {
             stream.fail(new AidaQuotaError(`Cannot send request: ${result.error}${result.detail ? ` ${result.detail}` : ""}`));
+            return;
+          }
+          if (isPayloadTooLargeError(result.error, result.detail)) {
+            stream.fail(new AidaPayloadTooLargeError(`Cannot send request: ${result.error}${result.detail ? ` ${result.detail}` : ""}`));
             return;
           }
           stream.fail(new Error(`Cannot send request: ${result.error}${result.detail ? ` ${result.detail}` : ""}`));
@@ -1876,8 +1881,11 @@ var AidaClient = class {
             thoughtSignature: result.functionCallChunk.functionCall.thoughtSignature
           });
         } else if ("error" in result) {
-          if (typeof result.error === "string" && result.error.toLowerCase().includes("quota")) {
+          if (isQuotaError(result.error)) {
             throw new AidaQuotaError(`Server responded: ${JSON.stringify(result)}`);
+          }
+          if (isPayloadTooLargeError(result.error)) {
+            throw new AidaPayloadTooLargeError(`Server responded: ${JSON.stringify(result)}`);
           }
           throw new Error(`Server responded: ${JSON.stringify(result)}`);
         } else {
@@ -2073,6 +2081,12 @@ var HostConfigTracker = class _HostConfigTracker extends Common4.ObjectWrapper.O
     }
   }
 };
+function isQuotaError(...inputs) {
+  return inputs.some((input) => input?.toLowerCase().includes("quota"));
+}
+function isPayloadTooLargeError(...inputs) {
+  return inputs.some((input) => input?.toLowerCase().includes("payload size exceeds the limit"));
+}
 
 // gen/front_end/core/host/GdpClient.js
 var GdpClient_exports = {};
