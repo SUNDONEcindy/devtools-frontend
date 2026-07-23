@@ -9,6 +9,7 @@ import * as Platform from '../../../../core/platform/platform.js';
 import * as Trace from '../../../../models/trace/trace.js';
 import * as VisualLogging from '../../../../ui/visual_logging/visual_logging.js';
 import * as Buttons from '../../../components/buttons/buttons.js';
+import { html, render } from '../../../lit/lit.js';
 import * as UI from '../../legacy.js';
 import * as ThemeSupport from '../../theme_support/theme_support.js';
 import { drawExpansionArrow, drawIcon, horizontalLine } from './CanvasHelper.js';
@@ -714,8 +715,8 @@ export class FlameChart extends Common.ObjectWrapper.eventMixin(UI.Widget.VBox) 
         };
     }
     updatePopoverContents(popoverElement) {
-        this.popoverElement.removeChildren();
-        this.popoverElement.appendChild(popoverElement);
+        // eslint-disable-next-line @devtools/no-lit-render-outside-of-view
+        render(html `${popoverElement}`, this.popoverElement);
         // Must update the offset AFTER the new content has been added.
         this.updatePopoverOffset();
         this.lastPopoverState.entryIndex = -1;

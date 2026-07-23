@@ -835,59 +835,59 @@ import * as Common from "./../common/common.js";
 import * as i18n from "./../i18n/i18n.js";
 var UIStrings = {
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
   systemError: "System error",
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
   connectionError: "Connection error",
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
   certificateError: "Certificate error",
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
   httpError: "HTTP error",
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
   cacheError: "Cache error",
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
-  signedExchangeError: "Signed Exchange error",
+  signedExchangeError: "`Signed Exchange` error",
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
   ftpError: "FTP error",
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
   certificateManagerError: "Certificate manager error",
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
   dnsResolverError: "DNS resolver error",
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
   unknownError: "Unknown error",
   /**
-   * @description Phrase used in error messages that carry a network error name
+   * @description Phrase used in error messages that carry a network error name.
    * @example {404} PH1
    * @example {net::ERR_INSUFFICIENT_RESOURCES} PH2
    */
   httpErrorStatusCodeSS: "HTTP error: status code {PH1}, {PH2}",
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
   invalidUrl: "Invalid URL",
   /**
-   * @description Name of an error category used in error messages
+   * @description Name of an error category used in error messages.
    */
-  decodingDataUrlFailed: "Decoding Data URL failed"
+  decodingDataUrlFailed: "Decoding data URL failed"
 };
 var str_ = i18n.i18n.registerUIStrings("core/host/ResourceLoader.ts", UIStrings);
 var i18nString = i18n.i18n.getLocalizedString.bind(void 0, str_);
@@ -1050,7 +1050,7 @@ var loadAsStream = function(url, headers, stream, callback, allowRemoteFilePaths
 // gen/front_end/core/host/InspectorFrontendHostStub.js
 var UIStrings2 = {
   /**
-   * @description Document title in Inspector Frontend Host of the DevTools window
+   * @description Document title in Inspector Frontend Host of the DevTools window.
    * @example {example.com} PH1
    */
   devtoolsS: "DevTools - {PH1}"

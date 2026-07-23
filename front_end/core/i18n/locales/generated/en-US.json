@@ -192,7 +192,7 @@
     "message": "Connection error"
   },
   "core/host/ResourceLoader.ts | decodingDataUrlFailed": {
-    "message": "Decoding Data URL failed"
+    "message": "Decoding data URL failed"
   },
   "core/host/ResourceLoader.ts | dnsResolverError": {
     "message": "DNS resolver error"
@@ -248,8 +248,8 @@
   "core/sdk/CSSStyleSheetHeader.ts | couldNotFindTheOriginalStyle": {
     "message": "Could not find the original style sheet."
   },
-  "core/sdk/CSSStyleSheetHeader.ts | thereWasAnErrorRetrievingThe": {
-    "message": "There was an error retrieving the source styles."
+  "core/sdk/CSSStyleSheetHeader.ts | couldNotRetrieveSourceStyles": {
+    "message": "Could not retrieve source styles."
   },
   "core/sdk/DebuggerModel.ts | block": {
     "message": "Block"
@@ -357,7 +357,7 @@
     "message": "This attempt to set a cookie via a Set-Cookie header was blocked because it had the \"{PH1}\" attribute but came from a cross-site response which was not the response to a top-level navigation."
   },
   "core/sdk/NetworkRequest.ts | blockedReasonSameSiteUnspecifiedTreatedAsLax": {
-    "message": "This Set-Cookie header didn’t specify a \"SameSite\" attribute and was defaulted to \"SameSite=Lax,\" and was blocked because it came from a cross-site response which was not the response to a top-level navigation. The Set-Cookie had to have been set with \"SameSite=None\" to enable cross-site usage."
+    "message": "This Set-Cookie header didn’t specify a \"SameSite\" attribute and was defaulted to \"SameSite=Lax\", and was blocked because it came from a cross-site response which was not the response to a top-level navigation. The Set-Cookie had to have been set with \"SameSite=None\" to enable cross-site usage."
   },
   "core/sdk/NetworkRequest.ts | blockedReasonSecureOnly": {
     "message": "This attempt to set a cookie via a Set-Cookie header was blocked because it had the \"Secure\" attribute but was not received over a secure connection."
@@ -369,7 +369,7 @@
     "message": "This cookie is allowed by Chrome Enterprise policy. Learn more: goo.gle/ce-3pc"
   },
   "core/sdk/NetworkRequest.ts | exemptionReasonScheme": {
-    "message": "This cookie is allowed by the top-level URL scheme"
+    "message": "This cookie is allowed by the top-level URL scheme."
   },
   "core/sdk/NetworkRequest.ts | exemptionReasonStorageAccessAPI": {
     "message": "This cookie is allowed by the Storage Access API. Learn more: goo.gle/saa"
@@ -456,7 +456,7 @@
     "message": "Error loading log"
   },
   "core/sdk/RehydratingConnection.ts | noHostWindow": {
-    "message": "Can not find host window"
+    "message": "Can’t find host window"
   },
   "core/sdk/RehydratingConnection.ts | noSourceText": {
     "message": "No source text available"
@@ -753,7 +753,7 @@
     "message": "Reduced contrast"
   },
   "core/sdk/sdk-meta.ts | remoteFileLoadingInfo": {
-    "message": "Example resource are source maps. Disabled by default for security reasons."
+    "message": "Example resources are source maps. Disabled by default for security reasons."
   },
   "core/sdk/sdk-meta.ts | rulersOnHover": {
     "message": "Rulers on hover"
@@ -822,7 +822,7 @@
     "message": "User idle, screen unlocked"
   },
   "core/sdk/ServerTiming.ts | deprecatedSyntaxFoundPleaseUse": {
-    "message": "Deprecated syntax found for metric \"{PH1}\". Please use: <name>;dur=<duration>;desc=<description>"
+    "message": "Deprecated syntax found for metric \"{PH1}\". Use: <name>;dur=<duration>;desc=<description>"
   },
   "core/sdk/ServerTiming.ts | duplicateParameterSIgnored": {
     "message": "Duplicate parameter \"{PH1}\" ignored."
@@ -7952,6 +7952,9 @@
   "panels/elements/elements-meta.ts | eventListeners": {
     "message": "Event Listeners"
   },
+  "panels/elements/elements-meta.ts | frameworkListeners": {
+    "message": "Framework listeners"
+  },
   "panels/elements/elements-meta.ts | hideElement": {
     "message": "Hide element"
   },
@@ -8766,7 +8769,7 @@
     "message": "Console message"
   },
   "panels/explain/components/ConsoleInsight.ts | error": {
-    "message": "DevTools has encountered an error"
+    "message": "DevTools encountered an error"
   },
   "panels/explain/components/ConsoleInsight.ts | errorBody": {
     "message": "Something went wrong. Try again."
@@ -8814,7 +8817,7 @@
     "message": "Related content"
   },
   "panels/explain/components/ConsoleInsight.ts | reloadRecommendation": {
-    "message": "Reload the page to capture related network request data for this message in order to create a better insight."
+    "message": "Reload the page to capture related network request data for this message to get a better insight."
   },
   "panels/explain/components/ConsoleInsight.ts | report": {
     "message": "Report legal issue"
@@ -8832,13 +8835,13 @@
     "message": "Sign in to use this feature"
   },
   "panels/explain/components/ConsoleInsight.ts | stackTrace": {
-    "message": "Stacktrace"
+    "message": "Stack trace"
   },
   "panels/explain/components/ConsoleInsight.ts | timedOut": {
     "message": "Generating a response took too long. Please try again."
   },
   "panels/explain/components/ConsoleInsight.ts | turnOnInSettings": {
-    "message": "Turn on {PH1} to receive AI assistance for understanding and addressing console warnings and errors."
+    "message": "Turn on {PH1} to use AI assistance for understanding and addressing console warnings and errors."
   },
   "panels/explain/explain-meta.ts | enableConsoleInsights": {
     "message": "Understand console messages with AI"
@@ -9284,6 +9287,9 @@
   "panels/js_timeline/js_timeline-meta.ts | timelineShowAllEvents": {
     "message": "Show all events"
   },
+  "panels/layer_viewer/layer_viewer-meta.ts | paints": {
+    "message": "Paints"
+  },
   "panels/layer_viewer/layer_viewer-meta.ts | panOrRotateDown": {
     "message": "Pan or rotate down"
   },
@@ -9298,6 +9304,9 @@
   },
   "panels/layer_viewer/layer_viewer-meta.ts | resetView": {
     "message": "Reset view"
+  },
+  "panels/layer_viewer/layer_viewer-meta.ts | slowScrollRects": {
+    "message": "Slow scroll rects"
   },
   "panels/layer_viewer/layer_viewer-meta.ts | switchToPanMode": {
     "message": "Switch to pan mode"
@@ -9392,17 +9401,11 @@
   "panels/layer_viewer/Layers3DView.ts | noLayerInformation": {
     "message": "No layers detected yet"
   },
-  "panels/layer_viewer/Layers3DView.ts | paints": {
-    "message": "Paints"
-  },
   "panels/layer_viewer/Layers3DView.ts | resetView": {
     "message": "Reset View"
   },
   "panels/layer_viewer/Layers3DView.ts | showPaintProfiler": {
     "message": "Show Paint Profiler"
-  },
-  "panels/layer_viewer/Layers3DView.ts | slowScrollRects": {
-    "message": "Slow scroll rects"
   },
   "panels/layer_viewer/Layers3DView.ts | webglSupportIsDisabledInYour": {
     "message": "WebGL support is disabled in your browser."
@@ -9464,8 +9467,38 @@
   "panels/layers/LayersPanel.ts | profiler": {
     "message": "Profiler"
   },
+  "panels/lighthouse/lighthouse-meta.ts | accessibility": {
+    "message": "Accessibility"
+  },
+  "panels/lighthouse/lighthouse-meta.ts | agenticBrowsing": {
+    "message": "Agentic browsing"
+  },
+  "panels/lighthouse/lighthouse-meta.ts | bestPractices": {
+    "message": "Best practices"
+  },
+  "panels/lighthouse/lighthouse-meta.ts | clearStorage": {
+    "message": "Clear storage"
+  },
+  "panels/lighthouse/lighthouse-meta.ts | device": {
+    "message": "Apply mobile emulation"
+  },
+  "panels/lighthouse/lighthouse-meta.ts | enableSampling": {
+    "message": "Enable JS sampling"
+  },
+  "panels/lighthouse/lighthouse-meta.ts | mode": {
+    "message": "Lighthouse mode"
+  },
+  "panels/lighthouse/lighthouse-meta.ts | performance": {
+    "message": "Performance"
+  },
+  "panels/lighthouse/lighthouse-meta.ts | seo": {
+    "message": "SEO"
+  },
   "panels/lighthouse/lighthouse-meta.ts | showLighthouse": {
     "message": "Show Lighthouse"
+  },
+  "panels/lighthouse/lighthouse-meta.ts | throttling": {
+    "message": "Throttling method"
   },
   "panels/lighthouse/LighthouseController.ts | accessibility": {
     "message": "Accessibility"
@@ -9507,7 +9540,7 @@
     "message": "Does this page follow best practices for modern web development"
   },
   "panels/lighthouse/LighthouseController.ts | enableJavaScriptSampling": {
-    "message": "Enable JavaScript sampling during the Lighthouse run. This will provide more execution details in the performance panel when you view the trace, but has higher CPU overhead and may impact the performance of the page."
+    "message": "Enable JavaScript sampling during the Lighthouse run. This will provide more execution details in the Performance panel when you view the trace, but has higher CPU overhead and may impact the performance of the page."
   },
   "panels/lighthouse/LighthouseController.ts | enableSampling": {
     "message": "Enable JS sampling"
@@ -9525,7 +9558,7 @@
     "message": "Is this page usable by people with disabilities or impairments"
   },
   "panels/lighthouse/LighthouseController.ts | javaScriptDisabled": {
-    "message": "JavaScript is disabled. You need to enable JavaScript to audit this page. Open the Command Menu and run the Enable JavaScript command to enable JavaScript."
+    "message": "JavaScript is disabled. You need to enable JavaScript to audit this page. Open the command menu and run the Enable JavaScript command to enable JavaScript."
   },
   "panels/lighthouse/LighthouseController.ts | lighthouseMode": {
     "message": "Lighthouse mode"
@@ -9540,7 +9573,7 @@
     "message": "Multiple tabs are being controlled by the same service worker. Close your other tabs on the same origin to audit this page."
   },
   "panels/lighthouse/LighthouseController.ts | navigation": {
-    "message": "Navigation (Default)"
+    "message": "Navigation (default)"
   },
   "panels/lighthouse/LighthouseController.ts | navigationTooltip": {
     "message": "Navigation mode analyzes a page load, exactly like the original Lighthouse reports."
@@ -9570,10 +9603,10 @@
     "message": "Snapshot mode analyzes the page in a particular state, typically after user interactions."
   },
   "panels/lighthouse/LighthouseController.ts | thereMayBeStoredDataAffectingLoadingPlural": {
-    "message": "There may be stored data affecting loading performance in these locations: {PH1}. Audit this page in an incognito window to prevent those resources from affecting your scores."
+    "message": "There may be stored data affecting loading performance in these locations: {PH1}. Audit this page in an incognito window to stop those resources from affecting your scores."
   },
   "panels/lighthouse/LighthouseController.ts | thereMayBeStoredDataAffectingSingular": {
-    "message": "There may be stored data affecting loading performance in this location: {PH1}. Audit this page in an incognito window to prevent those resources from affecting your scores."
+    "message": "There may be stored data affecting loading performance in this location: {PH1}. Audit this page in an incognito window to stop those resources from affecting your scores."
   },
   "panels/lighthouse/LighthouseController.ts | throttlingMethod": {
     "message": "Throttling method"
@@ -9606,7 +9639,7 @@
     "message": "Printing"
   },
   "panels/lighthouse/LighthousePanel.ts | thePrintPopupWindowIsOpenPlease": {
-    "message": "The print popup window is open. Please close it to continue."
+    "message": "The print popup window is open. Close it to continue."
   },
   "panels/lighthouse/LighthouseReportSelector.ts | newReport": {
     "message": "(new report)"
@@ -9639,7 +9672,7 @@
     "message": "Start timespan"
   },
   "panels/lighthouse/LighthouseStatusView.ts | ahSorryWeRanIntoAnError": {
-    "message": "Ah, sorry! We ran into an error."
+    "message": "We ran into an error."
   },
   "panels/lighthouse/LighthouseStatusView.ts | aiAuditingS": {
     "message": "AI assistance is auditing {PH1}"
@@ -9678,7 +9711,7 @@
     "message": "If a site takes >1 second to become interactive, users lose attention, and their perception of completing the page task is broken [Source: Google Developers Blog]"
   },
   "panels/lighthouse/LighthouseStatusView.ts | ifThisIssueIsReproduciblePlease": {
-    "message": "If this issue is reproducible, please report it at the Lighthouse GitHub repo."
+    "message": "If this issue is reproducible, report it at the Lighthouse GitHub repo."
   },
   "panels/lighthouse/LighthouseStatusView.ts | lighthouseIsGatheringInformation": {
     "message": "Lighthouse is gathering information about the page to compute your score."
@@ -12227,6 +12260,9 @@
   "panels/profiler/HeapSnapshotView.ts | filterByClass": {
     "message": "Filter by class"
   },
+  "panels/profiler/HeapSnapshotView.ts | filterSummarySObjectsS": {
+    "message": "{PH1} objects ({PH2})"
+  },
   "panels/profiler/HeapSnapshotView.ts | find": {
     "message": "Find"
   },
@@ -12304,9 +12340,6 @@
   },
   "panels/profiler/HeapSnapshotView.ts | savingD": {
     "message": "Saving… {PH1}%"
-  },
-  "panels/profiler/HeapSnapshotView.ts | selectedSizeS": {
-    "message": "Selected size: {PH1}"
   },
   "panels/profiler/HeapSnapshotView.ts | snapshotD": {
     "message": "Snapshot {PH1}"
@@ -16256,14 +16289,44 @@
   "panels/timeline/timeline-meta.ts | chromeFrameInLayersView": {
     "message": "Chrome frame in Layers view"
   },
+  "panels/timeline/timeline-meta.ts | dimThirdParties": {
+    "message": "Dim 3rd parties"
+  },
+  "panels/timeline/timeline-meta.ts | disableJavascriptSamples": {
+    "message": "Disable JavaScript samples"
+  },
+  "panels/timeline/timeline-meta.ts | documents": {
+    "message": "Documents"
+  },
+  "panels/timeline/timeline-meta.ts | enableAdvancedPaint": {
+    "message": "Enable advanced paint instrumentation (slow)"
+  },
+  "panels/timeline/timeline-meta.ts | enableSelectorStats": {
+    "message": "Enable CSS selector stats (slow)"
+  },
+  "panels/timeline/timeline-meta.ts | gpuMemory": {
+    "message": "GPU memory"
+  },
+  "panels/timeline/timeline-meta.ts | jsHeap": {
+    "message": "JS heap"
+  },
+  "panels/timeline/timeline-meta.ts | listeners": {
+    "message": "Listeners"
+  },
   "panels/timeline/timeline-meta.ts | loadProfile": {
     "message": "Load profile…"
+  },
+  "panels/timeline/timeline-meta.ts | memory": {
+    "message": "Memory"
   },
   "panels/timeline/timeline-meta.ts | nextFrame": {
     "message": "Next frame"
   },
   "panels/timeline/timeline-meta.ts | nextRecording": {
     "message": "Next recording"
+  },
+  "panels/timeline/timeline-meta.ts | nodes": {
+    "message": "Nodes"
   },
   "panels/timeline/timeline-meta.ts | performance": {
     "message": "Performance"
@@ -16282,6 +16345,15 @@
   },
   "panels/timeline/timeline-meta.ts | saveProfile": {
     "message": "Save profile…"
+  },
+  "panels/timeline/timeline-meta.ts | screenshotCapture": {
+    "message": "Screenshot capture"
+  },
+  "panels/timeline/timeline-meta.ts | screenshots": {
+    "message": "Screenshots"
+  },
+  "panels/timeline/timeline-meta.ts | showCustomtracks": {
+    "message": "Show custom tracks"
   },
   "panels/timeline/timeline-meta.ts | showPerformance": {
     "message": "Show Performance"
@@ -16460,23 +16532,11 @@
   "panels/timeline/TimelinePanel.ts | CpuThrottlingIsEnabled": {
     "message": "- CPU throttling is enabled"
   },
-  "panels/timeline/TimelinePanel.ts | dimThirdParties": {
-    "message": "Dim 3rd parties"
-  },
-  "panels/timeline/TimelinePanel.ts | disableJavascriptSamples": {
-    "message": "Disable JavaScript samples"
-  },
   "panels/timeline/TimelinePanel.ts | disablesJavascriptSampling": {
     "message": "Disables JavaScript sampling, reduces overhead when running against mobile devices"
   },
   "panels/timeline/TimelinePanel.ts | dropTimelineFileOrUrlHere": {
     "message": "Drop trace file or URL here"
-  },
-  "panels/timeline/TimelinePanel.ts | enableAdvancedPaint": {
-    "message": "Enable advanced paint instrumentation (slow)"
-  },
-  "panels/timeline/TimelinePanel.ts | enableSelectorStats": {
-    "message": "Enable CSS selector stats (slow)"
   },
   "panels/timeline/TimelinePanel.ts | encodingTraceForDownload": {
     "message": "Encoding…"
@@ -16511,9 +16571,6 @@
   "panels/timeline/TimelinePanel.ts | loadTrace": {
     "message": "Load trace…"
   },
-  "panels/timeline/TimelinePanel.ts | memory": {
-    "message": "Memory"
-  },
   "panels/timeline/TimelinePanel.ts | network": {
     "message": "Network:"
   },
@@ -16538,9 +16595,6 @@
   "panels/timeline/TimelinePanel.ts | recordingFailed": {
     "message": "Recording failed"
   },
-  "panels/timeline/TimelinePanel.ts | screenshotCapture": {
-    "message": "Screenshot capture"
-  },
   "panels/timeline/TimelinePanel.ts | screenshotPresetDefault": {
     "message": "500 x 500 px, up to 450 frames"
   },
@@ -16553,9 +16607,6 @@
   "panels/timeline/TimelinePanel.ts | screenshotPresetTiny": {
     "message": "100 x 100 px, up to 11250 frames"
   },
-  "panels/timeline/TimelinePanel.ts | screenshots": {
-    "message": "Screenshots"
-  },
   "panels/timeline/TimelinePanel.ts | selectionCleared": {
     "message": "Selection cleared"
   },
@@ -16564,9 +16615,6 @@
   },
   "panels/timeline/TimelinePanel.ts | shortcutsDialogTitle": {
     "message": "Keyboard shortcuts for flamechart"
-  },
-  "panels/timeline/TimelinePanel.ts | showCustomtracks": {
-    "message": "Show custom tracks"
   },
   "panels/timeline/TimelinePanel.ts | showDataAddedByExtensions": {
     "message": "Show data added by extensions of the Performance panel"

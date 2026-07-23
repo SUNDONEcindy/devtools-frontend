@@ -267,7 +267,7 @@ export class SourceFrameImpl extends Common.ObjectWrapper.eventMixin(UI.View.Sim
             header: i18nString(UIStrings.doYouTrustThisCode),
             message: i18nString(UIStrings.doNotPaste, { PH1: i18nString(UIStrings.allowPasting) }),
             typePhrase: i18nString(UIStrings.allowPasting),
-            inputPlaceholder: i18nString(UIStrings.typeAllowPasting, { PH1: i18nString(UIStrings.allowPasting) })
+            inputPlaceholder: i18nString(UIStrings.typeAllowPasting, { PH1: i18nString(UIStrings.allowPasting) }),
         });
         if (allowPasting) {
             this.selfXssWarningDisabledSetting.set(true);

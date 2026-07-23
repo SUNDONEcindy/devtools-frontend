@@ -144,7 +144,7 @@ export class ConsolePrompt extends Common.ObjectWrapper.eventMixin(UI.Widget.Wid
         if (this.aiCodeCompletionProvider) {
             this.aiCodeCompletionProvider.editorInitialized(this.editor);
             this.editor.editor.dispatch({
-                effects: TextEditor.AiCodeCompletionProvider.setAiCodeCompletionTeaserMode.of(TextEditor.AiCodeCompletionProvider.AiCodeCompletionTeaserMode.ONLY_SHOW_ON_EMPTY)
+                effects: TextEditor.AiCodeCompletionProvider.setAiCodeCompletionTeaserMode.of(TextEditor.AiCodeCompletionProvider.AiCodeCompletionTeaserMode.ONLY_SHOW_ON_EMPTY),
             });
         }
         this.editor.addEventListener('keydown', event => {
@@ -333,7 +333,7 @@ export class ConsolePrompt extends Common.ObjectWrapper.eventMixin(UI.Widget.Wid
                 const teaserMode = this.editor.editor.state.field(TextEditor.AiCodeCompletionProvider.aiCodeCompletionTeaserModeState);
                 if (teaserMode !== TextEditor.AiCodeCompletionProvider.AiCodeCompletionTeaserMode.OFF) {
                     this.editor.editor.dispatch({
-                        effects: TextEditor.AiCodeCompletionProvider.setAiCodeCompletionTeaserMode.of(TextEditor.AiCodeCompletionProvider.AiCodeCompletionTeaserMode.OFF)
+                        effects: TextEditor.AiCodeCompletionProvider.setAiCodeCompletionTeaserMode.of(TextEditor.AiCodeCompletionProvider.AiCodeCompletionTeaserMode.OFF),
                     });
                 }
             }

@@ -20192,8 +20192,7 @@ var EventListenersWidget = class _EventListenersWidget extends UI23.Widget.VBox 
     this.showForAncestorsSetting.addChangeListener(this.requestUpdate.bind(this));
     this.dispatchFilterBySetting = Common15.Settings.Settings.instance().createSetting("event-listener-dispatch-filter-type", DispatchFilterBy.All);
     this.dispatchFilterBySetting.addChangeListener(this.requestUpdate.bind(this));
-    this.showFrameworkListenersSetting = Common15.Settings.Settings.instance().createSetting("show-frameowkr-listeners", true);
-    this.showFrameworkListenersSetting.setTitle(i18nString18(UIStrings19.frameworkListeners));
+    this.showFrameworkListenersSetting = Common15.Settings.Settings.instance().moduleSetting("show-frameowkr-listeners");
     this.showFrameworkListenersSetting.addChangeListener(this.requestUpdate.bind(this));
     UI23.Context.Context.instance().addFlavorChangeListener(SDK19.DOMModel.DOMNode, this.requestUpdate.bind(this));
     this.requestUpdate();

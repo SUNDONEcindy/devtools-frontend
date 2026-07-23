@@ -72,7 +72,7 @@ export class Linkifier extends Common.ObjectWrapper.ObjectWrapper {
         Workspace.Workspace.WorkspaceImpl.instance().addEventListener(Workspace.Workspace.Events.WorkingCopyChanged, this.#onWorkingCopyChangedOrCommitted, this);
         Workspace.Workspace.WorkspaceImpl.instance().addEventListener(Workspace.Workspace.Events.WorkingCopyCommitted, this.#onWorkingCopyChangedOrCommitted, this);
     }
-    #onWorkingCopyChangedOrCommitted({ data: { uiSourceCode } }) {
+    #onWorkingCopyChangedOrCommitted({ data: { uiSourceCode }, }) {
         const anchors = anchorsByUISourceCode.get(uiSourceCode);
         if (!anchors) {
             return;

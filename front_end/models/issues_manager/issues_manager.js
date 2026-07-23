@@ -4117,6 +4117,7 @@ __export(IssuesManager_exports, {
 import * as Common5 from "./../../core/common/common.js";
 import * as Root2 from "./../../core/root/root.js";
 import * as SDK3 from "./../../core/sdk/sdk.js";
+import * as Bindings2 from "./../bindings/bindings.js";
 import * as Workspace2 from "./../workspace/workspace.js";
 
 // gen/front_end/models/issues_manager/BounceTrackingIssue.js
@@ -4793,9 +4794,10 @@ var StylesheetLoadingIssue = class _StylesheetLoadingIssue extends Issue {
 var SourceFrameIssuesManager = class {
   issuesManager;
   #sourceFrameMessageManager;
-  constructor(issuesManager, targetManager, workspace) {
+  constructor(issuesManager, targetManager, workspace, debuggerWorkspaceBinding, cssWorkspaceBinding) {
     this.issuesManager = issuesManager;
-    this.#sourceFrameMessageManager = new Bindings.PresentationConsoleMessageHelper.PresentationSourceFrameMessageManager(targetManager, workspace);
+    this.#sourceFrameMessageManager = new Bindings.PresentationConsoleMessageHelper.PresentationSourceFrameMessageManager(targetManager, workspace, debuggerWorkspaceBinding, cssWorkspaceBinding);
+    this.#sourceFrameMessageManager.enable();
     this.issuesManager.addEventListener("IssueAdded", this.#onIssueAdded, this);
     this.issuesManager.addEventListener("FullUpdateRequired", this.#onFullUpdateRequired, this);
   }
@@ -5155,13 +5157,13 @@ var IssuesManager = class _IssuesManager extends Common5.ObjectWrapper.ObjectWra
   #issuesByOutermostTarget = /* @__PURE__ */ new Map();
   #frameManager;
   #targetManager;
-  constructor(showThirdPartyIssuesSetting, hideIssueSetting, frameManager = SDK3.FrameManager.FrameManager.instance(), targetManager = SDK3.TargetManager.TargetManager.instance(), workspace = Workspace2.Workspace.WorkspaceImpl.instance()) {
+  constructor(showThirdPartyIssuesSetting, hideIssueSetting, frameManager = SDK3.FrameManager.FrameManager.instance(), targetManager = SDK3.TargetManager.TargetManager.instance(), workspace = Workspace2.Workspace.WorkspaceImpl.instance(), debuggerWorkspaceBinding = Bindings2.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance(), cssWorkspaceBinding = Bindings2.CSSWorkspaceBinding.CSSWorkspaceBinding.instance()) {
     super();
     this.showThirdPartyIssuesSetting = showThirdPartyIssuesSetting;
     this.hideIssueSetting = hideIssueSetting;
     this.#frameManager = frameManager;
     this.#targetManager = targetManager;
-    new SourceFrameIssuesManager(this, targetManager, workspace);
+    new SourceFrameIssuesManager(this, targetManager, workspace, debuggerWorkspaceBinding, cssWorkspaceBinding);
     this.#targetManager.observeModels(SDK3.IssuesModel.IssuesModel, this);
     this.#targetManager.addModelListener(SDK3.ResourceTreeModel.ResourceTreeModel, SDK3.ResourceTreeModel.Events.PrimaryPageChanged, this.#onPrimaryPageChanged, this);
     this.#frameManager.addEventListener("FrameAddedToTarget", this.#onFrameAddedToTarget, this);
