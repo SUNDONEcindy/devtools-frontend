@@ -9315,6 +9315,7 @@ var UIStrings19 = {
 var str_19 = i18n37.i18n.registerUIStrings("panels/timeline/TimelineUIUtils.ts", UIStrings19);
 var i18nString19 = i18n37.i18n.getLocalizedString.bind(void 0, str_19);
 var URL_REGEX = /(?:[a-zA-Z][a-zA-Z0-9+.-]{2,}:\/\/)[^\s"]{2,}[^\s"'\)\}\],:;.!?]/u;
+var ALWAYS_LINKIFIED_SCHEMES = /* @__PURE__ */ new Set(["http", "https"]);
 var eventDispatchDesciptors;
 var colorGenerator;
 var { SamplesIntegrator } = Trace23.Helpers.SamplesIntegrator;
@@ -9607,7 +9608,7 @@ var TimelineUIUtils = class _TimelineUIUtils {
   }
   static maybeCreateLinkElement(url) {
     const parsedURL = new Common11.ParsedURL.ParsedURL(url);
-    if (!parsedURL.scheme) {
+    if (!_TimelineUIUtils.isLinkifiableScheme(parsedURL.scheme)) {
       return null;
     }
     const splitResult = Common11.ParsedURL.ParsedURL.splitLineAndColumn(url);
@@ -9622,6 +9623,18 @@ var TimelineUIUtils = class _TimelineUIUtils {
       omitOrigin: true
     };
     return LegacyComponents.Linkifier.Linkifier.linkifyURL(rawURL, options);
+  }
+  /**
+   * Don't linkify URLs to privileged schemes. See https://crbug.com/530450502.
+   */
+  static isLinkifiableScheme(scheme) {
+    if (ALWAYS_LINKIFIED_SCHEMES.has(scheme)) {
+      return true;
+    }
+    if (LegacyComponents.Linkifier.Linkifier.isRegisteredLinkHandlerScheme(scheme + ":")) {
+      return true;
+    }
+    return false;
   }
   /**
    * Takes an input string and parses it to look for links. It does this by
@@ -9738,7 +9751,7 @@ var TimelineUIUtils = class _TimelineUIUtils {
       if (userDetail && Object.keys(userDetail).length) {
         const hasExclusiveLink = typeof userDetail === "object" && typeof userDetail.url === "string" && typeof userDetail.description === "string";
         if (hasExclusiveLink && Boolean(Root3.Runtime.hostConfig.devToolsDeepLinksViaExtensibilityApi?.enabled)) {
-          const linkElement = this.maybeCreateLinkElement(String(userDetail.url));
+          const linkElement = _TimelineUIUtils.maybeCreateLinkElement(String(userDetail.url));
           if (linkElement) {
             contentHelper.appendElementRow(String(userDetail.description), linkElement);
             delete userDetail.url;
