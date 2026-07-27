@@ -13457,6 +13457,12 @@
   "panels/sensors/LocationsSettingsTab.ts | addLocation": {
     "message": "Add location"
   },
+  "panels/sensors/LocationsSettingsTab.ts | cancel": {
+    "message": "Cancel"
+  },
+  "panels/sensors/LocationsSettingsTab.ts | editLocation": {
+    "message": "Edit location"
+  },
   "panels/sensors/LocationsSettingsTab.ts | lat": {
     "message": "Lat"
   },
@@ -13504,6 +13510,9 @@
   },
   "panels/sensors/LocationsSettingsTab.ts | longitudeMustBeLessThanOrEqualTo": {
     "message": "Longitude must be less than or equal to {PH1}"
+  },
+  "panels/sensors/LocationsSettingsTab.ts | save": {
+    "message": "Save"
   },
   "panels/sensors/LocationsSettingsTab.ts | timezoneId": {
     "message": "Timezone ID"
