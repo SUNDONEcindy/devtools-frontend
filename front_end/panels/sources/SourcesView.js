@@ -306,7 +306,7 @@ export class SourcesView extends Common.ObjectWrapper.eventMixin(UI.Widget.VBox)
             });
         }
     }
-    showSourceLocation(uiSourceCode, location, omitFocus, omitHighlight) {
+    async showSourceLocation(uiSourceCode, location, omitFocus, omitHighlight) {
         const currentFrame = this.currentSourceFrame();
         if (currentFrame) {
             this.historyManager.updateCurrentState(currentFrame.uiSourceCode(), currentFrame.textEditor.state.selection.main.head);
@@ -375,7 +375,7 @@ export class SourcesView extends Common.ObjectWrapper.eventMixin(UI.Widget.VBox)
                 // Remove the existing editor tab and create a new one of the correct type.
                 this.removeUISourceCodes([uiSourceCode]);
                 this.#uiSourceCodes.add(uiSourceCode);
-                this.showSourceLocation(uiSourceCode);
+                void this.showSourceLocation(uiSourceCode);
             }
         }
     }
@@ -580,7 +580,7 @@ export class SwitchFileActionDelegate {
         if (!nextUISourceCode) {
             return false;
         }
-        sourcesView.showSourceLocation(nextUISourceCode);
+        void sourcesView.showSourceLocation(nextUISourceCode);
         return true;
     }
 }

@@ -47,7 +47,7 @@ export declare class SourcesView extends SourcesView_base implements TabbedEdito
     private removeUISourceCodes;
     private projectRemoved;
     private updateScriptViewToolbarItems;
-    showSourceLocation(uiSourceCode: Workspace.UISourceCode.UISourceCode, location?: SourceFrame.SourceFrame.RevealPosition, omitFocus?: boolean, omitHighlight?: boolean): void;
+    showSourceLocation(uiSourceCode: Workspace.UISourceCode.UISourceCode, location?: SourceFrame.SourceFrame.RevealPosition, omitFocus?: boolean, omitHighlight?: boolean): Promise<void>;
     private createSourceView;
     getSourceView(uiSourceCode: Workspace.UISourceCode.UISourceCode): UI.Widget.Widget | undefined;
     private getOrCreateSourceView;

@@ -2444,10 +2444,6 @@ var LOCALIZED_INSTRUMENTATION_NAMES = {
     /* SDK.EventBreakpointsModel.InstrumentationNames.SCRIPT_BLOCKED_BY_CSP */
   ]: i18nLazyString(UIStrings4.scriptBlockedByContentSecurity),
   [
-    "sharedStorageWorkletScriptFirstStatement"
-    /* SDK.EventBreakpointsModel.InstrumentationNames.SHARED_STORAGE_WORKLET_SCRIPT_FIRST_STATEMENT */
-  ]: i18nLazyString(UIStrings4.scriptFirstStatement),
-  [
     "requestAnimationFrame"
     /* SDK.EventBreakpointsModel.InstrumentationNames.REQUEST_ANIMATION_FRAME */
   ]: i18nLazyString(UIStrings4.requestAnimationFrame),
@@ -5187,7 +5183,7 @@ var EditingLocationHistoryManager = class {
   sourcesView;
   entries = [];
   current = -1;
-  revealing = false;
+  revealingCount = 0;
   constructor(sourcesView) {
     this.sourcesView = sourcesView;
   }
@@ -5200,7 +5196,7 @@ var EditingLocationHistoryManager = class {
     }
     const prevPos = update.startState.selection.main;
     const newPos = update.state.selection.main;
-    const isJump = !this.revealing && prevPos.anchor !== newPos.anchor && update.transactions.some((tr) => {
+    const isJump = this.revealingCount === 0 && prevPos.anchor !== newPos.anchor && update.transactions.some((tr) => {
       return Boolean(tr.isUserEvent("select.pointer") || tr.isUserEvent("select.reveal") || tr.isUserEvent("select.search"));
     });
     if (isJump) {
@@ -5217,7 +5213,7 @@ var EditingLocationHistoryManager = class {
     }
   }
   updateCurrentState(uiSourceCode, position) {
-    if (!this.revealing) {
+    if (this.revealingCount === 0) {
       const top = this.current >= 0 ? this.entries[this.current] : null;
       if (top?.matches(uiSourceCode)) {
         top.position = position;
@@ -5231,24 +5227,27 @@ var EditingLocationHistoryManager = class {
       }
     }
   }
-  reveal(entry) {
+  async reveal(entry) {
     const uiSourceCode = Workspace7.Workspace.WorkspaceImpl.instance().uiSourceCode(entry.projectId, entry.url);
     if (uiSourceCode) {
-      this.revealing = true;
-      this.sourcesView.showSourceLocation(uiSourceCode, entry.position, false, true);
-      this.revealing = false;
+      this.revealingCount++;
+      try {
+        await this.sourcesView.showSourceLocation(uiSourceCode, entry.position, false, true);
+      } finally {
+        this.revealingCount--;
+      }
     }
   }
   rollback() {
     if (this.current > 0) {
       this.current--;
-      this.reveal(this.entries[this.current]);
+      void this.reveal(this.entries[this.current]);
     }
   }
   rollover() {
     if (this.current < this.entries.length - 1) {
       this.current++;
-      this.reveal(this.entries[this.current]);
+      void this.reveal(this.entries[this.current]);
     }
   }
   removeHistoryForSourceCode(uiSourceCode) {
@@ -7491,7 +7490,7 @@ var DebuggerPlugin = class extends Plugin {
 var BreakpointLocationRevealer = class {
   async reveal(breakpointLocation, omitFocus) {
     const { uiLocation } = breakpointLocation;
-    SourcesPanel.instance().showUILocation(uiLocation, omitFocus);
+    await SourcesPanel.instance().showUILocation(uiLocation, omitFocus);
     const debuggerPlugin = debuggerPluginForUISourceCode.get(uiLocation.uiSourceCode);
     if (debuggerPlugin) {
       debuggerPlugin.editBreakpointLocation(breakpointLocation);
@@ -10008,7 +10007,7 @@ var SourcesView = class _SourcesView extends Common11.ObjectWrapper.eventMixin(U
       });
     }
   }
-  showSourceLocation(uiSourceCode, location, omitFocus, omitHighlight) {
+  async showSourceLocation(uiSourceCode, location, omitFocus, omitHighlight) {
     const currentFrame = this.currentSourceFrame();
     if (currentFrame) {
       this.historyManager.updateCurrentState(currentFrame.uiSourceCode(), currentFrame.textEditor.state.selection.main.head);
@@ -10073,7 +10072,7 @@ var SourcesView = class _SourcesView extends Common11.ObjectWrapper.eventMixin(U
       if (this.#sourceViewTypeForWidget(widget) !== this.#sourceViewTypeForUISourceCode(uiSourceCode)) {
         this.removeUISourceCodes([uiSourceCode]);
         this.#uiSourceCodes.add(uiSourceCode);
-        this.showSourceLocation(uiSourceCode);
+        void this.showSourceLocation(uiSourceCode);
       }
     }
   }
@@ -10277,7 +10276,7 @@ var SwitchFileActionDelegate = class _SwitchFileActionDelegate {
     if (!nextUISourceCode) {
       return false;
     }
-    sourcesView.showSourceLocation(nextUISourceCode);
+    void sourcesView.showSourceLocation(nextUISourceCode);
     return true;
   }
 };
@@ -10932,7 +10931,7 @@ var SourcesPanel = class _SourcesPanel extends UI17.Panel.Panel {
   get visibleView() {
     return this.#sourcesView.visibleView();
   }
-  showUISourceCode(uiSourceCode, location, omitFocus) {
+  async showUISourceCode(uiSourceCode, location, omitFocus) {
     if (omitFocus) {
       if (!this.isShowing() && !UI17.Context.Context.instance().flavor(QuickSourceView)) {
         return;
@@ -10940,7 +10939,7 @@ var SourcesPanel = class _SourcesPanel extends UI17.Panel.Panel {
     } else {
       this.showEditor();
     }
-    this.#sourcesView.showSourceLocation(uiSourceCode, location, omitFocus);
+    await this.#sourcesView.showSourceLocation(uiSourceCode, location, omitFocus);
   }
   showEditor() {
     if (UI17.Context.Context.instance().flavor(QuickSourceView)) {
@@ -10948,9 +10947,9 @@ var SourcesPanel = class _SourcesPanel extends UI17.Panel.Panel {
     }
     void this.setAsCurrentPanel();
   }
-  showUILocation(uiLocation, omitFocus) {
+  async showUILocation(uiLocation, omitFocus) {
     const { uiSourceCode, lineNumber, columnNumber } = uiLocation;
-    this.showUISourceCode(uiSourceCode, { lineNumber, columnNumber }, omitFocus);
+    await this.showUISourceCode(uiSourceCode, { lineNumber, columnNumber }, omitFocus);
   }
   async revealInNavigator(uiSourceCode, skipReveal) {
     const viewManager = UI17.ViewManager.ViewManager.instance();
@@ -10992,7 +10991,7 @@ var SourcesPanel = class _SourcesPanel extends UI17.Panel.Panel {
     if (window.performance.now() - this.lastModificationTime < lastModificationTimeout) {
       return;
     }
-    this.#sourcesView.showSourceLocation(uiLocation.uiSourceCode, uiLocation, void 0, true);
+    await this.#sourcesView.showSourceLocation(uiLocation.uiSourceCode, uiLocation, void 0, true);
   }
   async updateDebuggerButtonsAndStatus() {
     const currentTarget = UI17.Context.Context.instance().flavor(SDK11.Target.Target);
@@ -11339,7 +11338,7 @@ var SourcesPanel = class _SourcesPanel extends UI17.Panel.Panel {
     }
     const uiLocation = await Bindings8.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance().rawLocationToUILocation(response.location);
     if (uiLocation) {
-      this.showUILocation(uiLocation);
+      await this.showUILocation(uiLocation);
     }
   }
   revealNavigatorSidebar() {
@@ -11458,7 +11457,7 @@ var lastModificationTimeout = 200;
 var minToolbarWidth = 215;
 var UILocationRevealer = class {
   async reveal(uiLocation, omitFocus) {
-    SourcesPanel.instance().showUILocation(uiLocation, omitFocus);
+    await SourcesPanel.instance().showUILocation(uiLocation, omitFocus);
   }
 };
 var UILocationRangeRevealer = class _UILocationRangeRevealer {
@@ -11471,20 +11470,20 @@ var UILocationRangeRevealer = class _UILocationRangeRevealer {
   }
   async reveal(uiLocationRange, omitFocus) {
     const { uiSourceCode, range: { start: from, end: to } } = uiLocationRange;
-    SourcesPanel.instance().showUISourceCode(uiSourceCode, { from, to }, omitFocus);
+    await SourcesPanel.instance().showUISourceCode(uiSourceCode, { from, to }, omitFocus);
   }
 };
 var DebuggerLocationRevealer = class {
   async reveal(rawLocation, omitFocus) {
     const uiLocation = await Bindings8.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance().rawLocationToUILocation(rawLocation);
     if (uiLocation) {
-      SourcesPanel.instance().showUILocation(uiLocation, omitFocus);
+      await SourcesPanel.instance().showUILocation(uiLocation, omitFocus);
     }
   }
 };
 var UISourceCodeRevealer = class {
   async reveal(uiSourceCode, omitFocus) {
-    SourcesPanel.instance().showUISourceCode(uiSourceCode, void 0, omitFocus);
+    await SourcesPanel.instance().showUISourceCode(uiSourceCode, void 0, omitFocus);
   }
 };
 var DebuggerPausedDetailsRevealer = class {

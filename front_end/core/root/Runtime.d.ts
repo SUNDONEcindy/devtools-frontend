@@ -43,8 +43,8 @@ export interface Option {
 }
 export declare class ExperimentsSupport {
     #private;
-    allConfigurableExperiments(): HostExperiment[];
-    registerHostExperiment(params: {
+    allConfigurableExperiments(): Experiment[];
+    register(params: {
         name: ExperimentName;
         title: string;
         aboutFlag: string;
@@ -52,7 +52,7 @@ export declare class ExperimentsSupport {
         requiresChromeRestart: boolean;
         docLink?: Platform.DevToolsPath.UrlString;
         readonly feedbackLink?: Platform.DevToolsPath.UrlString;
-    }): HostExperiment;
+    }): Experiment;
     isEnabled(experimentName: ExperimentName): boolean;
     getValueFromStorage(experimentName: ExperimentName): boolean | undefined;
     setEnabled(experimentName: ExperimentName, enabled: boolean): void;
@@ -62,7 +62,7 @@ export declare class ExperimentsSupport {
     clearForTest(): void;
     removeAllExperimentsFromLocalStorage(): void;
 }
-export declare class HostExperiment {
+export declare class Experiment {
     #private;
     name: ExperimentName;
     title: string;
