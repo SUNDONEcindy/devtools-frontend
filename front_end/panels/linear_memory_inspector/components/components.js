@@ -251,7 +251,7 @@ var LinearMemoryHighlightChipList = class extends UI.Widget.Widget {
 // gen/front_end/panels/linear_memory_inspector/components/LinearMemoryInspector.js
 var LinearMemoryInspector_exports = {};
 __export(LinearMemoryInspector_exports, {
-  DEFAULT_VIEW: () => DEFAULT_VIEW5,
+  DEFAULT_VIEW: () => DEFAULT_VIEW6,
   LinearMemoryInspector: () => LinearMemoryInspector
 });
 
@@ -661,6 +661,7 @@ var linearMemoryInspector_css_default = `/*
 // gen/front_end/panels/linear_memory_inspector/components/LinearMemoryNavigator.js
 var LinearMemoryNavigator_exports = {};
 __export(LinearMemoryNavigator_exports, {
+  DEFAULT_VIEW: () => DEFAULT_VIEW2,
   LinearMemoryNavigator: () => LinearMemoryNavigator
 });
 import "./../../../ui/kit/kit.js";
@@ -766,7 +767,7 @@ var UIStrings2 = {
 var str_2 = i18n3.i18n.registerUIStrings("panels/linear_memory_inspector/components/LinearMemoryNavigator.ts", UIStrings2);
 var i18nString2 = i18n3.i18n.getLocalizedString.bind(void 0, str_2);
 var { render: render3, html: html3, Directives: { ifDefined } } = Lit2;
-function renderNavigator(data, onAddressChange, onNavigatePage, onNavigateHistory, onRefreshRequest, shadow) {
+var DEFAULT_VIEW2 = (input, _output, target) => {
   const result = html3`
     <style>${linearMemoryNavigator_css_default}</style>
     <div class="navigator">
@@ -774,21 +775,21 @@ function renderNavigator(data, onAddressChange, onNavigatePage, onNavigateHistor
         ${createButton({
     icon: "undo",
     title: i18nString2(UIStrings2.goBackInAddressHistory),
-    onClick: () => onNavigateHistory?.(
+    onClick: () => input.onNavigateHistory?.(
       "Backward"
       /* Navigation.BACKWARD */
     ),
-    enabled: data.canGoBackInHistory,
+    enabled: input.canGoBackInHistory,
     jslogContext: "linear-memory-inspector.history-back"
   })}
         ${createButton({
     icon: "redo",
     title: i18nString2(UIStrings2.goForwardInAddressHistory),
-    onClick: () => onNavigateHistory?.(
+    onClick: () => input.onNavigateHistory?.(
       "Forward"
       /* Navigation.FORWARD */
     ),
-    enabled: data.canGoForwardInHistory,
+    enabled: input.canGoForwardInHistory,
     jslogContext: "linear-memory-inspector.history-forward"
   })}
       </div>
@@ -796,18 +797,18 @@ function renderNavigator(data, onAddressChange, onNavigatePage, onNavigateHistor
         ${createButton({
     icon: "chevron-left",
     title: i18nString2(UIStrings2.previousPage),
-    onClick: () => onNavigatePage?.(
+    onClick: () => input.onNavigatePage?.(
       "Backward"
       /* Navigation.BACKWARD */
     ),
     enabled: true,
     jslogContext: "linear-memory-inspector.previous-page"
   })}
-        ${createAddressInput(data, onAddressChange)}
+        ${createAddressInput(input)}
         ${createButton({
     icon: "chevron-right",
     title: i18nString2(UIStrings2.nextPage),
-    onClick: () => onNavigatePage?.(
+    onClick: () => input.onNavigatePage?.(
       "Forward"
       /* Navigation.FORWARD */
     ),
@@ -818,15 +819,15 @@ function renderNavigator(data, onAddressChange, onNavigatePage, onNavigateHistor
       ${createButton({
     icon: "refresh",
     title: i18nString2(UIStrings2.refresh),
-    onClick: () => onRefreshRequest?.(),
+    onClick: () => input.onRefreshRequest?.(),
     enabled: true,
     jslogContext: "linear-memory-inspector.refresh"
   })}
     </div>
     `;
-  render3(result, shadow);
-}
-function createAddressInput(data, onAddressChange) {
+  render3(result, target);
+};
+function createAddressInput(data) {
   const classMap2 = {
     "address-input": true,
     invalid: !data.valid
@@ -839,12 +840,12 @@ function createAddressInput(data, onAddressChange) {
     change: true
   })}
     title=${ifDefined(data.valid ? i18nString2(UIStrings2.enterAddress) : data.error)}
-    @change=${(e) => onAddressChange?.(
+    @change=${(e) => data.onAddressChange?.(
     e.target.value,
     "Submitted"
     /* Mode.SUBMITTED */
   )}
-    @input=${(e) => onAddressChange?.(
+    @input=${(e) => data.onAddressChange?.(
     e.target.value,
     "Edit"
     /* Mode.EDIT */
@@ -875,6 +876,7 @@ function createButton(data) {
     ></devtools-button>`;
 }
 var LinearMemoryNavigator = class extends UI2.Widget.Widget {
+  #view;
   #address = "0";
   #error = void 0;
   #valid = true;
@@ -913,8 +915,9 @@ var LinearMemoryNavigator = class extends UI2.Widget.Widget {
     this.#onNavigateHistory = callback;
     this.performUpdate();
   }
-  constructor(element) {
+  constructor(element, view = DEFAULT_VIEW2) {
     super(element);
+    this.#view = view;
     if (!this.element.shadowRoot) {
       this.element.attachShadow({ mode: "open" });
     }
@@ -966,21 +969,26 @@ var LinearMemoryNavigator = class extends UI2.Widget.Widget {
     if (!shadowRoot) {
       return;
     }
-    renderNavigator({
+    const viewInput = {
       address: this.#address,
       error: this.#error,
       valid: this.#valid,
       canGoBackInHistory: this.#canGoBackInHistory,
       canGoForwardInHistory: this.#canGoForwardInHistory,
-      mode: this.#mode
-    }, this.onAddressChange, this.onNavigatePage, this.onNavigateHistory, this.onRefreshRequest, shadowRoot);
+      mode: this.#mode,
+      onAddressChange: this.onAddressChange,
+      onNavigatePage: this.onNavigatePage,
+      onNavigateHistory: this.onNavigateHistory,
+      onRefreshRequest: this.onRefreshRequest
+    };
+    this.#view(viewInput, void 0, shadowRoot);
   }
 };
 
 // gen/front_end/panels/linear_memory_inspector/components/LinearMemoryValueInterpreter.js
 var LinearMemoryValueInterpreter_exports = {};
 __export(LinearMemoryValueInterpreter_exports, {
-  DEFAULT_VIEW: () => DEFAULT_VIEW4,
+  DEFAULT_VIEW: () => DEFAULT_VIEW5,
   LinearMemoryValueInterpreter: () => LinearMemoryValueInterpreter
 });
 import "./../../../ui/kit/kit.js";
@@ -1047,7 +1055,7 @@ var linearMemoryValueInterpreter_css_default = `/*
 // gen/front_end/panels/linear_memory_inspector/components/ValueInterpreterDisplay.js
 var ValueInterpreterDisplay_exports = {};
 __export(ValueInterpreterDisplay_exports, {
-  DEFAULT_VIEW: () => DEFAULT_VIEW2,
+  DEFAULT_VIEW: () => DEFAULT_VIEW3,
   ValueInterpreterDisplay: () => ValueInterpreterDisplay
 });
 import "./../../../ui/kit/kit.js";
@@ -1353,7 +1361,7 @@ var str_4 = i18n7.i18n.registerUIStrings("panels/linear_memory_inspector/compone
 var i18nString4 = i18n7.i18n.getLocalizedString.bind(void 0, str_4);
 var { render: render4, nothing, html: html4 } = Lit3;
 var SORTED_VALUE_TYPES = Array.from(getDefaultValueTypeMapping().keys());
-var DEFAULT_VIEW2 = (input, _output, target) => {
+var DEFAULT_VIEW3 = (input, _output, target) => {
   function parse(signed, type) {
     return format({ buffer: input.buffer, endianness: input.endianness, type, signed, mode: input.valueTypeModes.get(type) });
   }
@@ -1439,7 +1447,7 @@ var ValueInterpreterDisplay = class extends UI3.Widget.Widget {
   };
   #onJumpToAddressClicked = () => {
   };
-  constructor(element, view = DEFAULT_VIEW2) {
+  constructor(element, view = DEFAULT_VIEW3) {
     super(element);
     this.#view = view;
   }
@@ -1515,7 +1523,7 @@ var ValueInterpreterDisplay = class extends UI3.Widget.Widget {
 // gen/front_end/panels/linear_memory_inspector/components/ValueInterpreterSettings.js
 var ValueInterpreterSettings_exports = {};
 __export(ValueInterpreterSettings_exports, {
-  DEFAULT_VIEW: () => DEFAULT_VIEW3,
+  DEFAULT_VIEW: () => DEFAULT_VIEW4,
   ValueInterpreterSettings: () => ValueInterpreterSettings
 });
 import * as i18n9 from "./../../../core/i18n/i18n.js";
@@ -1593,7 +1601,7 @@ function valueTypeGroupToLocalizedString(group) {
   }
   return group;
 }
-var DEFAULT_VIEW3 = (input, _output, target) => {
+var DEFAULT_VIEW4 = (input, _output, target) => {
   render5(html5`
       <style>${valueInterpreterSettings_css_default}</style>
       <div class="settings" jslog=${VisualLogging5.pane("settings")}>
@@ -1625,7 +1633,7 @@ var ValueInterpreterSettings = class extends UI4.Widget.Widget {
   #valueTypes = /* @__PURE__ */ new Set();
   #onToggle = () => {
   };
-  constructor(element, view = DEFAULT_VIEW3) {
+  constructor(element, view = DEFAULT_VIEW4) {
     super(element);
     this.#view = view;
   }
@@ -1687,7 +1695,7 @@ function renderEndiannessSetting(onEndiannessChanged, currentEndiannes) {
     </label>
     `;
 }
-var DEFAULT_VIEW4 = (input, _output, target) => {
+var DEFAULT_VIEW5 = (input, _output, target) => {
   render6(html6`
     <style>${UI5.inspectorCommonStyles}</style>
     <style>${linearMemoryValueInterpreter_css_default}</style>
@@ -1737,7 +1745,7 @@ var LinearMemoryValueInterpreter = class extends UI5.Widget.Widget {
   };
   #onValueTypeToggled = () => {
   };
-  constructor(element, view = DEFAULT_VIEW4) {
+  constructor(element, view = DEFAULT_VIEW5) {
     super(element);
     this.#view = view;
   }
@@ -1855,7 +1863,7 @@ var AddressHistoryEntry = class {
     this.#callback(this.#address);
   }
 };
-var DEFAULT_VIEW5 = (input, _output, target) => {
+var DEFAULT_VIEW6 = (input, _output, target) => {
   const navigatorAddressToShow = input.currentNavigatorMode === "Submitted" ? formatAddress(input.address) : input.currentNavigatorAddressLine;
   const navigatorAddressIsValid = isValidAddress(navigatorAddressToShow, input.outerMemoryLength);
   const invalidAddressMsg = i18nString7(UIStrings7.addressHasToBeANumberBetweenSAnd, { PH1: formatAddress(0), PH2: formatAddress(input.outerMemoryLength) });
@@ -1953,7 +1961,7 @@ var LinearMemoryInspector = class extends Common.ObjectWrapper.eventMixin(UI6.Wi
   #view;
   constructor(element, view) {
     super(element);
-    this.#view = view ?? DEFAULT_VIEW5;
+    this.#view = view ?? DEFAULT_VIEW6;
   }
   set memory(value) {
     this.#memory = value;

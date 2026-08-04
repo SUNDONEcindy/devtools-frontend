@@ -1,7 +1,6 @@
 // Copyright 2020 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-/* eslint-disable @devtools/no-lit-render-outside-of-view */
 import '../../../ui/kit/kit.js';
 import * as i18n from '../../../core/i18n/i18n.js';
 import * as Buttons from '../../../ui/components/buttons/buttons.js';
@@ -38,7 +37,7 @@ const UIStrings = {
 const str_ = i18n.i18n.registerUIStrings('panels/linear_memory_inspector/components/LinearMemoryNavigator.ts', UIStrings);
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
 const { render, html, Directives: { ifDefined } } = Lit;
-function renderNavigator(data, onAddressChange, onNavigatePage, onNavigateHistory, onRefreshRequest, shadow) {
+export const DEFAULT_VIEW = (input, _output, target) => {
     // Disabled until https://crbug.com/1079231 is fixed.
     // clang-format off
     const result = html `
@@ -46,30 +45,30 @@ function renderNavigator(data, onAddressChange, onNavigatePage, onNavigateHistor
     <div class="navigator">
       <div class="navigator-item">
         ${createButton({ icon: 'undo', title: i18nString(UIStrings.goBackInAddressHistory),
-        onClick: () => onNavigateHistory?.("Backward" /* Navigation.BACKWARD */), enabled: data.canGoBackInHistory,
+        onClick: () => input.onNavigateHistory?.("Backward" /* Navigation.BACKWARD */), enabled: input.canGoBackInHistory,
         jslogContext: 'linear-memory-inspector.history-back' })}
         ${createButton({ icon: 'redo', title: i18nString(UIStrings.goForwardInAddressHistory),
-        onClick: () => onNavigateHistory?.("Forward" /* Navigation.FORWARD */), enabled: data.canGoForwardInHistory,
+        onClick: () => input.onNavigateHistory?.("Forward" /* Navigation.FORWARD */), enabled: input.canGoForwardInHistory,
         jslogContext: 'linear-memory-inspector.history-forward' })}
       </div>
       <div class="navigator-item">
         ${createButton({ icon: 'chevron-left', title: i18nString(UIStrings.previousPage),
-        onClick: () => onNavigatePage?.("Backward" /* Navigation.BACKWARD */), enabled: true,
+        onClick: () => input.onNavigatePage?.("Backward" /* Navigation.BACKWARD */), enabled: true,
         jslogContext: 'linear-memory-inspector.previous-page' })}
-        ${createAddressInput(data, onAddressChange)}
+        ${createAddressInput(input)}
         ${createButton({ icon: 'chevron-right', title: i18nString(UIStrings.nextPage),
-        onClick: () => onNavigatePage?.("Forward" /* Navigation.FORWARD */), enabled: true,
+        onClick: () => input.onNavigatePage?.("Forward" /* Navigation.FORWARD */), enabled: true,
         jslogContext: 'linear-memory-inspector.next-page' })}
       </div>
       ${createButton({ icon: 'refresh', title: i18nString(UIStrings.refresh),
-        onClick: () => onRefreshRequest?.(), enabled: true,
+        onClick: () => input.onRefreshRequest?.(), enabled: true,
         jslogContext: 'linear-memory-inspector.refresh' })}
     </div>
     `;
-    render(result, shadow);
+    render(result, target);
     // clang-format on
-}
-function createAddressInput(data, onAddressChange) {
+};
+function createAddressInput(data) {
     const classMap = {
         'address-input': true,
         invalid: !data.valid,
@@ -82,8 +81,8 @@ function createAddressInput(data, onAddressChange) {
         change: true,
     })}
     title=${ifDefined(data.valid ? i18nString(UIStrings.enterAddress) : data.error)}
-    @change=${(e) => onAddressChange?.(e.target.value, "Submitted" /* Mode.SUBMITTED */)}
-    @input=${(e) => onAddressChange?.(e.target.value, "Edit" /* Mode.EDIT */)}
+    @change=${(e) => data.onAddressChange?.(e.target.value, "Submitted" /* Mode.SUBMITTED */)}
+    @input=${(e) => data.onAddressChange?.(e.target.value, "Edit" /* Mode.EDIT */)}
     ${Lit.Directives.ref((el) => {
         if (el) {
             const inputEl = el;
@@ -109,6 +108,7 @@ function createButton(data) {
     ></devtools-button>`;
 }
 export class LinearMemoryNavigator extends UI.Widget.Widget {
+    #view;
     #address = '0';
     #error = undefined;
     #valid = true;
@@ -147,8 +147,9 @@ export class LinearMemoryNavigator extends UI.Widget.Widget {
         this.#onNavigateHistory = callback;
         this.performUpdate();
     }
-    constructor(element) {
+    constructor(element, view = DEFAULT_VIEW) {
         super(element);
+        this.#view = view;
         if (!this.element.shadowRoot) {
             this.element.attachShadow({ mode: 'open' });
         }
@@ -200,14 +201,19 @@ export class LinearMemoryNavigator extends UI.Widget.Widget {
         if (!shadowRoot) {
             return;
         }
-        renderNavigator({
+        const viewInput = {
             address: this.#address,
             error: this.#error,
             valid: this.#valid,
             canGoBackInHistory: this.#canGoBackInHistory,
             canGoForwardInHistory: this.#canGoForwardInHistory,
             mode: this.#mode,
-        }, this.onAddressChange, this.onNavigatePage, this.onNavigateHistory, this.onRefreshRequest, shadowRoot);
+            onAddressChange: this.onAddressChange,
+            onNavigatePage: this.onNavigatePage,
+            onNavigateHistory: this.onNavigateHistory,
+            onRefreshRequest: this.onRefreshRequest,
+        };
+        this.#view(viewInput, undefined, shadowRoot);
     }
 }
 //# sourceMappingURL=LinearMemoryNavigator.js.map

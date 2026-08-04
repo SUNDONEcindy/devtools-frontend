@@ -10556,67 +10556,37 @@ Your instructions are as follows:
     if (this.#hasGpu) {
       switch (this.#availability) {
         case "unavailable":
-          Host21.userMetrics.builtInAiAvailability(
-            0
-            /* Host.UserMetrics.BuiltInAiAvailability.UNAVAILABLE_HAS_GPU */
-          );
+          Host21.userMetrics.builtInAiAvailability(Host21.UserMetrics.BuiltInAiAvailability.UNAVAILABLE_HAS_GPU);
           break;
         case "downloadable":
-          Host21.userMetrics.builtInAiAvailability(
-            1
-            /* Host.UserMetrics.BuiltInAiAvailability.DOWNLOADABLE_HAS_GPU */
-          );
+          Host21.userMetrics.builtInAiAvailability(Host21.UserMetrics.BuiltInAiAvailability.DOWNLOADABLE_HAS_GPU);
           break;
         case "downloading":
-          Host21.userMetrics.builtInAiAvailability(
-            2
-            /* Host.UserMetrics.BuiltInAiAvailability.DOWNLOADING_HAS_GPU */
-          );
+          Host21.userMetrics.builtInAiAvailability(Host21.UserMetrics.BuiltInAiAvailability.DOWNLOADING_HAS_GPU);
           break;
         case "available":
-          Host21.userMetrics.builtInAiAvailability(
-            3
-            /* Host.UserMetrics.BuiltInAiAvailability.AVAILABLE_HAS_GPU */
-          );
+          Host21.userMetrics.builtInAiAvailability(Host21.UserMetrics.BuiltInAiAvailability.AVAILABLE_HAS_GPU);
           break;
         case "disabled":
-          Host21.userMetrics.builtInAiAvailability(
-            4
-            /* Host.UserMetrics.BuiltInAiAvailability.DISABLED_HAS_GPU */
-          );
+          Host21.userMetrics.builtInAiAvailability(Host21.UserMetrics.BuiltInAiAvailability.DISABLED_HAS_GPU);
           break;
       }
     } else {
       switch (this.#availability) {
         case "unavailable":
-          Host21.userMetrics.builtInAiAvailability(
-            5
-            /* Host.UserMetrics.BuiltInAiAvailability.UNAVAILABLE_NO_GPU */
-          );
+          Host21.userMetrics.builtInAiAvailability(Host21.UserMetrics.BuiltInAiAvailability.UNAVAILABLE_NO_GPU);
           break;
         case "downloadable":
-          Host21.userMetrics.builtInAiAvailability(
-            6
-            /* Host.UserMetrics.BuiltInAiAvailability.DOWNLOADABLE_NO_GPU */
-          );
+          Host21.userMetrics.builtInAiAvailability(Host21.UserMetrics.BuiltInAiAvailability.DOWNLOADABLE_NO_GPU);
           break;
         case "downloading":
-          Host21.userMetrics.builtInAiAvailability(
-            7
-            /* Host.UserMetrics.BuiltInAiAvailability.DOWNLOADING_NO_GPU */
-          );
+          Host21.userMetrics.builtInAiAvailability(Host21.UserMetrics.BuiltInAiAvailability.DOWNLOADING_NO_GPU);
           break;
         case "available":
-          Host21.userMetrics.builtInAiAvailability(
-            8
-            /* Host.UserMetrics.BuiltInAiAvailability.AVAILABLE_NO_GPU */
-          );
+          Host21.userMetrics.builtInAiAvailability(Host21.UserMetrics.BuiltInAiAvailability.AVAILABLE_NO_GPU);
           break;
         case "disabled":
-          Host21.userMetrics.builtInAiAvailability(
-            9
-            /* Host.UserMetrics.BuiltInAiAvailability.DISABLED_NO_GPU */
-          );
+          Host21.userMetrics.builtInAiAvailability(Host21.UserMetrics.BuiltInAiAvailability.DISABLED_NO_GPU);
           break;
       }
     }
