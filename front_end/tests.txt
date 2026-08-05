@@ -173,6 +173,7 @@ models/ai_assistance/AiAgent2.test.js
 models/ai_assistance/AiConversation.test.js
 models/ai_assistance/AiHistoryStorage.test.js
 models/ai_assistance/AiOrigins.test.js
+models/ai_assistance/AiSetting.test.js
 models/ai_assistance/AiUtils.test.js
 models/ai_assistance/BuiltInAi.test.js
 models/ai_assistance/ChangeManager.test.js
@@ -625,6 +626,7 @@ panels/timeline/TrackConfigBanner.test.js
 panels/timeline/TrackConfiguration.test.js
 panels/timeline/components/BreadcrumbsUI.test.js
 panels/timeline/components/CPUThrottlingSelector.test.js
+panels/timeline/components/CWVMetrics.test.js
 panels/timeline/components/ExportTraceOptions.test.js
 panels/timeline/components/FieldSettingsDialog.test.js
 panels/timeline/components/IgnoreListSetting.test.js
