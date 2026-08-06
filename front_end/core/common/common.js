@@ -6523,21 +6523,9 @@ var Setting = class {
     this.#requiresUserAction = requiresUserAction;
   }
   disabled() {
-    if (this.#registration?.disabledCondition) {
-      const { disabled } = this.#registration.disabledCondition(Root4.Runtime.hostConfig);
-      if (disabled) {
-        return true;
-      }
-    }
     return this.#disabled || false;
   }
   disabledReasons() {
-    if (this.#registration?.disabledCondition) {
-      const result = this.#registration.disabledCondition(Root4.Runtime.hostConfig);
-      if (result.disabled) {
-        return result.reasons;
-      }
-    }
     return [];
   }
   setDisabled(disabled) {
@@ -6578,15 +6566,6 @@ var Setting = class {
     }
     this.#maybeLogInitialAccess(this.#value);
     return this.#value;
-  }
-  // Prefer this getter for settings which are "disableable". The plain getter returns `this.#value`,
-  // even if the setting is disabled, which means the callsite has to explicitly call the `disabled()`
-  // getter and add its own logic for the disabled state.
-  getIfNotDisabled() {
-    if (this.disabled()) {
-      return;
-    }
-    return this.get();
   }
   async forceGet() {
     const name = this.name;

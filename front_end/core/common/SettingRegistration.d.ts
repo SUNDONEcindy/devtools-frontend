@@ -106,11 +106,6 @@ export interface SettingRegistration {
      */
     condition?: Root.Runtime.Condition;
     /**
-     * A function that returns true if the setting should be disabled, along with
-     * the reason why.
-     */
-    disabledCondition?: (config?: Root.Runtime.HostConfig) => DisabledConditionResult;
-    /**
      * See {@link LearnMore} for more info.
      */
     learnMore?: LearnMore;
@@ -145,10 +140,4 @@ interface RawSettingExtensionOption {
     raw: true;
 }
 export type SettingExtensionOption = LocalizedSettingExtensionOption | RawSettingExtensionOption;
-export type DisabledConditionResult = {
-    disabled: true;
-    reasons: Platform.UIString.LocalizedString[];
-} | {
-    disabled: false;
-};
 export {};
