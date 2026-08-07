@@ -5229,7 +5229,6 @@ __export(SettingRegistration_exports, {
   resetSettings: () => resetSettings
 });
 import * as i18n5 from "./../i18n/i18n.js";
-import * as Root2 from "./../root/root.js";
 var UIStrings3 = {
   /**
    * @description Title of the Elements panel.
@@ -5299,11 +5298,7 @@ var UIStrings3 = {
    * @description Header for the Account section in the settings UI. The Account
    * section allows users to see their signed-in account and configure which DevTools data is synced via Chrome Sync.
    */
-  account: "Account",
-  /**
-   * @description Title of the Privacy setting category.
-   */
-  privacy: "Privacy"
+  account: "Account"
 };
 var str_3 = i18n5.i18n.registerUIStrings("core/common/SettingRegistration.ts", UIStrings3);
 var i18nString = i18n5.i18n.getLocalizedString.bind(void 0, str_3);
@@ -5318,7 +5313,7 @@ function registerSettingExtension(registration) {
   registeredSettings.push(registration);
 }
 function getRegisteredSettings() {
-  return registeredSettings.filter((setting) => Root2.Runtime.Runtime.isDescriptorEnabled(setting));
+  return registeredSettings;
 }
 function registerSettingsForTest(settings, forceReset = false) {
   if (registeredSettings.length === 0 || forceReset) {
@@ -5385,8 +5380,6 @@ function getLocalizedSettingsCategory(category) {
       return i18n5.i18n.lockedString("");
     case "ACCOUNT":
       return i18nString(UIStrings3.account);
-    case "PRIVACY":
-      return i18nString(UIStrings3.privacy);
   }
 }
 
@@ -5405,7 +5398,7 @@ __export(Settings_exports, {
   resetSettings: () => resetSettings
 });
 import * as Platform5 from "./../platform/platform.js";
-import * as Root4 from "./../root/root.js";
+import * as Root3 from "./../root/root.js";
 
 // gen/front_end/core/common/VersionController.js
 var VersionController_exports = {};
@@ -5413,7 +5406,7 @@ __export(VersionController_exports, {
   VersionController: () => VersionController
 });
 import * as Platform4 from "./../platform/platform.js";
-import * as Root3 from "./../root/root.js";
+import * as Root2 from "./../root/root.js";
 var VersionController = class _VersionController {
   static GLOBAL_VERSION_SETTING_NAME = "inspectorVersion";
   static SYNCED_VERSION_SETTING_NAME = "syncedInspectorVersion";
@@ -6077,7 +6070,7 @@ var VersionController = class _VersionController {
     recordingsSetting.set(recordings);
   }
   updateVersionFrom42To43() {
-    const timelineShowAllEventsExperimentEnabled = Root3.Runtime.experiments.getValueFromStorage("timeline-show-all-events");
+    const timelineShowAllEventsExperimentEnabled = Root2.Runtime.experiments.getValueFromStorage("timeline-show-all-events");
     if (timelineShowAllEventsExperimentEnabled !== void 0) {
       if (this.#settings.syncedStorage.has("timeline-show-all-events")) {
         return;
@@ -6090,7 +6083,7 @@ var VersionController = class _VersionController {
     }
   }
   updateVersionFrom43To44() {
-    const apcaExperimentEnabled = Root3.Runtime.experiments.getValueFromStorage("apca");
+    const apcaExperimentEnabled = Root2.Runtime.experiments.getValueFromStorage("apca");
     if (apcaExperimentEnabled !== void 0) {
       if (this.#settings.syncedStorage.has("apca")) {
         return;
@@ -6103,7 +6096,7 @@ var VersionController = class _VersionController {
     }
   }
   updateVersionFrom44To45() {
-    const timelineDebugModeExperimentEnabled = Root3.Runtime.experiments.getValueFromStorage("timeline-debug-mode");
+    const timelineDebugModeExperimentEnabled = Root2.Runtime.experiments.getValueFromStorage("timeline-debug-mode");
     if (timelineDebugModeExperimentEnabled !== void 0) {
       if (this.#settings.syncedStorage.has("timeline-debug-mode")) {
         return;
@@ -6116,7 +6109,7 @@ var VersionController = class _VersionController {
     }
   }
   updateVersionFrom45To46() {
-    const timelineInvalidationTrackingExperimentEnabled = Root3.Runtime.experiments.getValueFromStorage("timeline-invalidation-tracking");
+    const timelineInvalidationTrackingExperimentEnabled = Root2.Runtime.experiments.getValueFromStorage("timeline-invalidation-tracking");
     if (timelineInvalidationTrackingExperimentEnabled !== void 0) {
       if (this.#settings.syncedStorage.has("timeline-invalidation-tracking")) {
         return;
@@ -6194,7 +6187,7 @@ var Settings = class _Settings {
     for (const registration of this.#settingRegistrations) {
       const { settingName, defaultValue, storageType } = registration;
       const isRegex = registration.settingType === "regex";
-      const evaluatedDefaultValue = typeof defaultValue === "function" ? defaultValue(Root4.Runtime.hostConfig) : defaultValue;
+      const evaluatedDefaultValue = typeof defaultValue === "function" ? defaultValue(Root3.Runtime.hostConfig) : defaultValue;
       const setting = isRegex && typeof evaluatedDefaultValue === "string" ? this.createRegExpSetting(settingName, evaluatedDefaultValue, void 0, storageType) : this.createSetting(settingName, evaluatedDefaultValue, storageType);
       setting.setRegistration(registration);
       this.registerModuleSetting(setting);
@@ -6207,7 +6200,7 @@ var Settings = class _Settings {
     return this.#settingRegistrations;
   }
   static hasInstance() {
-    return Root4.DevToolsContext.globalInstance().has(_Settings);
+    return Root3.DevToolsContext.globalInstance().has(_Settings);
   }
   static instance(opts = {
     forceNew: null,
@@ -6218,11 +6211,11 @@ var Settings = class _Settings {
     console: null
   }) {
     const { forceNew, syncedStorage, globalStorage, localStorage, settingRegistrations, logSettingAccess, runSettingsMigration, console: console2 } = opts;
-    if (!Root4.DevToolsContext.globalInstance().has(_Settings) || forceNew) {
+    if (!Root3.DevToolsContext.globalInstance().has(_Settings) || forceNew) {
       if (!syncedStorage || !globalStorage || !localStorage || !settingRegistrations || !console2) {
         throw new Error(`Unable to create settings: global and local storage must be provided: ${new Error().stack}`);
       }
-      Root4.DevToolsContext.globalInstance().set(_Settings, new _Settings({
+      Root3.DevToolsContext.globalInstance().set(_Settings, new _Settings({
         syncedStorage,
         globalStorage,
         localStorage,
@@ -6232,10 +6225,10 @@ var Settings = class _Settings {
         console: console2
       }));
     }
-    return Root4.DevToolsContext.globalInstance().get(_Settings);
+    return Root3.DevToolsContext.globalInstance().get(_Settings);
   }
   static removeInstance() {
-    Root4.DevToolsContext.globalInstance().delete(_Settings);
+    Root3.DevToolsContext.globalInstance().delete(_Settings);
   }
   registerModuleSetting(setting) {
     const settingName = setting.name;
@@ -6365,7 +6358,7 @@ var Settings = class _Settings {
     const { name, type, defaultValue, storageType } = descriptor;
     const isRegex = type === "regex";
     const isGetter = (value) => typeof value === "function";
-    const evaluatedDefaultValue = isGetter(defaultValue) ? defaultValue(Root4.Runtime.hostConfig) : defaultValue;
+    const evaluatedDefaultValue = isGetter(defaultValue) ? defaultValue(Root3.Runtime.hostConfig) : defaultValue;
     setting = isRegex && typeof evaluatedDefaultValue === "string" ? this.createRegExpSetting(name, evaluatedDefaultValue, void 0, storageType) : this.createSetting(name, evaluatedDefaultValue, storageType);
     setting.setSettingType(type);
     this.registerModuleSetting(setting);
@@ -6383,7 +6376,7 @@ var Settings = class _Settings {
    * @returns An object with either the resolved `setting` or the availability `status` and `reason`.
    */
   maybeResolve(descriptor) {
-    const available = descriptor.isAvailable(Root4.Runtime.hostConfig);
+    const available = descriptor.isAvailable(Root3.Runtime.hostConfig);
     if (available.status === 1) {
       return { setting: this.#resolve(descriptor) };
     }
@@ -6480,10 +6473,7 @@ var Setting = class {
   #type = null;
   #requiresUserAction;
   #value;
-  // TODO(crbug.com/1172300) Type cannot be inferred without changes to consumers. See above.
-  #serializer = JSON;
   #hadUserAction;
-  #disabled;
   #loggedInitialAccess = false;
   #logSettingAccess;
   #console;
@@ -6495,9 +6485,6 @@ var Setting = class {
     storage.register(this.name);
     this.#console = console2;
     this.#logSettingAccess = logSettingAccess;
-  }
-  setSerializer(serializer) {
-    this.#serializer = serializer;
   }
   descriptor() {
     return {
@@ -6522,19 +6509,9 @@ var Setting = class {
   setRequiresUserAction(requiresUserAction) {
     this.#requiresUserAction = requiresUserAction;
   }
-  disabled() {
-    return this.#disabled || false;
-  }
-  disabledReasons() {
-    return [];
-  }
-  setDisabled(disabled) {
-    this.#disabled = disabled;
-    this.eventSupport.dispatchEventToListeners(this.name);
-  }
   #maybeLogAccess(value) {
     try {
-      const valueToLog = typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? value : this.#serializer?.stringify(value);
+      const valueToLog = typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? value : JSON.stringify(value);
       if (valueToLog !== void 0 && this.#logSettingAccess) {
         void this.#logSettingAccess(this.name, valueToLog);
       }
@@ -6559,7 +6536,7 @@ var Setting = class {
     this.#value = this.defaultValue;
     if (this.storage.has(this.name)) {
       try {
-        this.#value = this.#serializer.parse(this.storage.get(this.name));
+        this.#value = JSON.parse(this.storage.get(this.name));
       } catch {
         this.storage.remove(this.name);
       }
@@ -6574,7 +6551,7 @@ var Setting = class {
     this.#value = this.defaultValue;
     if (value) {
       try {
-        this.#value = this.#serializer.parse(value);
+        this.#value = JSON.parse(value);
       } catch {
         this.storage.remove(this.name);
       }
@@ -6590,7 +6567,7 @@ var Setting = class {
     this.#hadUserAction = true;
     this.#value = value;
     try {
-      const settingString = this.#serializer.stringify(value);
+      const settingString = JSON.stringify(value);
       try {
         this.storage.set(this.name, settingString);
       } catch (e) {

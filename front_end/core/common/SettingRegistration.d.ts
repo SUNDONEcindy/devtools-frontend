@@ -1,5 +1,4 @@
 import type * as Platform from '../platform/platform.js';
-import * as Root from '../root/root.js';
 import type { SettingStorageType } from './Settings.js';
 export declare function registerSettingExtension(registration: SettingRegistration): void;
 export declare function getRegisteredSettings(): SettingRegistration[];
@@ -25,8 +24,7 @@ export declare const enum SettingCategory {
     MEMORY = "MEMORY",
     EXTENSIONS = "EXTENSIONS",
     ADORNER = "ADORNER",
-    ACCOUNT = "ACCOUNT",
-    PRIVACY = "PRIVACY"
+    ACCOUNT = "ACCOUNT"
 }
 export declare function getLocalizedSettingsCategory(category: SettingCategory): Platform.UIString.LocalizedString;
 export declare const enum SettingType {
@@ -98,13 +96,6 @@ export interface SettingRegistration {
      * Determines if the setting value is stored in the global, local or session storage.
      */
     storageType?: SettingStorageType;
-    /**
-     * A condition is a function that will make the setting available if it
-     * returns true, and not available, otherwise. Make sure that objects you
-     * access from inside the condition function are ready at the time when the
-     * setting conditions are checked.
-     */
-    condition?: Root.Runtime.Condition;
     /**
      * See {@link LearnMore} for more info.
      */

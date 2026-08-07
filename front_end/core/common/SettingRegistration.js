@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import * as i18n from '../i18n/i18n.js';
-import * as Root from '../root/root.js';
 const UIStrings = {
     /**
      * @description Title of the Elements panel.
@@ -73,10 +72,6 @@ const UIStrings = {
      * section allows users to see their signed-in account and configure which DevTools data is synced via Chrome Sync.
      */
     account: 'Account',
-    /**
-     * @description Title of the Privacy setting category.
-     */
-    privacy: 'Privacy',
 };
 const str_ = i18n.i18n.registerUIStrings('core/common/SettingRegistration.ts', UIStrings);
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
@@ -91,7 +86,7 @@ export function registerSettingExtension(registration) {
     registeredSettings.push(registration);
 }
 export function getRegisteredSettings() {
-    return registeredSettings.filter(setting => Root.Runtime.Runtime.isDescriptorEnabled(setting));
+    return registeredSettings;
 }
 export function registerSettingsForTest(settings, forceReset = false) {
     if (registeredSettings.length === 0 || forceReset) {
@@ -158,8 +153,6 @@ export function getLocalizedSettingsCategory(category) {
             return i18n.i18n.lockedString('');
         case "ACCOUNT" /* SettingCategory.ACCOUNT */:
             return i18nString(UIStrings.account);
-        case "PRIVACY" /* SettingCategory.PRIVACY */:
-            return i18nString(UIStrings.privacy);
     }
 }
 //# sourceMappingURL=SettingRegistration.js.map
