@@ -3511,8 +3511,12 @@ var ExtensionServer = class _ExtensionServer extends Common7.ObjectWrapper.Objec
     if (message.command !== "registerRecorderExtensionPlugin") {
       return this.status.E_BADARG("command", `expected ${"registerRecorderExtensionPlugin"}`);
     }
-    const { pluginName, mediaType, port, capabilities } = message;
     const extensionOrigin = this.getExtensionOrigin(_shared_port);
+    const extension = this.registeredExtensions.get(extensionOrigin);
+    if (!extension || extension.hostsPolicy.runtimeBlockedHosts.length > 0) {
+      return this.status.E_FAILED("Permission denied");
+    }
+    const { pluginName, mediaType, port, capabilities } = message;
     const recorderPluginManager = Extensions2.RecorderPluginManager.RecorderPluginManager.instance();
     recorderPluginManager.addPlugin(new Extensions2.RecorderExtensionEndpoint.RecorderExtensionEndpoint(pluginName, port, capabilities, extensionOrigin, recorderPluginManager, mediaType));
     return this.status.OK();
@@ -3584,6 +3588,10 @@ var ExtensionServer = class _ExtensionServer extends Common7.ObjectWrapper.Objec
       return this.status.E_EXISTS(id);
     }
     const extensionOrigin = this.getExtensionOrigin(port);
+    const extension = this.registeredExtensions.get(extensionOrigin);
+    if (!extension || extension.hostsPolicy.runtimeBlockedHosts.length > 0) {
+      return this.status.E_FAILED("Permission denied");
+    }
     const pagePath = _ExtensionServer.expandResourcePath(extensionOrigin, message.pagePath);
     if (pagePath === void 0) {
       return this.status.E_BADARG("pagePath", "Resources paths cannot point to non-extension resources");
@@ -3937,6 +3945,14 @@ var ExtensionServer = class _ExtensionServer extends Common7.ObjectWrapper.Objec
    * long as the corresponding target and the embedder name (if it is a URL) are permitted.
    */
   extensionAllowedOnContentProvider(contentProvider, port) {
+    if (contentProvider instanceof Workspace.UISourceCode.UISourceCode) {
+      const debuggerSourceMapURLs = Bindings.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance().sourceMapURLsForUISourceCode(contentProvider);
+      const cssSourceMapURLs = Bindings.CSSWorkspaceBinding.CSSWorkspaceBinding.instance().sourceMapURLsForUISourceCode(contentProvider);
+      const sourceMapURLs = [...debuggerSourceMapURLs, ...cssSourceMapURLs];
+      if (sourceMapURLs.some((url) => !this.extensionAllowedOnURL(url, port))) {
+        return false;
+      }
+    }
     if (contentProvider instanceof Workspace.UISourceCode.UISourceCode && contentProvider.contentType() === Common7.ResourceType.resourceTypes.Script) {
       const scripts = Bindings.DebuggerWorkspaceBinding.DebuggerWorkspaceBinding.instance().scriptsForUISourceCode(contentProvider);
       if (scripts.length > 0) {

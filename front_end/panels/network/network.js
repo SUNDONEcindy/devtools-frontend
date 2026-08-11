@@ -4727,8 +4727,13 @@ var objectPropertiesSection_css_default = `/*
   opacity: 60%;
 }
 
+:host {
+  display: block;
+}
+
 .object-properties-section {
   padding: 0;
+  margin: 0;
   color: var(--sys-color-on-surface);
   display: flex;
   flex-direction: column;
@@ -5222,6 +5227,7 @@ var DEFAULT_VIEW8 = (input, output, target) => {
       readOnly: true,
       propertiesMode: 1
     });
+    objectTree.expanded = true;
     return html8`
       <li role=treeitem class="source-code object-properties-section-root-element object-properties-section" open>
         ${object.description}
