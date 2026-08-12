@@ -3814,57 +3814,19 @@ var TimelineController = class {
     await loadPromiseWithResolvers.promise;
   }
   async startRecording(options) {
-    function disabledByDefault(category) {
-      return "disabled-by-default-" + category;
-    }
     this.client.recordingStatus(i18nString12(UIStrings12.initializingTracing));
     if (options.navigateToUrl) {
       await this.#navigateToAboutBlank();
     }
-    const categoriesArray = [
-      Common6.Settings.Settings.instance().moduleSetting("timeline-show-all-events").get() ? "*" : "-*",
-      Trace14.Types.Events.Categories.Console,
-      Trace14.Types.Events.Categories.Loading,
-      Trace14.Types.Events.Categories.UserTiming,
-      "devtools.timeline",
-      disabledByDefault("devtools.target-rundown"),
-      disabledByDefault("devtools.timeline.frame"),
-      disabledByDefault("devtools.timeline.stack"),
-      disabledByDefault("devtools.timeline"),
-      disabledByDefault("devtools.v8-source-rundown-sources"),
-      disabledByDefault("devtools.v8-source-rundown"),
-      disabledByDefault("layout_shift.debug"),
-      // Looking for disabled-by-default-v8.compile? We disabled it: crbug.com/414330508.
-      disabledByDefault("v8.inspector"),
-      disabledByDefault("v8.cpu_profiler.hires"),
-      disabledByDefault("lighthouse"),
-      "v8.execute",
-      "v8",
-      "cppgc",
-      "navigation,rail"
-    ];
-    if (options.enableJSSampling) {
-      categoriesArray.push(disabledByDefault("v8.cpu_profiler"));
-    }
-    if (Common6.Settings.Settings.instance().moduleSetting("timeline-invalidation-tracking").get()) {
-      categoriesArray.push(disabledByDefault("devtools.timeline.invalidationTracking"));
-    }
-    if (options.capturePictures) {
-      categoriesArray.push(disabledByDefault("devtools.timeline.layers"), disabledByDefault("devtools.timeline.picture"), disabledByDefault("blink.graphics_context_annotations"));
-    }
+    const categoriesArray = this.#categoriesForRecording(options);
     const screenshotOptions = {};
     if (options.captureFilmStrip) {
-      categoriesArray.push(disabledByDefault("devtools.screenshot"));
       if (options.screenshotMaxSize !== void 0) {
         screenshotOptions.screenshotMaxSize = options.screenshotMaxSize;
       }
       if (options.screenshotMaxCount !== void 0) {
         screenshotOptions.screenshotMaxCount = options.screenshotMaxCount;
       }
-    }
-    if (options.captureSelectorStats) {
-      categoriesArray.push(disabledByDefault("blink.debug"));
-      categoriesArray.push(disabledByDefault("devtools.timeline.invalidationTracking"));
     }
     await LiveMetrics.LiveMetrics.instance().disable();
     SDK5.TargetManager.TargetManager.instance().addModelListener(SDK5.ResourceTreeModel.ResourceTreeModel, SDK5.ResourceTreeModel.Events.FrameNavigated, this.#onFrameNavigated, this);
@@ -4002,6 +3964,28 @@ var TimelineController = class {
   }
   eventsRetrievalProgress(progress) {
     this.client.loadingProgress(progress);
+  }
+  #categoriesForRecording(options) {
+    const categoriesArray = [
+      Common6.Settings.Settings.instance().moduleSetting("timeline-show-all-events").get() ? "*" : "-*",
+      ...Trace14.Types.Events.DefaultCategories
+    ];
+    if (options.enableJSSampling) {
+      categoriesArray.push(...Trace14.Types.Events.OptionalCategories.JsSampling);
+    }
+    if (Common6.Settings.Settings.instance().moduleSetting("timeline-invalidation-tracking").get()) {
+      categoriesArray.push(...Trace14.Types.Events.OptionalCategories.InvalidationTracking);
+    }
+    if (options.capturePictures) {
+      categoriesArray.push(...Trace14.Types.Events.OptionalCategories.AdvancedPaint);
+    }
+    if (options.captureFilmStrip) {
+      categoriesArray.push(...Trace14.Types.Events.OptionalCategories.Screenshot);
+    }
+    if (options.captureSelectorStats) {
+      categoriesArray.push(...Trace14.Types.Events.OptionalCategories.CssSelectorStats);
+    }
+    return categoriesArray;
   }
 };
 
@@ -5857,16 +5841,6 @@ var timelinePanel_css_default = `/*
   background-color: var(--sys-color-surface2);
   border-bottom: 1px solid var(--sys-color-divider);
   justify-content: space-between;
-}
-
-#memory-graphs-container .timeline-memory-header::after {
-  content: "";
-  /* stylelint-disable-next-line custom-property-pattern */
-  background-image: var(--image-file-toolbarResizerVertical);
-  background-repeat: no-repeat;
-  background-position: right center, center;
-  flex: 20px 0 0;
-  margin: 0 4px;
 }
 
 .timeline-memory-toolbar {

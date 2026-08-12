@@ -14364,7 +14364,7 @@ var FilmStripRecorder = class {
     }
     this.#tracingManager = tracingManager;
     this.#resourceTreeModel = this.#tracingManager.target().model(SDK17.ResourceTreeModel.ResourceTreeModel);
-    void this.#tracingManager.start(this, "-*,disabled-by-default-devtools.screenshot");
+    void this.#tracingManager.start(this, ["-*", ...Trace2.Types.Events.OptionalCategories.Screenshot].join(","));
     Host11.userMetrics.actionTaken(Host11.UserMetrics.Action.FilmStripStartedRecording);
   }
   isRecording() {
