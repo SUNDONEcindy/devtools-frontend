@@ -3172,6 +3172,8 @@ var WidgetElement = class extends HTMLElement {
 customElements.define("devtools-widget", WidgetElement);
 var WidgetDirective = class extends Lit.Directive.Directive {
   #partType;
+  #lastWidgetClass;
+  #lastKey;
   constructor(partInfo) {
     super(partInfo);
     this.#partType = partInfo.type;
@@ -3206,7 +3208,11 @@ var WidgetDirective = class extends Lit.Directive.Directive {
     if (this.#partType === Lit.Directive.PartType.ELEMENT) {
       return Lit.nothing;
     }
-    return Lit.Directives.repeat([widgetClass], () => widgetClass, () => html`<devtools-widget ${widget(widgetClass, widgetParams)}></devtools-widget>`);
+    if (this.#lastWidgetClass !== widgetClass) {
+      this.#lastWidgetClass = widgetClass;
+      this.#lastKey = Widget.isPrototypeOf(widgetClass) ? widgetClass : widgetClass.toString();
+    }
+    return Lit.Directives.repeat([widgetClass], () => this.#lastKey, () => html`<devtools-widget ${widget(widgetClass, widgetParams)}></devtools-widget>`);
   }
 };
 var widget = Lit.Directive.directive(WidgetDirective);
@@ -23759,16 +23765,11 @@ import * as Platform25 from "./../../core/platform/platform.js";
 var SimpleView = class extends VBox {
   #title;
   #viewId;
-  /**
-   * Constructs a new `SimpleView` with the given `options`.
-   *
-   * @param options the settings for the resulting view.
-   * @throws TypeError - if `options.viewId` is not in extended kebab case.
-   */
-  constructor(options) {
-    super(options);
-    this.#title = options.title;
-    this.#viewId = options.viewId;
+  constructor(elementOrOptions, options) {
+    super(elementOrOptions, options);
+    const optionsObj = elementOrOptions instanceof HTMLElement ? options : elementOrOptions;
+    this.#title = optionsObj.title;
+    this.#viewId = optionsObj.viewId;
     if (!Platform25.StringUtilities.isExtendedKebabCase(this.#viewId)) {
       throw new TypeError(`Invalid view ID '${this.#viewId}'`);
     }

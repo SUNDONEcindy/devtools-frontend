@@ -12,3 +12,12 @@ export declare const showMetricsRulersSettingDescriptor: Common.Settings.Setting
 export declare const apcaSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
 export declare const showGridAreasSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
 export declare const showGridTrackSizesSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const extendGridLinesSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const showGridLineLabelsSettingDescriptor: Common.Settings.SettingDescriptor<string>;
+export declare const showPaintRectsSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const showLayoutShiftRegionsSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const showAdHighlightsSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const showDebugBordersSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const showFPSCounterSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const showScrollBottleneckRectsSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const emulatePageFocusSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;

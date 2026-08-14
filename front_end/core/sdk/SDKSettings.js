@@ -76,4 +76,58 @@ export const showGridTrackSizesSettingDescriptor = {
     defaultValue: false,
     storageType: "Synced" /* Common.Settings.SettingStorageType.SYNCED */,
 };
+export const extendGridLinesSettingDescriptor = {
+    name: 'extend-grid-lines',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.SYNCED */,
+};
+export const showGridLineLabelsSettingDescriptor = {
+    name: 'show-grid-line-labels',
+    type: "enum" /* Common.Settings.SettingType.ENUM */,
+    defaultValue: 'lineNumbers',
+    storageType: "Synced" /* Common.Settings.SettingStorageType.SYNCED */,
+};
+export const showPaintRectsSettingDescriptor = {
+    name: 'show-paint-rects',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Session" /* Common.Settings.SettingStorageType.SESSION */,
+};
+export const showLayoutShiftRegionsSettingDescriptor = {
+    name: 'show-layout-shift-regions',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Session" /* Common.Settings.SettingStorageType.SESSION */,
+};
+export const showAdHighlightsSettingDescriptor = {
+    name: 'show-ad-highlights',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Session" /* Common.Settings.SettingStorageType.SESSION */,
+};
+export const showDebugBordersSettingDescriptor = {
+    name: 'show-debug-borders',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Session" /* Common.Settings.SettingStorageType.SESSION */,
+};
+export const showFPSCounterSettingDescriptor = {
+    name: 'show-fps-counter',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Session" /* Common.Settings.SettingStorageType.SESSION */,
+};
+export const showScrollBottleneckRectsSettingDescriptor = {
+    name: 'show-scroll-bottleneck-rects',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Session" /* Common.Settings.SettingStorageType.SESSION */,
+};
+export const emulatePageFocusSettingDescriptor = {
+    name: 'emulate-page-focus',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Local" /* Common.Settings.SettingStorageType.LOCAL */,
+};
 //# sourceMappingURL=SDKSettings.js.map
