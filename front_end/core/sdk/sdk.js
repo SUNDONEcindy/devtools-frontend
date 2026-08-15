@@ -17960,10 +17960,16 @@ var SDKSettings_exports = {};
 __export(SDKSettings_exports, {
   apcaSettingDescriptor: () => apcaSettingDescriptor,
   breakpointsActiveSettingDescriptor: () => breakpointsActiveSettingDescriptor,
+  cpuPressureSettingDescriptor: () => cpuPressureSettingDescriptor,
   cssSourceMapsEnabledSettingDescriptor: () => cssSourceMapsEnabledSettingDescriptor,
   disableAsyncStackTracesSettingDescriptor: () => disableAsyncStackTracesSettingDescriptor,
   emulatePageFocusSettingDescriptor: () => emulatePageFocusSettingDescriptor,
+  emulatedCSSMediaFeatureForcedColorsSettingDescriptor: () => emulatedCSSMediaFeatureForcedColorsSettingDescriptor,
+  emulatedCSSMediaFeaturePrefersColorSchemeSettingDescriptor: () => emulatedCSSMediaFeaturePrefersColorSchemeSettingDescriptor,
+  emulatedCSSMediaFeaturePrefersReducedMotionSettingDescriptor: () => emulatedCSSMediaFeaturePrefersReducedMotionSettingDescriptor,
+  emulatedCSSMediaSettingDescriptor: () => emulatedCSSMediaSettingDescriptor,
   extendGridLinesSettingDescriptor: () => extendGridLinesSettingDescriptor,
+  idleDetectionSettingDescriptor: () => idleDetectionSettingDescriptor,
   javaScriptDisabledSettingDescriptor: () => javaScriptDisabledSettingDescriptor,
   jsSourceMapsEnabledSettingDescriptor: () => jsSourceMapsEnabledSettingDescriptor,
   pauseOnCaughtExceptionSettingDescriptor: () => pauseOnCaughtExceptionSettingDescriptor,
@@ -17979,7 +17985,8 @@ __export(SDKSettings_exports, {
   showLayoutShiftRegionsSettingDescriptor: () => showLayoutShiftRegionsSettingDescriptor,
   showMetricsRulersSettingDescriptor: () => showMetricsRulersSettingDescriptor,
   showPaintRectsSettingDescriptor: () => showPaintRectsSettingDescriptor,
-  showScrollBottleneckRectsSettingDescriptor: () => showScrollBottleneckRectsSettingDescriptor
+  showScrollBottleneckRectsSettingDescriptor: () => showScrollBottleneckRectsSettingDescriptor,
+  touchSettingDescriptor: () => touchSettingDescriptor
 });
 import * as Common6 from "./../common/common.js";
 var jsSourceMapsEnabledSettingDescriptor = {
@@ -18109,6 +18116,45 @@ var emulatePageFocusSettingDescriptor = {
   type: "boolean",
   defaultValue: false,
   storageType: "Local"
+};
+var emulatedCSSMediaSettingDescriptor = {
+  name: "emulated-css-media",
+  type: "enum",
+  defaultValue: "",
+  storageType: "Session"
+};
+var cpuPressureSettingDescriptor = {
+  name: "emulation.cpu-pressure",
+  type: "enum",
+  defaultValue: "none"
+};
+var touchSettingDescriptor = {
+  name: "emulation.touch",
+  type: "enum",
+  defaultValue: "none"
+};
+var idleDetectionSettingDescriptor = {
+  name: "emulation.idle-detection",
+  type: "enum",
+  defaultValue: "none"
+};
+var emulatedCSSMediaFeaturePrefersColorSchemeSettingDescriptor = {
+  name: "emulated-css-media-feature-prefers-color-scheme",
+  type: "enum",
+  defaultValue: "",
+  storageType: "Session"
+};
+var emulatedCSSMediaFeatureForcedColorsSettingDescriptor = {
+  name: "emulated-css-media-feature-forced-colors",
+  type: "enum",
+  defaultValue: "",
+  storageType: "Session"
+};
+var emulatedCSSMediaFeaturePrefersReducedMotionSettingDescriptor = {
+  name: "emulated-css-media-feature-prefers-reduced-motion",
+  type: "enum",
+  defaultValue: "",
+  storageType: "Session"
 };
 
 // gen/front_end/core/sdk/SourceMapManager.js
@@ -36569,12 +36615,12 @@ var EmulationModel = class extends SDKModel {
     if (disableJavascriptSetting.get()) {
       void this.#emulationAgent.invoke_setScriptExecutionDisabled({ value: true });
     }
-    const touchSetting = settings.moduleSetting("emulation.touch");
+    const touchSetting = settings.resolve(touchSettingDescriptor);
     touchSetting.addChangeListener(() => {
       const settingValue = touchSetting.get();
       void this.overrideEmulateTouch(settingValue === "force");
     });
-    const idleDetectionSetting = settings.moduleSetting("emulation.idle-detection");
+    const idleDetectionSetting = settings.resolve(idleDetectionSettingDescriptor);
     idleDetectionSetting.addChangeListener(async () => {
       const settingValue = idleDetectionSetting.get();
       if (settingValue === "none") {
@@ -36584,7 +36630,7 @@ var EmulationModel = class extends SDKModel {
       const emulationParams = JSON.parse(settingValue);
       await this.setIdleOverride(emulationParams);
     });
-    const cpuPressureDetectionSetting = settings.moduleSetting("emulation.cpu-pressure");
+    const cpuPressureDetectionSetting = settings.resolve(cpuPressureSettingDescriptor);
     cpuPressureDetectionSetting.addChangeListener(async () => {
       const settingValue = cpuPressureDetectionSetting.get();
       if (settingValue === "none") {
@@ -36598,14 +36644,14 @@ var EmulationModel = class extends SDKModel {
       }
       await this.setPressureStateOverride(settingValue);
     });
-    const mediaTypeSetting = settings.moduleSetting("emulated-css-media");
+    const mediaTypeSetting = settings.resolve(emulatedCSSMediaSettingDescriptor);
     const mediaFeatureColorGamutSetting = settings.moduleSetting("emulated-css-media-feature-color-gamut");
-    const mediaFeaturePrefersColorSchemeSetting = settings.moduleSetting("emulated-css-media-feature-prefers-color-scheme");
-    const mediaFeatureForcedColorsSetting = settings.moduleSetting("emulated-css-media-feature-forced-colors");
+    const mediaFeaturePrefersColorSchemeSetting = settings.resolve(emulatedCSSMediaFeaturePrefersColorSchemeSettingDescriptor);
+    const mediaFeatureForcedColorsSetting = settings.resolve(emulatedCSSMediaFeatureForcedColorsSettingDescriptor);
     const mediaFeaturePrefersContrastSetting = settings.moduleSetting("emulated-css-media-feature-prefers-contrast");
     const mediaFeaturePrefersReducedDataSetting = settings.moduleSetting("emulated-css-media-feature-prefers-reduced-data");
     const mediaFeaturePrefersReducedTransparencySetting = settings.moduleSetting("emulated-css-media-feature-prefers-reduced-transparency");
-    const mediaFeaturePrefersReducedMotionSetting = settings.moduleSetting("emulated-css-media-feature-prefers-reduced-motion");
+    const mediaFeaturePrefersReducedMotionSetting = settings.resolve(emulatedCSSMediaFeaturePrefersReducedMotionSettingDescriptor);
     this.#mediaConfiguration = /* @__PURE__ */ new Map([
       ["type", mediaTypeSetting.get()],
       ["color-gamut", mediaFeatureColorGamutSetting.get()],

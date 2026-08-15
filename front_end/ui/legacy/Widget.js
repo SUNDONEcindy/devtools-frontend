@@ -176,7 +176,7 @@ function runNextUpdate() {
     });
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const widgetConfigs = new WeakMap();
+export const widgetConfigs = new WeakMap();
 export function registerWidgetConfig(element, config) {
     if (!widgetConfigs.has(element)) {
         setUpLifecycleTracking(element);

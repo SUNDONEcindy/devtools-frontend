@@ -455,20 +455,11 @@
   "core/sdk/sdk-meta.ts | blurredVision": {
     "message": "Blurred vision"
   },
-  "core/sdk/sdk-meta.ts | cpuPressure": {
-    "message": "CPU Pressure"
-  },
-  "core/sdk/sdk-meta.ts | critical": {
-    "message": "Critical"
-  },
   "core/sdk/sdk-meta.ts | customFormatters": {
     "message": "Custom formatters"
   },
   "core/sdk/sdk-meta.ts | deuteranopia": {
     "message": "Deuteranopia (no green)"
-  },
-  "core/sdk/sdk-meta.ts | devicebased": {
-    "message": "Device-based"
   },
   "core/sdk/sdk-meta.ts | disableAvifFormat": {
     "message": "Disable AVIF format"
@@ -497,9 +488,6 @@
   "core/sdk/sdk-meta.ts | doNotEmulateCss": {
     "message": "Do not emulate CSS {PH1}"
   },
-  "core/sdk/sdk-meta.ts | doNotEmulateCssMediaType": {
-    "message": "Do not emulate CSS media type"
-  },
   "core/sdk/sdk-meta.ts | doNotEmulateOsTextScale": {
     "message": "Do not emulate OS text scale"
   },
@@ -518,20 +506,8 @@
   "core/sdk/sdk-meta.ts | emulateCssMediaFeature": {
     "message": "Emulate CSS media feature {PH1}"
   },
-  "core/sdk/sdk-meta.ts | emulateCssMediaType": {
-    "message": "Emulate CSS media type"
-  },
-  "core/sdk/sdk-meta.ts | emulateCssPrintMediaType": {
-    "message": "Emulate CSS print media type"
-  },
-  "core/sdk/sdk-meta.ts | emulateCssScreenMediaType": {
-    "message": "Emulate CSS screen media type"
-  },
   "core/sdk/sdk-meta.ts | emulateDeuteranopia": {
     "message": "Emulate deuteranopia (no green)"
-  },
-  "core/sdk/sdk-meta.ts | emulateIdleDetectorState": {
-    "message": "Emulate Idle Detector state"
   },
   "core/sdk/sdk-meta.ts | emulateOsTextScale": {
     "message": "Emulate OS text scale"
@@ -569,12 +545,6 @@
   "core/sdk/sdk-meta.ts | enableWebpFormat": {
     "message": "Enable WebP format"
   },
-  "core/sdk/sdk-meta.ts | fair": {
-    "message": "Fair"
-  },
-  "core/sdk/sdk-meta.ts | forceEnabled": {
-    "message": "Force enabled"
-  },
   "core/sdk/sdk-meta.ts | logXmlhttprequests": {
     "message": "Log XMLHttpRequests"
   },
@@ -586,15 +556,6 @@
   },
   "core/sdk/sdk-meta.ts | noEmulation": {
     "message": "No emulation"
-  },
-  "core/sdk/sdk-meta.ts | noIdleEmulation": {
-    "message": "No idle emulation"
-  },
-  "core/sdk/sdk-meta.ts | nominal": {
-    "message": "Nominal"
-  },
-  "core/sdk/sdk-meta.ts | noPressureEmulation": {
-    "message": "No override"
   },
   "core/sdk/sdk-meta.ts | osTextScaleEmulation100": {
     "message": "100% (default)"
@@ -629,9 +590,6 @@
   "core/sdk/sdk-meta.ts | osTextScaleEmulationNone": {
     "message": "No emulation"
   },
-  "core/sdk/sdk-meta.ts | print": {
-    "message": "print"
-  },
   "core/sdk/sdk-meta.ts | protanopia": {
     "message": "Protanopia (no red)"
   },
@@ -644,29 +602,8 @@
   "core/sdk/sdk-meta.ts | remoteFileLoadingInfo": {
     "message": "Example resources are source maps. Disabled by default for security reasons."
   },
-  "core/sdk/sdk-meta.ts | screen": {
-    "message": "screen"
-  },
-  "core/sdk/sdk-meta.ts | serious": {
-    "message": "Serious"
-  },
-  "core/sdk/sdk-meta.ts | touch": {
-    "message": "Touch"
-  },
   "core/sdk/sdk-meta.ts | tritanopia": {
     "message": "Tritanopia (no blue)"
-  },
-  "core/sdk/sdk-meta.ts | userActiveScreenLocked": {
-    "message": "User active, screen locked"
-  },
-  "core/sdk/sdk-meta.ts | userActiveScreenUnlocked": {
-    "message": "User active, screen unlocked"
-  },
-  "core/sdk/sdk-meta.ts | userIdleScreenLocked": {
-    "message": "User idle, screen locked"
-  },
-  "core/sdk/sdk-meta.ts | userIdleScreenUnlocked": {
-    "message": "User idle, screen unlocked"
   },
   "core/sdk/ServerTiming.ts | deprecatedSyntaxFoundPleaseUse": {
     "message": "Deprecated syntax found for metric \"{PH1}\". Use: <name>;dur=<duration>;desc=<description>"
@@ -758,11 +695,32 @@
   "entrypoints/inspector_main/inspector_main-meta.ts | doNotEmulateAFocusedPage": {
     "message": "Do not emulate a focused page"
   },
+  "entrypoints/inspector_main/inspector_main-meta.ts | doNotEmulateCss": {
+    "message": "Do not emulate CSS {PH1}"
+  },
+  "entrypoints/inspector_main/inspector_main-meta.ts | doNotEmulateCssMediaType": {
+    "message": "Do not emulate CSS media type"
+  },
   "entrypoints/inspector_main/inspector_main-meta.ts | doNotHighlightAdFrames": {
     "message": "Do not highlight ad frames"
   },
   "entrypoints/inspector_main/inspector_main-meta.ts | emulateAFocusedPage": {
     "message": "Emulate a focused page"
+  },
+  "entrypoints/inspector_main/inspector_main-meta.ts | emulateCss": {
+    "message": "Emulate CSS {PH1}"
+  },
+  "entrypoints/inspector_main/inspector_main-meta.ts | emulateCssMediaFeature": {
+    "message": "Emulate CSS media feature {PH1}"
+  },
+  "entrypoints/inspector_main/inspector_main-meta.ts | emulateCssMediaType": {
+    "message": "Emulate CSS media type"
+  },
+  "entrypoints/inspector_main/inspector_main-meta.ts | emulateCssPrintMediaType": {
+    "message": "Emulate CSS print media type"
+  },
+  "entrypoints/inspector_main/inspector_main-meta.ts | emulateCssScreenMediaType": {
+    "message": "Emulate CSS screen media type"
   },
   "entrypoints/inspector_main/inspector_main-meta.ts | forceAdBlocking": {
     "message": "Force ad blocking on this site"
@@ -794,14 +752,26 @@
   "entrypoints/inspector_main/inspector_main-meta.ts | layout": {
     "message": "layout"
   },
+  "entrypoints/inspector_main/inspector_main-meta.ts | noEmulation": {
+    "message": "No emulation"
+  },
   "entrypoints/inspector_main/inspector_main-meta.ts | paint": {
     "message": "paint"
+  },
+  "entrypoints/inspector_main/inspector_main-meta.ts | print": {
+    "message": "print"
+  },
+  "entrypoints/inspector_main/inspector_main-meta.ts | query": {
+    "message": "query"
   },
   "entrypoints/inspector_main/inspector_main-meta.ts | reloadPage": {
     "message": "Reload page"
   },
   "entrypoints/inspector_main/inspector_main-meta.ts | rendering": {
     "message": "Rendering"
+  },
+  "entrypoints/inspector_main/inspector_main-meta.ts | screen": {
+    "message": "screen"
   },
   "entrypoints/inspector_main/inspector_main-meta.ts | showAds": {
     "message": "Show ads on this site, if allowed"
@@ -13460,8 +13430,26 @@
   "panels/sensors/sensors-meta.ts | accelerometer": {
     "message": "accelerometer"
   },
+  "panels/sensors/sensors-meta.ts | cpuPressure": {
+    "message": "CPU Pressure"
+  },
+  "panels/sensors/sensors-meta.ts | critical": {
+    "message": "Critical"
+  },
+  "panels/sensors/sensors-meta.ts | devicebased": {
+    "message": "Device-based"
+  },
   "panels/sensors/sensors-meta.ts | deviceOrientation": {
     "message": "device orientation"
+  },
+  "panels/sensors/sensors-meta.ts | emulateIdleDetectorState": {
+    "message": "Emulate Idle Detector state"
+  },
+  "panels/sensors/sensors-meta.ts | fair": {
+    "message": "Fair"
+  },
+  "panels/sensors/sensors-meta.ts | forceEnabled": {
+    "message": "Force enabled"
   },
   "panels/sensors/sensors-meta.ts | geolocation": {
     "message": "geolocation"
@@ -13475,8 +13463,20 @@
   "panels/sensors/sensors-meta.ts | locations": {
     "message": "Locations"
   },
+  "panels/sensors/sensors-meta.ts | noIdleEmulation": {
+    "message": "No idle emulation"
+  },
+  "panels/sensors/sensors-meta.ts | nominal": {
+    "message": "Nominal"
+  },
+  "panels/sensors/sensors-meta.ts | noPressureEmulation": {
+    "message": "No override"
+  },
   "panels/sensors/sensors-meta.ts | sensors": {
     "message": "Sensors"
+  },
+  "panels/sensors/sensors-meta.ts | serious": {
+    "message": "Serious"
   },
   "panels/sensors/sensors-meta.ts | showLocations": {
     "message": "Show Locations"
@@ -13486,6 +13486,21 @@
   },
   "panels/sensors/sensors-meta.ts | timezones": {
     "message": "timezones"
+  },
+  "panels/sensors/sensors-meta.ts | touch": {
+    "message": "Touch"
+  },
+  "panels/sensors/sensors-meta.ts | userActiveScreenLocked": {
+    "message": "User active, screen locked"
+  },
+  "panels/sensors/sensors-meta.ts | userActiveScreenUnlocked": {
+    "message": "User active, screen unlocked"
+  },
+  "panels/sensors/sensors-meta.ts | userIdleScreenLocked": {
+    "message": "User idle, screen locked"
+  },
+  "panels/sensors/sensors-meta.ts | userIdleScreenUnlocked": {
+    "message": "User idle, screen unlocked"
   },
   "panels/sensors/SensorsView.ts | accuracy": {
     "message": "Accuracy"
@@ -17368,6 +17383,9 @@
   },
   "panels/whats_new/whats_new-meta.ts | whatsNew": {
     "message": "What’s new"
+  },
+  "ui/comments/comments-meta.ts | toggleCommentMode": {
+    "message": "Add comments to send to your AI coding agent"
   },
   "ui/components/dialogs/Dialog.ts | close": {
     "message": "Close"

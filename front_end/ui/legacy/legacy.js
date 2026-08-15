@@ -2734,6 +2734,7 @@ __export(Widget_exports, {
   registerWidgetConfig: () => registerWidgetConfig,
   widget: () => widget,
   widgetConfig: () => widgetConfig,
+  widgetConfigs: () => widgetConfigs,
   widgetRef: () => widgetRef
 });
 import "./../dom_extension/dom_extension.js";
@@ -16682,6 +16683,18 @@ var cloneCustomElement = (element, deep) => {
   }
   return clone;
 };
+var UIUtilsWidgetDirective = class extends WidgetDirective {
+  update(part, args) {
+    const result = super.update(part, args);
+    if (part.type === Lit2.Directive.PartType.ELEMENT) {
+      const lightNode = part.element;
+      for (const clone of HTMLElementWithLightDOMTemplate.getClones(lightNode)) {
+        super.update({ type: Lit2.Directive.PartType.ELEMENT, element: clone }, args);
+      }
+    }
+    return result;
+  }
+};
 var HTMLElementWithLightDOMTemplate = class _HTMLElementWithLightDOMTemplate extends HTMLElement {
   #mutationObserver = new MutationObserver(this.#onChange.bind(this));
   #contentTemplate = null;
@@ -16689,13 +16702,40 @@ var HTMLElementWithLightDOMTemplate = class _HTMLElementWithLightDOMTemplate ext
     super();
     this.#mutationObserver.observe(this, { childList: true, attributes: true, subtree: true, characterData: true });
   }
+  static #originalToClones = /* @__PURE__ */ new WeakMap();
+  static getClones(node) {
+    const cloneSet = this.#originalToClones.get(node);
+    if (!cloneSet) {
+      return [];
+    }
+    const clones = [];
+    for (const cloneRef of cloneSet) {
+      const clone = cloneRef.deref();
+      if (clone) {
+        clones.push(clone);
+      } else {
+        cloneSet.delete(cloneRef);
+      }
+    }
+    return clones;
+  }
   static cloneNode(node) {
     const clone = node.cloneNode(false);
+    let cloneSet = _HTMLElementWithLightDOMTemplate.#originalToClones.get(node);
+    if (!cloneSet) {
+      cloneSet = /* @__PURE__ */ new Set();
+      _HTMLElementWithLightDOMTemplate.#originalToClones.set(node, cloneSet);
+    }
+    cloneSet.add(new WeakRef(clone));
     for (const child of node.childNodes) {
       clone.appendChild(_HTMLElementWithLightDOMTemplate.cloneNode(child));
     }
     if (node instanceof Element && clone instanceof Element) {
       Lit2.CustomDirectives.InterceptBindingDirective.setEventListeners(node, clone);
+      const currentConfig = widgetConfigs.get(node);
+      if (currentConfig) {
+        registerWidgetConfig(clone, currentConfig);
+      }
     }
     return clone;
   }
@@ -16730,6 +16770,10 @@ var HTMLElementWithLightDOMTemplate = class _HTMLElementWithLightDOMTemplate ext
         return value;
       }
       if (Lit2.isLitDirective(value)) {
+        const directiveValue = value;
+        if (directiveValue["_$litDirective$"] === WidgetDirective) {
+          directiveValue["_$litDirective$"] = UIUtilsWidgetDirective;
+        }
         for (let i = 0; i < value.values.length; i++) {
           const subvalue = value.values[i];
           if (isCallable(subvalue)) {
