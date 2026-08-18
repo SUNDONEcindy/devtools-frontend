@@ -9938,7 +9938,7 @@ var CSSMetadata = class _CSSMetadata {
         if (partialValueKeywordsNoPresets.get(name)?.has(value)) {
           return false;
         }
-        return CSS.supports(name, value);
+        return true;
       }).sort(_CSSMetadata.sortPrefixesAndCSSWideKeywordsToEnd);
       const presets = values.map((value) => `${name}: ${value}`);
       if (!this.isSVGProperty(name)) {
@@ -10077,11 +10077,6 @@ var CSSMetadata = class _CSSMetadata {
     let keywords = propertyValues.get(propertyName) || propertyValues.get(unprefixedName);
     if (!keywords) {
       keywords = [];
-      for (const commonKeyword of CommonKeywords) {
-        if (CSS.supports(propertyName, commonKeyword)) {
-          keywords.push(commonKeyword);
-        }
-      }
       propertyValues.set(propertyName, keywords);
     }
     return keywords;
@@ -12880,7 +12875,8 @@ __export(DOMModel_exports, {
   DOMNodeShortcut: () => DOMNodeShortcut,
   DOMNodeSnapshot: () => DOMNodeSnapshot,
   DeferredDOMNode: () => DeferredDOMNode,
-  Events: () => Events5
+  Events: () => Events5,
+  cssEscape: () => cssEscape
 });
 import * as Common18 from "./../common/common.js";
 import * as Platform11 from "./../platform/platform.js";
@@ -17959,19 +17955,27 @@ var CSSStyleSheetHeader = class {
 var SDKSettings_exports = {};
 __export(SDKSettings_exports, {
   apcaSettingDescriptor: () => apcaSettingDescriptor,
+  avifFormatDisabledSettingDescriptor: () => avifFormatDisabledSettingDescriptor,
   breakpointsActiveSettingDescriptor: () => breakpointsActiveSettingDescriptor,
   cpuPressureSettingDescriptor: () => cpuPressureSettingDescriptor,
   cssSourceMapsEnabledSettingDescriptor: () => cssSourceMapsEnabledSettingDescriptor,
   disableAsyncStackTracesSettingDescriptor: () => disableAsyncStackTracesSettingDescriptor,
   emulatePageFocusSettingDescriptor: () => emulatePageFocusSettingDescriptor,
+  emulatedCSSMediaFeatureColorGamutSettingDescriptor: () => emulatedCSSMediaFeatureColorGamutSettingDescriptor,
   emulatedCSSMediaFeatureForcedColorsSettingDescriptor: () => emulatedCSSMediaFeatureForcedColorsSettingDescriptor,
   emulatedCSSMediaFeaturePrefersColorSchemeSettingDescriptor: () => emulatedCSSMediaFeaturePrefersColorSchemeSettingDescriptor,
+  emulatedCSSMediaFeaturePrefersContrastSettingDescriptor: () => emulatedCSSMediaFeaturePrefersContrastSettingDescriptor,
+  emulatedCSSMediaFeaturePrefersReducedDataSettingDescriptor: () => emulatedCSSMediaFeaturePrefersReducedDataSettingDescriptor,
   emulatedCSSMediaFeaturePrefersReducedMotionSettingDescriptor: () => emulatedCSSMediaFeaturePrefersReducedMotionSettingDescriptor,
+  emulatedCSSMediaFeaturePrefersReducedTransparencySettingDescriptor: () => emulatedCSSMediaFeaturePrefersReducedTransparencySettingDescriptor,
   emulatedCSSMediaSettingDescriptor: () => emulatedCSSMediaSettingDescriptor,
+  emulatedOSTextScaleSettingDescriptor: () => emulatedOSTextScaleSettingDescriptor,
+  emulatedVisionDeficiencySettingDescriptor: () => emulatedVisionDeficiencySettingDescriptor,
   extendGridLinesSettingDescriptor: () => extendGridLinesSettingDescriptor,
   idleDetectionSettingDescriptor: () => idleDetectionSettingDescriptor,
   javaScriptDisabledSettingDescriptor: () => javaScriptDisabledSettingDescriptor,
   jsSourceMapsEnabledSettingDescriptor: () => jsSourceMapsEnabledSettingDescriptor,
+  localFontsDisabledSettingDescriptor: () => localFontsDisabledSettingDescriptor,
   pauseOnCaughtExceptionSettingDescriptor: () => pauseOnCaughtExceptionSettingDescriptor,
   pauseOnExceptionEnabledSettingDescriptor: () => pauseOnExceptionEnabledSettingDescriptor,
   pauseOnUncaughtExceptionSettingDescriptor: () => pauseOnUncaughtExceptionSettingDescriptor,
@@ -18154,6 +18158,54 @@ var emulatedCSSMediaFeaturePrefersReducedMotionSettingDescriptor = {
   name: "emulated-css-media-feature-prefers-reduced-motion",
   type: "enum",
   defaultValue: "",
+  storageType: "Session"
+};
+var emulatedCSSMediaFeaturePrefersContrastSettingDescriptor = {
+  name: "emulated-css-media-feature-prefers-contrast",
+  type: "enum",
+  defaultValue: "",
+  storageType: "Session"
+};
+var emulatedCSSMediaFeaturePrefersReducedDataSettingDescriptor = {
+  name: "emulated-css-media-feature-prefers-reduced-data",
+  type: "enum",
+  defaultValue: "",
+  storageType: "Session"
+};
+var emulatedCSSMediaFeaturePrefersReducedTransparencySettingDescriptor = {
+  name: "emulated-css-media-feature-prefers-reduced-transparency",
+  type: "enum",
+  defaultValue: "",
+  storageType: "Session"
+};
+var emulatedCSSMediaFeatureColorGamutSettingDescriptor = {
+  name: "emulated-css-media-feature-color-gamut",
+  type: "enum",
+  defaultValue: "",
+  storageType: "Session"
+};
+var emulatedVisionDeficiencySettingDescriptor = {
+  name: "emulated-vision-deficiency",
+  type: "enum",
+  defaultValue: "none",
+  storageType: "Session"
+};
+var emulatedOSTextScaleSettingDescriptor = {
+  name: "emulated-os-text-scale",
+  type: "enum",
+  defaultValue: "",
+  storageType: "Session"
+};
+var localFontsDisabledSettingDescriptor = {
+  name: "local-fonts-disabled",
+  type: "boolean",
+  defaultValue: false,
+  storageType: "Session"
+};
+var avifFormatDisabledSettingDescriptor = {
+  name: "avif-format-disabled",
+  type: "boolean",
+  defaultValue: false,
   storageType: "Session"
 };
 
@@ -23304,6 +23356,36 @@ var DOMNodeEvents;
   DOMNodeEvents2["SCROLL_SNAP_OVERLAY_STATE_CHANGED"] = "ScrollSnapOverlayStateChanged";
   DOMNodeEvents2["CONTAINER_QUERY_OVERLAY_STATE_CHANGED"] = "ContainerQueryOverlayStateChanged";
 })(DOMNodeEvents || (DOMNodeEvents = {}));
+function cssEscape(value) {
+  const length = value.length;
+  let index = -1;
+  let codeUnit;
+  let result = "";
+  const firstCodeUnit = value.charCodeAt(0);
+  if (length === 0) {
+    return "";
+  }
+  if (length === 1 && firstCodeUnit === 45) {
+    return "\\" + value;
+  }
+  while (++index < length) {
+    codeUnit = value.charCodeAt(index);
+    if (codeUnit === 0) {
+      result += "\uFFFD";
+      continue;
+    }
+    if (codeUnit >= 1 && codeUnit <= 31 || codeUnit === 127 || index === 0 && codeUnit >= 48 && codeUnit <= 57 || index === 1 && codeUnit >= 48 && codeUnit <= 57 && firstCodeUnit === 45) {
+      result += "\\" + codeUnit.toString(16) + " ";
+      continue;
+    }
+    if (codeUnit >= 128 || codeUnit === 45 || codeUnit === 95 || codeUnit >= 48 && codeUnit <= 57 || codeUnit >= 65 && codeUnit <= 90 || codeUnit >= 97 && codeUnit <= 122) {
+      result += value.charAt(index);
+      continue;
+    }
+    result += "\\" + value.charAt(index);
+  }
+  return result;
+}
 var DOMNode = class _DOMNode extends Common18.ObjectWrapper.ObjectWrapper {
   #domModel;
   #frameManager;
@@ -24271,14 +24353,14 @@ var DOMNode = class _DOMNode extends Common18.ObjectWrapper.ObjectWrapper {
     const id = this.getAttribute("id");
     const classes = this.getAttribute("class");
     if (lowerCaseName === "input" && type && !id && !classes) {
-      return lowerCaseName + '[type="' + CSS.escape(type) + '"]';
+      return lowerCaseName + '[type="' + cssEscape(type) + '"]';
     }
     if (id) {
-      return lowerCaseName + "#" + CSS.escape(id);
+      return lowerCaseName + "#" + cssEscape(id);
     }
     if (classes) {
       const classList = classes.trim().split(/\s+/g);
-      return (lowerCaseName === "div" ? "" : lowerCaseName) + "." + classList.map((cls) => CSS.escape(cls)).join(".");
+      return (lowerCaseName === "div" ? "" : lowerCaseName) + "." + classList.map((cls) => cssEscape(cls)).join(".");
     }
     if (this.pseudoIdentifier()) {
       return `${lowerCaseName}(${this.pseudoIdentifier()})`;
@@ -36645,12 +36727,12 @@ var EmulationModel = class extends SDKModel {
       await this.setPressureStateOverride(settingValue);
     });
     const mediaTypeSetting = settings.resolve(emulatedCSSMediaSettingDescriptor);
-    const mediaFeatureColorGamutSetting = settings.moduleSetting("emulated-css-media-feature-color-gamut");
+    const mediaFeatureColorGamutSetting = settings.resolve(emulatedCSSMediaFeatureColorGamutSettingDescriptor);
     const mediaFeaturePrefersColorSchemeSetting = settings.resolve(emulatedCSSMediaFeaturePrefersColorSchemeSettingDescriptor);
     const mediaFeatureForcedColorsSetting = settings.resolve(emulatedCSSMediaFeatureForcedColorsSettingDescriptor);
-    const mediaFeaturePrefersContrastSetting = settings.moduleSetting("emulated-css-media-feature-prefers-contrast");
-    const mediaFeaturePrefersReducedDataSetting = settings.moduleSetting("emulated-css-media-feature-prefers-reduced-data");
-    const mediaFeaturePrefersReducedTransparencySetting = settings.moduleSetting("emulated-css-media-feature-prefers-reduced-transparency");
+    const mediaFeaturePrefersContrastSetting = settings.resolve(emulatedCSSMediaFeaturePrefersContrastSettingDescriptor);
+    const mediaFeaturePrefersReducedDataSetting = settings.resolve(emulatedCSSMediaFeaturePrefersReducedDataSettingDescriptor);
+    const mediaFeaturePrefersReducedTransparencySetting = settings.resolve(emulatedCSSMediaFeaturePrefersReducedTransparencySettingDescriptor);
     const mediaFeaturePrefersReducedMotionSetting = settings.resolve(emulatedCSSMediaFeaturePrefersReducedMotionSettingDescriptor);
     this.#mediaConfiguration = /* @__PURE__ */ new Map([
       ["type", mediaTypeSetting.get()],
@@ -36705,24 +36787,24 @@ var EmulationModel = class extends SDKModel {
       mediaFeaturePrefersColorSchemeSetting.set("dark");
       void this.emulateAutoDarkMode(true);
     }
-    const visionDeficiencySetting = settings.moduleSetting("emulated-vision-deficiency");
+    const visionDeficiencySetting = settings.resolve(emulatedVisionDeficiencySettingDescriptor);
     visionDeficiencySetting.addChangeListener(() => this.emulateVisionDeficiency(visionDeficiencySetting.get()));
     if (visionDeficiencySetting.get()) {
       void this.emulateVisionDeficiency(visionDeficiencySetting.get());
     }
-    const osTextScaleSetting = settings.moduleSetting("emulated-os-text-scale");
+    const osTextScaleSetting = settings.resolve(emulatedOSTextScaleSettingDescriptor);
     osTextScaleSetting.addChangeListener(() => {
       void this.emulateOSTextScale(parseFloat(osTextScaleSetting.get()) || void 0);
     });
     if (osTextScaleSetting.get()) {
       void this.emulateOSTextScale(parseFloat(osTextScaleSetting.get()) || void 0);
     }
-    const localFontsDisabledSetting = settings.moduleSetting("local-fonts-disabled");
+    const localFontsDisabledSetting = settings.resolve(localFontsDisabledSettingDescriptor);
     localFontsDisabledSetting.addChangeListener(() => this.setLocalFontsDisabled(localFontsDisabledSetting.get()));
     if (localFontsDisabledSetting.get()) {
       this.setLocalFontsDisabled(localFontsDisabledSetting.get());
     }
-    const avifFormatDisabledSetting = settings.moduleSetting("avif-format-disabled");
+    const avifFormatDisabledSetting = settings.resolve(avifFormatDisabledSettingDescriptor);
     const jpegXlFormatDisabledSetting = settings.moduleSetting("jpeg-xl-format-disabled");
     const webpFormatDisabledSetting = settings.moduleSetting("webp-format-disabled");
     const updateDisabledImageFormats = () => {

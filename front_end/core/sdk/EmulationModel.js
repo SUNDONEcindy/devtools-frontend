@@ -4,7 +4,7 @@
 import { CSSModel } from './CSSModel.js';
 import { OverlayModel } from './OverlayModel.js';
 import { SDKModel } from './SDKModel.js';
-import { cpuPressureSettingDescriptor, emulatedCSSMediaFeatureForcedColorsSettingDescriptor, emulatedCSSMediaFeaturePrefersColorSchemeSettingDescriptor, emulatedCSSMediaFeaturePrefersReducedMotionSettingDescriptor, emulatedCSSMediaSettingDescriptor, idleDetectionSettingDescriptor, javaScriptDisabledSettingDescriptor, touchSettingDescriptor, } from './SDKSettings.js';
+import { avifFormatDisabledSettingDescriptor, cpuPressureSettingDescriptor, emulatedCSSMediaFeatureColorGamutSettingDescriptor, emulatedCSSMediaFeatureForcedColorsSettingDescriptor, emulatedCSSMediaFeaturePrefersColorSchemeSettingDescriptor, emulatedCSSMediaFeaturePrefersContrastSettingDescriptor, emulatedCSSMediaFeaturePrefersReducedDataSettingDescriptor, emulatedCSSMediaFeaturePrefersReducedMotionSettingDescriptor, emulatedCSSMediaFeaturePrefersReducedTransparencySettingDescriptor, emulatedCSSMediaSettingDescriptor, emulatedOSTextScaleSettingDescriptor, emulatedVisionDeficiencySettingDescriptor, idleDetectionSettingDescriptor, javaScriptDisabledSettingDescriptor, localFontsDisabledSettingDescriptor, touchSettingDescriptor, } from './SDKSettings.js';
 export class EmulationModel extends SDKModel {
     #multitargetNetworkManager;
     #emulationAgent;
@@ -70,12 +70,12 @@ export class EmulationModel extends SDKModel {
             await this.setPressureStateOverride(settingValue);
         });
         const mediaTypeSetting = settings.resolve(emulatedCSSMediaSettingDescriptor);
-        const mediaFeatureColorGamutSetting = settings.moduleSetting('emulated-css-media-feature-color-gamut');
+        const mediaFeatureColorGamutSetting = settings.resolve(emulatedCSSMediaFeatureColorGamutSettingDescriptor);
         const mediaFeaturePrefersColorSchemeSetting = settings.resolve(emulatedCSSMediaFeaturePrefersColorSchemeSettingDescriptor);
         const mediaFeatureForcedColorsSetting = settings.resolve(emulatedCSSMediaFeatureForcedColorsSettingDescriptor);
-        const mediaFeaturePrefersContrastSetting = settings.moduleSetting('emulated-css-media-feature-prefers-contrast');
-        const mediaFeaturePrefersReducedDataSetting = settings.moduleSetting('emulated-css-media-feature-prefers-reduced-data');
-        const mediaFeaturePrefersReducedTransparencySetting = settings.moduleSetting('emulated-css-media-feature-prefers-reduced-transparency');
+        const mediaFeaturePrefersContrastSetting = settings.resolve(emulatedCSSMediaFeaturePrefersContrastSettingDescriptor);
+        const mediaFeaturePrefersReducedDataSetting = settings.resolve(emulatedCSSMediaFeaturePrefersReducedDataSettingDescriptor);
+        const mediaFeaturePrefersReducedTransparencySetting = settings.resolve(emulatedCSSMediaFeaturePrefersReducedTransparencySettingDescriptor);
         const mediaFeaturePrefersReducedMotionSetting = settings.resolve(emulatedCSSMediaFeaturePrefersReducedMotionSettingDescriptor);
         // Note: this uses a different format than what the CDP API expects,
         // because we want to update these values per media type/feature
@@ -134,24 +134,24 @@ export class EmulationModel extends SDKModel {
             mediaFeaturePrefersColorSchemeSetting.set('dark');
             void this.emulateAutoDarkMode(true);
         }
-        const visionDeficiencySetting = settings.moduleSetting('emulated-vision-deficiency');
+        const visionDeficiencySetting = settings.resolve(emulatedVisionDeficiencySettingDescriptor);
         visionDeficiencySetting.addChangeListener(() => this.emulateVisionDeficiency(visionDeficiencySetting.get()));
         if (visionDeficiencySetting.get()) {
             void this.emulateVisionDeficiency(visionDeficiencySetting.get());
         }
-        const osTextScaleSetting = settings.moduleSetting('emulated-os-text-scale');
+        const osTextScaleSetting = settings.resolve(emulatedOSTextScaleSettingDescriptor);
         osTextScaleSetting.addChangeListener(() => {
             void this.emulateOSTextScale(parseFloat(osTextScaleSetting.get()) || undefined);
         });
         if (osTextScaleSetting.get()) {
             void this.emulateOSTextScale(parseFloat(osTextScaleSetting.get()) || undefined);
         }
-        const localFontsDisabledSetting = settings.moduleSetting('local-fonts-disabled');
+        const localFontsDisabledSetting = settings.resolve(localFontsDisabledSettingDescriptor);
         localFontsDisabledSetting.addChangeListener(() => this.setLocalFontsDisabled(localFontsDisabledSetting.get()));
         if (localFontsDisabledSetting.get()) {
             this.setLocalFontsDisabled(localFontsDisabledSetting.get());
         }
-        const avifFormatDisabledSetting = settings.moduleSetting('avif-format-disabled');
+        const avifFormatDisabledSetting = settings.resolve(avifFormatDisabledSettingDescriptor);
         const jpegXlFormatDisabledSetting = settings.moduleSetting('jpeg-xl-format-disabled');
         const webpFormatDisabledSetting = settings.moduleSetting('webp-format-disabled');
         const updateDisabledImageFormats = () => {
