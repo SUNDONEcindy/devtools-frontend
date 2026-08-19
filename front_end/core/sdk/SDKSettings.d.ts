@@ -37,3 +37,10 @@ export declare const emulatedVisionDeficiencySettingDescriptor: Common.Settings.
 export declare const emulatedOSTextScaleSettingDescriptor: Common.Settings.SettingDescriptor<string>;
 export declare const localFontsDisabledSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
 export declare const avifFormatDisabledSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const jpegXlFormatDisabledSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const webpFormatDisabledSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const customFormattersSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const requestBlockingEnabledSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const cacheDisabledSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const emulateAutoDarkModeSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;
+export declare const enableRemoteFileLoadingSettingDescriptor: Common.Settings.SettingDescriptor<boolean>;

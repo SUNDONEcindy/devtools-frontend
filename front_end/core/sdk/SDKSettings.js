@@ -217,4 +217,44 @@ export const avifFormatDisabledSettingDescriptor = {
     defaultValue: false,
     storageType: "Session" /* Common.Settings.SettingStorageType.SESSION */,
 };
+export const jpegXlFormatDisabledSettingDescriptor = {
+    name: 'jpeg-xl-format-disabled',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Session" /* Common.Settings.SettingStorageType.SESSION */,
+};
+export const webpFormatDisabledSettingDescriptor = {
+    name: 'webp-format-disabled',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Session" /* Common.Settings.SettingStorageType.SESSION */,
+};
+export const customFormattersSettingDescriptor = {
+    name: 'custom-formatters',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+};
+export const requestBlockingEnabledSettingDescriptor = {
+    name: 'request-blocking-enabled',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Local" /* Common.Settings.SettingStorageType.LOCAL */,
+};
+export const cacheDisabledSettingDescriptor = {
+    name: 'cache-disabled',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+};
+export const emulateAutoDarkModeSettingDescriptor = {
+    name: 'emulate-auto-dark-mode',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Session" /* Common.Settings.SettingStorageType.SESSION */,
+};
+export const enableRemoteFileLoadingSettingDescriptor = {
+    name: 'network.enable-remote-file-loading',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.SYNCED */,
+};
 //# sourceMappingURL=SDKSettings.js.map
