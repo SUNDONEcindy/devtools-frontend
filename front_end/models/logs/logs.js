@@ -53,7 +53,7 @@ var NetworkLog = class _NetworkLog extends Common.ObjectWrapper.ObjectWrapper {
     this.#targetManager.observeModels(SDK.NetworkManager.NetworkManager, this);
     const recordLogSetting = this.#settings.moduleSetting("network-log.record-log");
     recordLogSetting.addChangeListener(() => {
-      const preserveLogSetting = this.#settings.moduleSetting("network-log.preserve-log");
+      const preserveLogSetting = this.#settings.resolve(SDK.SDKSettings.preserveNetworkLogSettingDescriptor);
       if (!preserveLogSetting.get() && recordLogSetting.get()) {
         this.reset(true);
       }
@@ -262,7 +262,7 @@ var NetworkLog = class _NetworkLog extends Common.ObjectWrapper.ObjectWrapper {
     return initiatorData.request;
   }
   willReloadPage() {
-    if (!this.#settings.moduleSetting("network-log.preserve-log").get()) {
+    if (!this.#settings.resolve(SDK.SDKSettings.preserveNetworkLogSettingDescriptor).get()) {
       this.reset(true);
     }
   }
@@ -275,7 +275,7 @@ var NetworkLog = class _NetworkLog extends Common.ObjectWrapper.ObjectWrapper {
     if (mainFrame.url !== mainFrame.unreachableUrl() && Common.ParsedURL.schemeIs(mainFrame.url, "chrome-error:")) {
       return;
     }
-    const preserveLog = this.#settings.moduleSetting("network-log.preserve-log").get();
+    const preserveLog = this.#settings.resolve(SDK.SDKSettings.preserveNetworkLogSettingDescriptor).get();
     const oldRequests = this.#requests;
     const oldManagerRequests = this.#requests.filter((request) => SDK.NetworkManager.NetworkManager.forRequest(request) === manager);
     const oldRequestsSet = this.#requestsSet;
