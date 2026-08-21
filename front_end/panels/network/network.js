@@ -14265,7 +14265,7 @@ var NetworkPanel = class _NetworkPanel extends UI24.Panel.Panel {
     this.networkLogLargeRowsSetting.addChangeListener(this.toggleLargerRequests, this);
     this.networkRecordFilmStripSetting.addChangeListener(this.toggleRecordFilmStrip, this);
     this.preserveLogSetting = Common20.Settings.Settings.instance().resolve(SDK17.SDKSettings.preserveNetworkLogSettingDescriptor);
-    this.recordLogSetting = Common20.Settings.Settings.instance().moduleSetting("network-log.record-log");
+    this.recordLogSetting = Common20.Settings.Settings.instance().resolve(Logs6.NetworkLog.recordNetworkLogSettingDescriptor);
     this.recordLogSetting.addChangeListener(({ data }) => this.toggleRecord(data));
     this.throttlingSelect = this.createThrottlingConditionsSelect();
     this.setupToolbarButtons(splitWidget);
