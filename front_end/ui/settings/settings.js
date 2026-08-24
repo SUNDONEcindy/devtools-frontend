@@ -29,6 +29,7 @@ var MainSettings_exports = {};
 __export(MainSettings_exports, {
   chromeThemeColorsSettingDescriptor: () => chromeThemeColorsSettingDescriptor,
   languageSettingDescriptor: () => languageSettingDescriptor,
+  shortcutPanelSwitchSettingDescriptor: () => shortcutPanelSwitchSettingDescriptor,
   sidebarPositionSettingDescriptor: () => sidebarPositionSettingDescriptor,
   uiThemeSettingDescriptor: () => uiThemeSettingDescriptor
 });
@@ -55,6 +56,12 @@ var languageSettingDescriptor = {
   name: "language",
   type: "enum",
   defaultValue: "en-US",
+  storageType: "Synced"
+};
+var shortcutPanelSwitchSettingDescriptor = {
+  name: "shortcut-panel-switch",
+  type: "boolean",
+  defaultValue: false,
   storageType: "Synced"
 };
 

@@ -1550,6 +1550,7 @@ import * as Root6 from "./../../core/root/root.js";
 import * as SDK from "./../../core/sdk/sdk.js";
 import * as Buttons3 from "./../components/buttons/buttons.js";
 import { createIcon as createIcon5 } from "./../kit/kit.js";
+import * as SettingsUI from "./../settings/settings.js";
 import * as VisualLogging9 from "./../visual_logging/visual_logging.js";
 
 // gen/front_end/ui/legacy/DockController.js
@@ -8584,7 +8585,7 @@ var InspectorView = class _InspectorView extends VBox {
     if (!KeyboardShortcut.eventHasCtrlEquivalentKey(event) || event.altKey || event.shiftKey) {
       return;
     }
-    const panelShortcutEnabled = Common11.Settings.Settings.instance().moduleSetting("shortcut-panel-switch").get();
+    const panelShortcutEnabled = Common11.Settings.Settings.instance().resolve(SettingsUI.MainSettings.shortcutPanelSwitchSettingDescriptor).get();
     if (panelShortcutEnabled) {
       let panelIndex = -1;
       if (event.keyCode > 48 && event.keyCode < 58) {
