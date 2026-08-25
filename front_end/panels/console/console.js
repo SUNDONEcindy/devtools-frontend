@@ -947,6 +947,7 @@ var objectValue_css_default = `/*
 import * as Components2 from "./../../ui/legacy/components/utils/utils.js";
 import * as UI3 from "./../../ui/legacy/legacy.js";
 import { html as html3, nothing as nothing3, render as render3 } from "./../../ui/lit/lit.js";
+import * as Settings2 from "./../../ui/settings/settings.js";
 import * as VisualLogging from "./../../ui/visual_logging/visual_logging.js";
 import * as Elements from "./../elements/elements.js";
 
@@ -2841,7 +2842,7 @@ var ConsoleViewMessage = class _ConsoleViewMessage {
     if (!this.contentElementInternal) {
       return;
     }
-    if (Common2.Settings.Settings.instance().moduleSetting("console-timestamps-enabled").get()) {
+    if (Common2.Settings.Settings.instance().resolve(Settings2.ConsoleSettings.consoleTimestampsEnabledSettingDescriptor).get()) {
       if (!this.timestampElement) {
         this.timestampElement = document.createElement("span");
         this.timestampElement.classList.add("console-timestamp");
@@ -6205,7 +6206,7 @@ import { createIcon as createIcon2 } from "./../../ui/kit/kit.js";
 import * as SettingsUI from "./../../ui/legacy/components/settings_ui/settings_ui.js";
 import * as Components5 from "./../../ui/legacy/components/utils/utils.js";
 import * as UI9 from "./../../ui/legacy/legacy.js";
-import * as SettingUIRegistration from "./../../ui/settings/settings.js";
+import * as Settings7 from "./../../ui/settings/settings.js";
 import * as VisualLogging5 from "./../../ui/visual_logging/visual_logging.js";
 import { AiCodeCompletionSummaryToolbar } from "./../common/common.js";
 
@@ -6626,7 +6627,7 @@ var ConsoleView = class _ConsoleView extends UI9.Widget.VBox {
     toolbar2.appendToolbarItem(this.filterStatusText);
     toolbar2.appendToolbarItem(this.showSettingsPaneButton);
     const monitoringXHREnabledSetting = Common6.Settings.Settings.instance().resolve(SDK7.SDKSettings.monitoringXHREnabledSettingDescriptor);
-    this.timestampsSetting = Common6.Settings.Settings.instance().moduleSetting("console-timestamps-enabled");
+    this.timestampsSetting = Common6.Settings.Settings.instance().resolve(Settings7.ConsoleSettings.consoleTimestampsEnabledSettingDescriptor);
     this.consoleHistoryAutocompleteSetting = Common6.Settings.Settings.instance().moduleSetting("console-history-autocomplete");
     this.selfXssWarningDisabledSetting = Common6.Settings.Settings.instance().createSetting(
       "disable-self-xss-warning",
@@ -6640,7 +6641,7 @@ var ConsoleView = class _ConsoleView extends UI9.Widget.VBox {
     const consoleEagerEvalSetting = Common6.Settings.Settings.instance().moduleSetting("console-eager-eval");
     const preserveConsoleLogSetting = Common6.Settings.Settings.instance().resolve(SDK7.SDKSettings.preserveConsoleLogSettingDescriptor);
     const userActivationEvalSetting = Common6.Settings.Settings.instance().resolve(SDK7.SDKSettings.consoleUserActivationEvalSettingDescriptor);
-    settingsPane.append(SettingsUI.SettingsUI.createSettingCheckbox(i18nString5(UIStrings5.networkMessages), this.filter.networkMessagesSetting, SettingUIRegistration.SettingUIRegistration.resolve(this.filter.networkMessagesSetting.descriptor()).title), SettingsUI.SettingsUI.createSettingCheckbox(i18nString5(UIStrings5.logXMLHttpRequests), monitoringXHREnabledSetting), SettingsUI.SettingsUI.createSettingCheckbox(i18nString5(UIStrings5.preserveLog), preserveConsoleLogSetting, i18nString5(UIStrings5.doNotClearLogOnPageReload)), SettingsUI.SettingsUI.createSettingCheckbox(SettingUIRegistration.SettingUIRegistration.resolve(consoleEagerEvalSetting.descriptor()).title, consoleEagerEvalSetting, i18nString5(UIStrings5.eagerlyEvaluateTextInThePrompt)), SettingsUI.SettingsUI.createSettingCheckbox(i18nString5(UIStrings5.selectedContextOnly), this.filter.filterByExecutionContextSetting, i18nString5(UIStrings5.onlyShowMessagesFromTheCurrentContext)), SettingsUI.SettingsUI.createSettingCheckbox(SettingUIRegistration.SettingUIRegistration.resolve(this.consoleHistoryAutocompleteSetting.descriptor()).title, this.consoleHistoryAutocompleteSetting, i18nString5(UIStrings5.autocompleteFromHistory)), SettingsUI.SettingsUI.createSettingCheckbox(SettingUIRegistration.SettingUIRegistration.resolve(this.groupSimilarSetting.descriptor()).title, this.groupSimilarSetting, i18nString5(UIStrings5.groupSimilarMessagesInConsole)), SettingsUI.SettingsUI.createSettingCheckbox(SettingUIRegistration.SettingUIRegistration.resolve(userActivationEvalSetting.descriptor()).title, userActivationEvalSetting, i18nString5(UIStrings5.treatEvaluationAsUserActivation)), SettingsUI.SettingsUI.createSettingCheckbox(SettingUIRegistration.SettingUIRegistration.resolve(this.showCorsErrorsSetting.descriptor()).title, this.showCorsErrorsSetting, i18nString5(UIStrings5.showCorsErrorsInConsole)));
+    settingsPane.append(SettingsUI.SettingsUI.createSettingCheckbox(i18nString5(UIStrings5.networkMessages), this.filter.networkMessagesSetting, Settings7.SettingUIRegistration.resolve(this.filter.networkMessagesSetting.descriptor()).title), SettingsUI.SettingsUI.createSettingCheckbox(i18nString5(UIStrings5.logXMLHttpRequests), monitoringXHREnabledSetting), SettingsUI.SettingsUI.createSettingCheckbox(i18nString5(UIStrings5.preserveLog), preserveConsoleLogSetting, i18nString5(UIStrings5.doNotClearLogOnPageReload)), SettingsUI.SettingsUI.createSettingCheckbox(Settings7.SettingUIRegistration.resolve(consoleEagerEvalSetting.descriptor()).title, consoleEagerEvalSetting, i18nString5(UIStrings5.eagerlyEvaluateTextInThePrompt)), SettingsUI.SettingsUI.createSettingCheckbox(i18nString5(UIStrings5.selectedContextOnly), this.filter.filterByExecutionContextSetting, i18nString5(UIStrings5.onlyShowMessagesFromTheCurrentContext)), SettingsUI.SettingsUI.createSettingCheckbox(Settings7.SettingUIRegistration.resolve(this.consoleHistoryAutocompleteSetting.descriptor()).title, this.consoleHistoryAutocompleteSetting, i18nString5(UIStrings5.autocompleteFromHistory)), SettingsUI.SettingsUI.createSettingCheckbox(Settings7.SettingUIRegistration.resolve(this.groupSimilarSetting.descriptor()).title, this.groupSimilarSetting, i18nString5(UIStrings5.groupSimilarMessagesInConsole)), SettingsUI.SettingsUI.createSettingCheckbox(Settings7.SettingUIRegistration.resolve(userActivationEvalSetting.descriptor()).title, userActivationEvalSetting, i18nString5(UIStrings5.treatEvaluationAsUserActivation)), SettingsUI.SettingsUI.createSettingCheckbox(Settings7.SettingUIRegistration.resolve(this.showCorsErrorsSetting.descriptor()).title, this.showCorsErrorsSetting, i18nString5(UIStrings5.showCorsErrorsInConsole)));
     if (!this.showSettingsPaneSetting.get()) {
       settingsPane.classList.add("hidden");
     }
@@ -7714,8 +7715,8 @@ var ConsoleViewFilter = class _ConsoleViewFilter {
   constructor(filterChangedCallback) {
     this.filterChanged = filterChangedCallback;
     this.messageLevelFiltersSetting = _ConsoleViewFilter.levelFilterSetting();
-    this.networkMessagesSetting = Common6.Settings.Settings.instance().moduleSetting("network-messages");
-    this.filterByExecutionContextSetting = Common6.Settings.Settings.instance().moduleSetting("selected-context-filter-enabled");
+    this.networkMessagesSetting = Common6.Settings.Settings.instance().resolve(Settings7.ConsoleSettings.networkMessagesSettingDescriptor);
+    this.filterByExecutionContextSetting = Common6.Settings.Settings.instance().resolve(Settings7.ConsoleSettings.selectedContextFilterEnabledSettingDescriptor);
     this.messageLevelFiltersSetting.addChangeListener(this.onFilterChanged.bind(this));
     this.networkMessagesSetting.addChangeListener(this.onFilterChanged.bind(this));
     this.filterByExecutionContextSetting.addChangeListener(this.onFilterChanged.bind(this));
