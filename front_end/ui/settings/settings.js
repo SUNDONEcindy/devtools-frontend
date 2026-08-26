@@ -7,6 +7,11 @@ var __export = (target, all) => {
 // gen/front_end/ui/settings/ConsoleSettings.js
 var ConsoleSettings_exports = {};
 __export(ConsoleSettings_exports, {
+  consoleAutocompleteOnEnterSettingDescriptor: () => consoleAutocompleteOnEnterSettingDescriptor,
+  consoleEagerEvalSettingDescriptor: () => consoleEagerEvalSettingDescriptor,
+  consoleGroupSimilarSettingDescriptor: () => consoleGroupSimilarSettingDescriptor,
+  consoleHistoryAutocompleteSettingDescriptor: () => consoleHistoryAutocompleteSettingDescriptor,
+  consoleShowsCorsErrorsSettingDescriptor: () => consoleShowsCorsErrorsSettingDescriptor,
   consoleTimestampsEnabledSettingDescriptor: () => consoleTimestampsEnabledSettingDescriptor,
   networkMessagesSettingDescriptor: () => networkMessagesSettingDescriptor,
   selectedContextFilterEnabledSettingDescriptor: () => selectedContextFilterEnabledSettingDescriptor
@@ -28,6 +33,34 @@ var consoleTimestampsEnabledSettingDescriptor = {
   name: "console-timestamps-enabled",
   type: "boolean",
   defaultValue: false,
+  storageType: "Synced"
+};
+var consoleHistoryAutocompleteSettingDescriptor = {
+  name: "console-history-autocomplete",
+  type: "boolean",
+  defaultValue: true
+};
+var consoleAutocompleteOnEnterSettingDescriptor = {
+  name: "console-autocomplete-on-enter",
+  type: "boolean",
+  defaultValue: false,
+  storageType: "Synced"
+};
+var consoleGroupSimilarSettingDescriptor = {
+  name: "console-group-similar",
+  type: "boolean",
+  defaultValue: true,
+  storageType: "Synced"
+};
+var consoleShowsCorsErrorsSettingDescriptor = {
+  name: "console-shows-cors-errors",
+  type: "boolean",
+  defaultValue: true
+};
+var consoleEagerEvalSettingDescriptor = {
+  name: "console-eager-eval",
+  type: "boolean",
+  defaultValue: true,
   storageType: "Synced"
 };
 

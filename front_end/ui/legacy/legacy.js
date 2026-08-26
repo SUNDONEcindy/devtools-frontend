@@ -1781,8 +1781,8 @@ var infobar_css_default = `/*
 }
 
 .infobar:focus {
-  outline: 2px solid var(--sys-color-state-focus-ring);
-  outline-offset: -2px;
+  outline: var(--sys-size-2) solid var(--sys-color-state-focus-ring);
+  outline-offset: calc(-1 * var(--sys-size-2));
 }
 
 .infobar-warning {
@@ -2306,9 +2306,9 @@ var tabbedPane_css_default = `/*
     text-align: left;
 
     &:focus-visible {
-      outline: 2px solid var(--sys-color-state-focus-ring);
-      outline-offset: 2px;
-      border-radius: 2px;
+      outline: var(--sys-size-2) solid var(--sys-color-state-focus-ring);
+      outline-offset: var(--sys-size-2);
+      border-radius: var(--sys-size-2);
     }
   }
 }
@@ -2316,7 +2316,7 @@ var tabbedPane_css_default = `/*
 .tabbed-pane-header {
   display: flex;
   flex: 0 0 27px;
-  border-bottom: 1px solid var(--sys-color-divider);
+  border-bottom: var(--sys-size-1) solid var(--sys-color-divider);
   overflow: visible;
   width: 100%;
   background-color: var(--app-color-toolbar-background);
@@ -2339,7 +2339,7 @@ var tabbedPane_css_default = `/*
 }
 
 .tabbed-pane-header-tab-icon {
-  min-width: 14px;
+  min-width: var(--sys-size-7);
   display: flex;
   align-items: center;
   margin-right: var(--sys-size-2);
@@ -2444,7 +2444,7 @@ var tabbedPane_css_default = `/*
   --override-dragging-box-shadow-color: rgb(0 0 0 / 37%);
 
   position: relative;
-  box-shadow: 0 1px 4px 0 var(--override-dragging-box-shadow-color);
+  box-shadow: 0 var(--sys-size-1) var(--sys-size-3) 0 var(--override-dragging-box-shadow-color);
   background-color: var(--app-color-toolbar-background);
 }
 
@@ -2521,9 +2521,9 @@ var tabbedPane_css_default = `/*
 }
 
 .tabbed-pane-shadow.vertical-tab-layout .tabbed-pane-header-tab {
-  height: var(--size-12, 28px);
-  padding: 0 var(--size-8, 16px) 0 var(--size-7, 14px);
-  border-radius: 0 100px 100px 0;
+  height: var(--sys-size-12);
+  padding: 0 var(--sys-size-8) 0 var(--sys-size-7);
+  border-radius: 0 var(--sys-shape-corner-full) var(--sys-shape-corner-full) 0;
   color: var(--sys-color-on-surface);
   position: relative;
 
@@ -2542,7 +2542,7 @@ var tabbedPane_css_default = `/*
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sys-color-state-focus-ring);
+    outline: var(--sys-size-2) solid var(--sys-color-state-focus-ring);
   }
 
   &:active::before {
@@ -2560,7 +2560,7 @@ var tabbedPane_css_default = `/*
 .tabbed-pane-tab-slider {
   height: 3px;
   position: absolute;
-  bottom: -1px;
+  bottom: calc(-1 * var(--sys-size-1));
   background-color: var(--sys-color-primary);
   border-radius: var(--sys-shape-corner-full) var(--sys-shape-corner-full) 0 0;
   left: 0;
@@ -2585,20 +2585,20 @@ var tabbedPane_css_default = `/*
 }
 
 .tabbed-pane-left-toolbar {
-  margin-right: -4px;
+  margin-right: calc(-1 * var(--sys-size-3));
   flex: none;
 }
 
 .tabbed-pane-right-toolbar {
-  margin-left: -4px;
+  margin-left: calc(-1 * var(--sys-size-3));
   flex: none;
 }
 
 .preview-icon {
   --override-tabbed-pane-preview-icon-color: var(--icon-default);
 
-  width: 16px;
-  height: 16px;
+  width: var(--sys-size-8);
+  height: var(--sys-size-8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2618,7 +2618,7 @@ var tabbedPane_css_default = `/*
 
   .tabbed-pane-header {
     forced-color-adjust: none;
-    border-bottom: 1px solid transparent;
+    border-bottom: var(--sys-size-1) solid transparent;
     background-color: ButtonFace;
   }
 
@@ -2695,7 +2695,7 @@ var tabbedPane_css_default = `/*
 
 .spark {
   position: absolute;
-  top: 2px;
+  top: var(--sys-size-2);
 
   --icon-default: var(--sys-color-primary);
 }
@@ -13689,15 +13689,15 @@ var checkboxTextLabel_css_default = `/*
 }
 
 input {
-  height: 12px;
-  width: 12px;
+  height: var(--sys-size-6);
+  width: var(--sys-size-6);
   flex-shrink: 0;
   accent-color: var(--sys-color-primary-bright);
   color: var(--sys-color-on-primary);
 }
 
 :host(:not(.small)) input:not(.small) {
-  margin: 6px;
+  margin: var(--sys-size-4);
 }
 
 :host(.inside-datagrid) input {
@@ -18172,7 +18172,7 @@ var filter_css_default = `/*
   flex: none;
   flex-wrap: wrap;
   align-items: center;
-  border-bottom: 1px solid var(--sys-color-divider);
+  border-bottom: var(--sys-size-1) solid var(--sys-color-divider);
   color: var(--sys-color-on-surface-subtle);
 }
 
@@ -18183,7 +18183,7 @@ var filter_css_default = `/*
 }
 
 .filter-bitset-filter {
-  padding: 2px;
+  padding: var(--sys-size-2);
   display: inline-flex;
   overflow: hidden;
   min-height: var(--sys-size-11);
@@ -18196,19 +18196,19 @@ var filter_css_default = `/*
 
 .filter-bitset-filter span {
   color: var(--sys-color-on-surface);
-  outline: 1px solid var(--sys-color-neutral-outline);
-  outline-offset: -1px;
+  outline: var(--sys-size-1) solid var(--sys-color-neutral-outline);
+  outline-offset: calc(-1 * var(--sys-size-1));
   box-sizing: border-box;
   display: inline-block;
   flex: none;
-  margin: auto 2px;
+  margin: auto var(--sys-size-2);
   padding: 3px 6px;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--sys-size-4);
   overflow: hidden;
   cursor: pointer;
   font-weight: 500;
-  font-size: 11px;
+  font-size: var(--sys-typescale-body5-size);
 }
 
 .filter-bitset-filter span:focus-visible {
@@ -18236,21 +18236,21 @@ var filter_css_default = `/*
 
 .filter-bitset-filter-divider {
   background-color: var(--sys-color-divider);
-  height: 16px;
-  width: 1px;
-  margin: auto 2px;
+  height: var(--sys-size-8);
+  width: var(--sys-size-1);
+  margin: auto var(--sys-size-2);
   display: inline-block;
 }
 
 .filter-checkbox-filter {
-  padding-left: 1px;
+  padding-left: var(--sys-size-1);
   padding-right: 7px;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
   display: inline-flex;
   vertical-align: middle;
-  height: 24px;
+  height: var(--sys-size-11);
   position: relative;
 }
 
@@ -18265,15 +18265,15 @@ var filter_css_default = `/*
 
 .filter-divider {
   background-color: var(--sys-color-divider);
-  width: 1px;
+  width: var(--sys-size-1);
   margin: 5px 4px;
-  height: 16px;
+  height: var(--sys-size-8);
 }
 
 .toolbar-button {
   white-space: nowrap;
   overflow: hidden;
-  min-width: 28px;
+  min-width: var(--sys-size-12);
   background: transparent;
   border-radius: 0;
 }
@@ -18290,7 +18290,7 @@ var filter_css_default = `/*
 }
 
 .toolbar-text {
-  margin: 0 4px 0 0;
+  margin: 0 var(--sys-size-3) 0 0;
   text-overflow: ellipsis;
   flex: auto;
   overflow: hidden;
@@ -18327,7 +18327,7 @@ var filter_css_default = `/*
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sys-color-state-focus-ring);
+    outline: var(--sys-size-2) solid var(--sys-color-state-focus-ring);
   }
 }
 
@@ -21849,7 +21849,7 @@ var treeoutline_css_default = `/*
 
 :host {
   flex: 1 1 auto;
-  padding: 2px 0 0;
+  padding: var(--sys-size-2) 0 0;
 }
 
 :host(devtools-tree) {
@@ -21862,14 +21862,14 @@ var treeoutline_css_default = `/*
 }
 
 .tree-outline {
-  padding: 0 0 4px 4px;
+  padding: 0 0 var(--sys-size-3) var(--sys-size-3);
   margin: 0;
   z-index: 0;
   position: relative;
 }
 
 .tree-outline:focus-visible {
-  box-shadow: 0 0 0 2px var(--sys-color-state-focus-ring) inset;
+  box-shadow: 0 0 0 var(--sys-size-2) var(--sys-color-state-focus-ring) inset;
 }
 
 .tree-outline li .selection {
@@ -21889,8 +21889,8 @@ var treeoutline_css_default = `/*
 
 .tree-outline:not(.hide-selection-when-blurred) li.elements-drag-over .selection {
   display: block;
-  margin-top: -2px;
-  border-top: 2px solid;
+  margin-top: calc(-1 * var(--sys-size-2));
+  border-top: var(--sys-size-2) solid;
   border-top-color: var(--sys-color-tonal-container);
 }
 
@@ -21908,7 +21908,7 @@ var treeoutline_css_default = `/*
 }
 
 .tree-outline:not(.hide-selection-when-blurred) li.in-clipboard .highlight {
-  outline: 1px dotted var(--sys-color-neutral-outline);
+  outline: var(--sys-size-1) dotted var(--sys-color-neutral-outline);
 }
 
 ol.tree-outline:not(.hide-selection-when-blurred) li.selected:focus .selection {
@@ -21921,7 +21921,7 @@ ol.tree-outline,
 }
 
 .tree-outline ol {
-  padding-left: 12px;
+  padding-left: var(--sys-size-6);
 }
 
 .tree-outline li {
@@ -21930,7 +21930,7 @@ ol.tree-outline,
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 16px;
+  min-height: var(--sys-size-8);
 }
 
 ol.tree-outline:not(.hide-selection-when-blurred) li.selected:focus {
@@ -21953,11 +21953,11 @@ ol.tree-outline:not(.hide-selection-when-blurred) li.selected:focus {
 }
 
 .tree-outline li .leading-icons {
-  margin-right: 4px;
+  margin-right: var(--sys-size-3);
 }
 
 .tree-outline li .trailing-icons {
-  margin-left: 4px;
+  margin-left: var(--sys-size-3);
 }
 
 .tree-outline li::before {
@@ -21988,8 +21988,8 @@ ol.tree-outline:not(.hide-selection-when-blurred) li.selected:focus {
 }
 
 .tree-outline.tree-outline-dense li {
-  margin-top: 1px;
-  min-height: 12px;
+  margin-top: var(--sys-size-1);
+  min-height: var(--sys-size-6);
 }
 
 .tree-outline.tree-outline-dense li.parent {
@@ -22006,7 +22006,7 @@ ol.tree-outline:not(.hide-selection-when-blurred) li.selected:focus {
 
 .tree-outline.hide-selection-when-blurred .selected:focus-visible {
   background: var(--sys-color-state-focus-highlight);
-  border-radius: 2px;
+  border-radius: var(--sys-size-2);
 }
 
 .tree-outline-disclosure:not(.tree-outline-disclosure-hide-overflow) .tree-outline.hide-selection-when-blurred .selected:focus-visible {
@@ -22024,7 +22024,7 @@ ol.tree-outline:not(.hide-selection-when-blurred) li.selected:focus {
   height: var(--sys-size-10);
   margin-right: var(--sys-size-3);
   padding-right: var(--sys-size-3);
-  padding-left: 6px;
+  padding-left: var(--sys-size-4);
 
   &::before {
     flex-shrink: 0;

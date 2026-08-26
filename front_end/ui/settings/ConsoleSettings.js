@@ -20,4 +20,32 @@ export const consoleTimestampsEnabledSettingDescriptor = {
     defaultValue: false,
     storageType: "Synced" /* Common.Settings.SettingStorageType.SYNCED */,
 };
+export const consoleHistoryAutocompleteSettingDescriptor = {
+    name: 'console-history-autocomplete',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: true,
+};
+export const consoleAutocompleteOnEnterSettingDescriptor = {
+    name: 'console-autocomplete-on-enter',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: false,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.SYNCED */,
+};
+export const consoleGroupSimilarSettingDescriptor = {
+    name: 'console-group-similar',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: true,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.SYNCED */,
+};
+export const consoleShowsCorsErrorsSettingDescriptor = {
+    name: 'console-shows-cors-errors',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: true,
+};
+export const consoleEagerEvalSettingDescriptor = {
+    name: 'console-eager-eval',
+    type: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
+    defaultValue: true,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.SYNCED */,
+};
 //# sourceMappingURL=ConsoleSettings.js.map
