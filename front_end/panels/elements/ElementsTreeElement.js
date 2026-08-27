@@ -57,7 +57,6 @@ import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 import * as PanelsCommon from '../common/common.js';
 import * as Media from '../media/media.js';
 import * as ElementsComponents from './components/components.js';
-import { cssPath, jsPath, xPath } from './DOMPath.js';
 import { getElementIssueDetails } from './ElementIssueUtils.js';
 import { ElementsPanel } from './ElementsPanel.js';
 import * as ElementStatePaneWidget from './ElementStatePaneWidget.js';
@@ -228,6 +227,11 @@ const UIStrings = {
 };
 const str_ = i18n.i18n.registerUIStrings('panels/elements/ElementsTreeElement.ts', UIStrings);
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
+var TagType;
+(function (TagType) {
+    TagType["OPENING"] = "OPENING_TAG";
+    TagType["CLOSING"] = "CLOSING_TAG";
+})(TagType || (TagType = {}));
 export function isOpeningTag(context) {
     return context.tagType === "OPENING_TAG" /* TagType.OPENING */;
 }
@@ -526,6 +530,12 @@ function renderAttribute(attr, updateRecord, isDiff, node, issues) {
         }
     }
     const nodeName = node ? node.nodeName().toLowerCase() : '';
+    let ValueType;
+    (function (ValueType) {
+        ValueType[ValueType["UNKNOWN"] = 0] = "UNKNOWN";
+        ValueType[ValueType["SRC"] = 1] = "SRC";
+        ValueType[ValueType["SRCSET"] = 2] = "SRCSET";
+    })(ValueType || (ValueType = {}));
     let valueType = 0 /* ValueType.UNKNOWN */;
     if (nodeName && (name === 'src' || name === 'href') && value) {
         valueType = 1 /* ValueType.SRC */;
@@ -916,10 +926,6 @@ export class ElementsTreeWidget extends UI.Widget.Widget {
     revealInTopLayer;
     showContextMenu;
     populateTreeElement;
-    performCopyOrCut;
-    duplicateNode;
-    pasteNode;
-    canPaste;
     toggleHideElement;
     isToggledToHidden;
     selectNodeAfterEdit;
@@ -931,7 +937,7 @@ export class ElementsTreeWidget extends UI.Widget.Widget {
     searchQuery;
     #expandedChildrenLimit;
     decorationsThrottler;
-    inClipboard;
+    inClipboard = false;
     #hovered;
     editing;
     #editorRef;
@@ -1121,7 +1127,7 @@ export class ElementsTreeWidget extends UI.Widget.Widget {
             decorations: this.#decorations,
             descendantDecorations: this.#expanded ? [] : this.#descendantDecorations,
             decorationsTooltip: this.#decorationsTooltip,
-            indent: this.computeLeftIndent ? this.computeLeftIndent() : 0,
+            indent: this.#getLeftIndent(),
             showScrollSnapAdorner: Boolean(this.#layout?.hasScroll) && !isClosingTag,
             scrollSnapAdornerActive: this.#scrollSnapAdornerActive,
             showSlotAdorner: Boolean(this.node.assignedSlot) && !isClosingTag,
@@ -1897,7 +1903,7 @@ export class ElementsTreeWidget extends UI.Widget.Widget {
         this.#editorRef?.focus();
         function resize() {
             if (this.visibleWidth) {
-                this.#editorWidth = this.visibleWidth() - (this.computeLeftIndent ? this.computeLeftIndent() : 0) - 30;
+                this.#editorWidth = this.visibleWidth() - this.#getLeftIndent() - 30;
                 this.requestUpdate();
             }
         }
@@ -2083,10 +2089,16 @@ export class ElementsTreeWidget extends UI.Widget.Widget {
         this.updateDecorations();
         this.#highlightSearchResults();
     }
+    #getLeftIndent() {
+        if (typeof this.computeLeftIndent === 'function') {
+            return this.computeLeftIndent();
+        }
+        return this.computeLeftIndent ?? 0;
+    }
     updateDecorations() {
         // Important to keep the entire tree node row as a clickable area for that
         // node.
-        this.element.style.setProperty('--indent', (this.computeLeftIndent ? this.computeLeftIndent() : 0) + 'px');
+        this.element.style.setProperty('--indent', this.#getLeftIndent() + 'px');
         if (this.isClosingTag) {
             return;
         }
@@ -2181,46 +2193,6 @@ export class ElementsTreeWidget extends UI.Widget.Widget {
         }
         const node = this.node;
         void node.getOuterHTML().then(this.startEditingAsHTML.bind(this, commitChange, disposeCallback));
-    }
-    copyCSSPath() {
-        Host.InspectorFrontendHost.InspectorFrontendHostInstance.copyText(cssPath(this.node, true));
-    }
-    copyJSPath() {
-        Host.InspectorFrontendHost.InspectorFrontendHostInstance.copyText(jsPath(this.node, true));
-    }
-    copyXPath() {
-        Host.InspectorFrontendHost.InspectorFrontendHostInstance.copyText(xPath(this.node, true));
-    }
-    copyFullXPath() {
-        Host.InspectorFrontendHost.InspectorFrontendHostInstance.copyText(xPath(this.node, false));
-    }
-    async copyStyles() {
-        const node = this.node;
-        const cssModel = node.domModel().cssModel();
-        const cascade = await cssModel.cachedMatchedCascadeForNode(node);
-        if (!cascade) {
-            return;
-        }
-        const indent = Common.Settings.Settings.instance().moduleSetting('text-editor-indent').get();
-        const lines = [];
-        for (const style of cascade.nodeStyles().reverse()) {
-            for (const property of style.leadingProperties()) {
-                if (!property.parsedOk || property.disabled || !property.activeInStyle() || property.implicit) {
-                    continue;
-                }
-                if (cascade.isInherited(style) && !SDK.CSSMetadata.cssMetadata().isPropertyInherited(property.name)) {
-                    continue;
-                }
-                if (style.parentRule?.isUserAgent()) {
-                    continue;
-                }
-                if (cascade.propertyState(property) !== "Active" /* SDK.CSSMatchedStyles.PropertyState.ACTIVE */) {
-                    continue;
-                }
-                lines.push(`${indent}${property.name}: ${property.value};`);
-            }
-        }
-        Host.InspectorFrontendHost.InspectorFrontendHostInstance.copyText(lines.join('\n'));
     }
     #highlightSearchResults() {
         this.hideSearchHighlights();
@@ -2407,7 +2379,8 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
         this.widget.hideSearchHighlights();
     }
     copyStyles() {
-        return this.widget.copyStyles();
+        const outline = this.treeOutline;
+        return outline?.domTreeWidget?.copyStyles(this.nodeInternal) ?? Promise.resolve();
     }
     setInClipboard(inClipboard) {
         this.widget.setInClipboard(inClipboard);
@@ -2437,16 +2410,20 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
         this.widget.editAsHTML();
     }
     copyCSSPath() {
-        this.widget.copyCSSPath();
+        const outline = this.treeOutline;
+        outline?.domTreeWidget?.copyCSSPath(this.nodeInternal);
     }
     copyJSPath() {
-        this.widget.copyJSPath();
+        const outline = this.treeOutline;
+        outline?.domTreeWidget?.copyJSPath(this.nodeInternal);
     }
     copyXPath() {
-        this.widget.copyXPath();
+        const outline = this.treeOutline;
+        outline?.domTreeWidget?.copyXPath(this.nodeInternal);
     }
     copyFullXPath() {
-        this.widget.copyFullXPath();
+        const outline = this.treeOutline;
+        outline?.domTreeWidget?.copyFullXPath(this.nodeInternal);
     }
     hasEditableNode() {
         return this.widget.hasEditableNode();
@@ -2487,10 +2464,6 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
             this.widget.revealInTopLayer = node => outline.revealInTopLayer(node);
             this.widget.showContextMenu = event => void outline.showContextMenu(this, event);
             this.widget.populateTreeElement = async () => await outline.populateTreeElement(this);
-            this.widget.performCopyOrCut = (isCut, node, isElement) => outline.performCopyOrCut(isCut, node, isElement);
-            this.widget.duplicateNode = node => outline.duplicateNode(node);
-            this.widget.pasteNode = node => outline.pasteNode(node);
-            this.widget.canPaste = node => outline.canPaste(node);
             this.widget.toggleHideElement = node => outline.toggleHideElement(node);
             this.widget.isToggledToHidden = node => outline.isToggledToHidden(node);
             this.widget.selectNodeAfterEdit = (wasExpanded, error, newNode) => {

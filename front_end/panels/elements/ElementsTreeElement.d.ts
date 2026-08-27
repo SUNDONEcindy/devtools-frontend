@@ -113,17 +113,13 @@ export declare class ElementsTreeWidget extends UI.Widget.Widget {
     childCount?: () => number;
     closingTagElement?: () => Element | null;
     updateShadowRootDepth?: (depth: number) => void;
-    computeLeftIndent?: () => number;
+    computeLeftIndent?: number | (() => number);
     setChildrenListElementVisible?: (visible: boolean) => void;
     findStartTagWidget?: () => ElementsTreeWidget | null;
     selectDOMNode?: (node: SDK.DOMModel.DOMNode, selectedByUser?: boolean) => void;
     revealInTopLayer?: (node: SDK.DOMModel.DOMNode) => void;
     showContextMenu?: (event: Event) => void;
     populateTreeElement?: () => Promise<void>;
-    performCopyOrCut?: (isCut: boolean, node: SDK.DOMModel.DOMNode, isElement?: boolean) => void;
-    duplicateNode?: (node: SDK.DOMModel.DOMNode) => void;
-    pasteNode?: (node: SDK.DOMModel.DOMNode) => void;
-    canPaste?: (node: SDK.DOMModel.DOMNode) => boolean;
     toggleHideElement?: (node: SDK.DOMModel.DOMNode) => Promise<void>;
     isToggledToHidden?: (node: SDK.DOMModel.DOMNode) => boolean;
     selectNodeAfterEdit?: (wasExpanded: boolean, error: string | null, newNode: SDK.DOMModel.DOMNode | null) => ElementsTreeWidget | null;
@@ -133,7 +129,7 @@ export declare class ElementsTreeWidget extends UI.Widget.Widget {
     visibleWidth?: () => number;
     private searchQuery;
     private readonly decorationsThrottler;
-    private inClipboard;
+    inClipboard: boolean;
     editing: EditorHandles | null;
     expandAllButtonElement: UI.TreeOutline.TreeElement | null;
     get node(): SDK.DOMModel.DOMNode;
@@ -196,11 +192,6 @@ export declare class ElementsTreeWidget extends UI.Widget.Widget {
     updateDecorations(): void;
     remove(): Promise<void>;
     toggleEditAsHTML(callback?: ((arg0: boolean) => void), startEditing?: boolean): void;
-    copyCSSPath(): void;
-    copyJSPath(): void;
-    copyXPath(): void;
-    copyFullXPath(): void;
-    copyStyles(): Promise<void>;
     editAsHTML(): void;
     updateAdorners(): void;
 }

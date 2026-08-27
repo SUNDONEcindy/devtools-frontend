@@ -6,9 +6,10 @@ import elementsTreeOutlineStyles from './elementsTreeOutline.css.js';
 import { ImagePreviewPopover } from './ImagePreviewPopover.js';
 import type { MarkerDecoratorRegistration } from './MarkerDecorator.js';
 import { TopLayerContainer } from './TopLayerContainer.js';
-export type View = typeof DEFAULT_VIEW;
+export type View = (input: ViewInput, output: ViewOutput, target: HTMLElement) => void;
 export { elementsTreeOutlineStyles };
 interface ViewInput {
+    rootDOMNode: SDK.DOMModel.DOMNode | null;
     omitRootDOMNode: boolean;
     selectEnabled: boolean;
     hideGutter: boolean;
@@ -34,6 +35,17 @@ interface ViewInput {
     onElementsTreeUpdated: (event: Common.EventTarget.EventTargetEvent<SDK.DOMModel.DOMNode[]>) => void;
     onElementCollapsed: () => void;
     onElementExpanded: () => void;
+    onSelect?: (node: SDK.DOMModel.DOMNode, selectedByUser?: boolean) => void;
+    onExpand?: (node: SDK.DOMModel.DOMNode, expanded: boolean) => void;
+    onContextMenu?: (node: SDK.DOMModel.DOMNode, event: MouseEvent) => void;
+    onToggleHideElement?: (node: SDK.DOMModel.DOMNode) => void;
+    onKeyDown?: (event: KeyboardEvent) => void;
+    isToggledToHidden?: (node: SDK.DOMModel.DOMNode) => boolean;
+    onDuplicateNode?: (node: SDK.DOMModel.DOMNode) => void;
+    isNodeExpanded?: (node: SDK.DOMModel.DOMNode) => boolean;
+    isNodeInClipboard?: (node: SDK.DOMModel.DOMNode) => boolean;
+    onCopyOrCut?: (isCut: boolean, event: Event) => void;
+    onPaste?: (event: Event) => void;
 }
 interface ViewOutput {
     elementsTreeOutline?: ElementsTreeOutline;
@@ -43,6 +55,7 @@ interface ViewOutput {
     alreadyExpandedParentTreeElement: ElementsTreeElement | null;
 }
 export declare const DEFAULT_VIEW: (input: ViewInput, output: ViewOutput, target: HTMLElement) => void;
+export declare const DECLARATIVE_VIEW: View;
 /**
  * The main goal of this presenter is to wrap ElementsTreeOutline until
  * ElementsTreeOutline can be fully integrated into DOMTreeWidget.
@@ -63,6 +76,8 @@ export declare class DOMTreeWidget extends UI.Widget.Widget {
         focus: boolean;
     }>) => void;
     onElementsTreeUpdated: (event: Common.EventTarget.EventTargetEvent<SDK.DOMModel.DOMNode[]>) => void;
+    onElementCollapsed: () => void;
+    onElementExpanded: () => void;
     onDocumentUpdated: (domModel: SDK.DOMModel.DOMModel) => void;
     set maxRows(maxRows: number | undefined);
     get maxRows(): number | undefined;
@@ -88,6 +103,8 @@ export declare class DOMTreeWidget extends UI.Widget.Widget {
     set wrap(wrap: boolean);
     setWordWrap(wrap: boolean): void;
     selectedDOMNode(): SDK.DOMModel.DOMNode | null;
+    setNodeExpanded(node: SDK.DOMModel.DOMNode, expanded: boolean): void;
+    isNodeExpanded(node: SDK.DOMModel.DOMNode): boolean;
     /**
      * FIXME: this is called to re-render everything from scratch, for
      * example, if global settings changed. Instead, the setting values
@@ -117,10 +134,27 @@ export declare class DOMTreeWidget extends UI.Widget.Widget {
     highlightMatch(node: SDK.DOMModel.DOMNode, query?: string): void;
     hideMatchHighlights(node: SDK.DOMModel.DOMNode): void;
     toggleHideElement(node: SDK.DOMModel.DOMNode): void;
+    removeNode(node: SDK.DOMModel.DOMNode): Promise<void>;
     isToggledToHidden(node: SDK.DOMModel.DOMNode): boolean;
     toggleEditAsHTML(node: SDK.DOMModel.DOMNode): void;
     duplicateNode(node: SDK.DOMModel.DOMNode): void;
-    copyStyles(node: SDK.DOMModel.DOMNode): void;
+    selectNodeAfterEdit(wasExpanded: boolean, error: string | null, newNode: SDK.DOMModel.DOMNode | null): void;
+    onKeyDown(event: KeyboardEvent): boolean;
+    clipboardData(): ClipboardData | null;
+    setClipboardData(data: ClipboardData | null): void;
+    resetClipboardIfNeeded(removedNode: SDK.DOMModel.DOMNode): void;
+    isNodeInClipboard(node: SDK.DOMModel.DOMNode): boolean;
+    copyOuterHTML(node: SDK.DOMModel.DOMNode, includeShadowRoots?: boolean): Promise<void>;
+    copyCSSPath(node: SDK.DOMModel.DOMNode): void;
+    copyJSPath(node: SDK.DOMModel.DOMNode): void;
+    copyXPath(node: SDK.DOMModel.DOMNode, optimized?: boolean): void;
+    copyFullXPath(node: SDK.DOMModel.DOMNode): void;
+    copyStyles(node: SDK.DOMModel.DOMNode): Promise<void>;
+    performCopyOrCut(isCut: boolean, node: SDK.DOMModel.DOMNode | null, includeShadowRoots?: boolean): void;
+    canPaste(targetNode: SDK.DOMModel.DOMNode): boolean;
+    pasteNode(targetNode: SDK.DOMModel.DOMNode): void;
+    onCopyOrCut(isCut: boolean, event: Event): void;
+    onPaste(event: Event): void;
     /**
      * FIXME: used to determine focus state, probably we can have a better
      * way to do it.
@@ -132,15 +166,7 @@ export declare class DOMTreeWidget extends UI.Widget.Widget {
     detach(overrideHideOnDetach?: boolean): void;
     show(parentElement: Element, insertBefore?: Node | null, suppressOrphanWidgetError?: boolean): void;
 }
-declare const ElementsTreeOutline_base: (new (...args: any[]) => {
-    __events: Common.ObjectWrapper.ObjectWrapper<ElementsTreeOutline.EventTypes>;
-    addEventListener<T extends keyof ElementsTreeOutline.EventTypes>(eventType: T, listener: (arg0: Common.EventTarget.EventTargetEvent<ElementsTreeOutline.EventTypes[T], any>) => void, thisObject?: Object): Common.EventTarget.EventDescriptor<ElementsTreeOutline.EventTypes, T>;
-    once<T extends keyof ElementsTreeOutline.EventTypes>(eventType: T): Promise<ElementsTreeOutline.EventTypes[T]>;
-    removeEventListener<T extends keyof ElementsTreeOutline.EventTypes>(eventType: T, listener: (arg0: Common.EventTarget.EventTargetEvent<ElementsTreeOutline.EventTypes[T], any>) => void, thisObject?: Object): void;
-    hasEventListeners(eventType: keyof ElementsTreeOutline.EventTypes): boolean;
-    dispatchEventToListeners<T extends keyof ElementsTreeOutline.EventTypes>(eventType: import("../../core/platform/TypescriptUtilities.js").NoUnion<T>, ...eventData: Common.EventTarget.EventPayloadToRestParameters<ElementsTreeOutline.EventTypes, T>): void;
-    dispatchDOMEvent?(event: Event): void;
-}) & typeof UI.TreeOutline.TreeOutline;
+declare const ElementsTreeOutline_base: import("../../core/platform/Constructor.js").Constructor<Common.EventTarget.EventTarget<ElementsTreeOutline.EventTypes>, any[]> & typeof UI.TreeOutline.TreeOutline;
 export declare class ElementsTreeOutline extends ElementsTreeOutline_base {
     #private;
     treeElementByNode: WeakMap<SDK.DOMModel.DOMNode, ElementsTreeElement>;
@@ -156,7 +182,6 @@ export declare class ElementsTreeOutline extends ElementsTreeOutline_base {
     decoratorExtensions: MarkerDecoratorRegistration[] | null;
     private multilineEditing?;
     private visibleWidthInternal?;
-    private clipboardNodeData?;
     private isXMLMimeTypeInternal?;
     suppressRevealAndSelect: boolean;
     private previousHoveredElement?;
@@ -169,6 +194,7 @@ export declare class ElementsTreeOutline extends ElementsTreeOutline_base {
     showAIButton: boolean;
     disableEdits: boolean;
     expandRoot: boolean;
+    domTreeWidget: DOMTreeWidget | null;
     constructor(omitRootDOMNode?: boolean, selectEnabled?: boolean, hideGutter?: boolean, maxTreeDepth?: number, enableContextMenu?: boolean, showComments?: boolean, showAIButton?: boolean, disableEdits?: boolean, expandRoot?: boolean);
     static forDOMModel(domModel: SDK.DOMModel.DOMModel): ElementsTreeOutline | null;
     deindentSingleNode(): void;
@@ -176,16 +202,12 @@ export declare class ElementsTreeOutline extends ElementsTreeOutline_base {
     setMultilineEditing(multilineEditing: MultilineEditorController | null): void;
     visibleWidth(): number;
     setVisibleWidth(width: number): void;
-    private setClipboardData;
+    setClipboardData(data: ClipboardData | null): void;
     resetClipboardIfNeeded(removedNode: SDK.DOMModel.DOMNode): void;
-    private onBeforeCopy;
-    private onCopyOrCut;
     performCopyOrCut(isCut: boolean, node: SDK.DOMModel.DOMNode | null, includeShadowRoots?: boolean): void;
     canPaste(targetNode: SDK.DOMModel.DOMNode): boolean;
     pasteNode(targetNode: SDK.DOMModel.DOMNode): void;
     duplicateNode(targetNode: SDK.DOMModel.DOMNode): void;
-    private onPaste;
-    private performPaste;
     setVisible(visible: boolean): void;
     get rootDOMNode(): SDK.DOMModel.DOMNode | null;
     set rootDOMNode(x: SDK.DOMModel.DOMNode | null);
@@ -220,7 +242,6 @@ export declare class ElementsTreeOutline extends ElementsTreeOutline_base {
     private clearDragOverTreeElementMarker;
     showContextMenu: (treeElement: ElementsTreeElement, event: Event) => void;
     runPendingUpdates(): void;
-    private onKeyDown;
     toggleEditAsHTML(node: SDK.DOMModel.DOMNode, startEditing?: boolean, callback?: (() => void)): void;
     selectNodeAfterEdit(wasExpanded: boolean, error: string | null, newNode: SDK.DOMModel.DOMNode | null): ElementsTreeElement | null;
     toggleHideElement(node: SDK.DOMModel.DOMNode): Promise<void>;

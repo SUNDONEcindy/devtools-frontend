@@ -79,6 +79,7 @@
     "../../../../../../front_end/core/sdk/ScopeTreeCache.ts",
     "../../../../../../front_end/core/sdk/ScreenCaptureModel.ts",
     "../../../../../../front_end/core/sdk/Script.ts",
+    "../../../../../../front_end/core/sdk/SecurityOrigin.ts",
     "../../../../../../front_end/core/sdk/SecurityOriginManager.ts",
     "../../../../../../front_end/core/sdk/ServerSentEvents.ts",
     "../../../../../../front_end/core/sdk/ServerSentEventsProtocol.ts",
@@ -127,13 +128,13 @@
       "path": "../../generated/generated-tsconfig.ref.json"
     },
     {
-      "path": "../../../../tsc/front_end/generated/protocol-tsconfig.ref.json"
+      "path": "../../generated/protocol-tsconfig.ref.json"
     },
     {
       "path": "../../models/formatter/bundle-tsconfig.ref.json"
     },
     {
-      "path": "../../../../tsc/front_end/third_party/codemirror.next/bundle-tsconfig.ref.json"
+      "path": "../../third_party/codemirror.next/bundle-tsconfig.ref.json"
     },
     {
       "path": "../../third_party/source-map-scopes-codec/bundle-tsconfig.ref.json"

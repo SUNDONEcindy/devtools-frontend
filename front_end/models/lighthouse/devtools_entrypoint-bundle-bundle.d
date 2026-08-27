@@ -1,0 +1,1 @@
+gen/front_end/models/lighthouse/lighthouse.js: gen/front_end/models/lighthouse/LighthouseReporterTypes.js gen/front_end/models/lighthouse/RunTypes.js gen/front_end/models/lighthouse/lighthouse.prebundle.js

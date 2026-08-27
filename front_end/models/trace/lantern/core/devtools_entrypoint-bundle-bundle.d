@@ -1,0 +1,1 @@
+gen/front_end/models/trace/lantern/core/core.js: gen/front_end/models/trace/lantern/core/LanternError.js gen/front_end/models/trace/lantern/core/NetworkAnalyzer.js gen/front_end/models/trace/lantern/core/core.prebundle.js

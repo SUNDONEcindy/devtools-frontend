@@ -1,0 +1,1 @@
+gen/front_end/models/trace/lantern/graph/graph.js: gen/front_end/models/trace/lantern/graph/BaseNode.js gen/front_end/models/trace/lantern/graph/CPUNode.js gen/front_end/models/trace/lantern/graph/NetworkNode.js gen/front_end/models/trace/lantern/graph/PageDependencyGraph.js gen/front_end/models/trace/lantern/graph/graph.prebundle.js

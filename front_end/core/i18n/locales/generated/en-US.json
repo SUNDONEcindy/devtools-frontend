@@ -2547,7 +2547,7 @@
     "message": "Show Accessibility"
   },
   "panels/accessibility/AccessibilityAnnouncementRecordingView.ts | ariaLiveRecording": {
-    "message": "A11y Announcements recording"
+    "message": "Announcements recording"
   },
   "panels/accessibility/AccessibilityNodeView.ts | accessibilityNodeNotExposed": {
     "message": "Accessibility node not exposed"
@@ -3701,6 +3701,12 @@
   "panels/application/components/AdsView.ts | adIframesTitle": {
     "message": "Ad iframes (total {PH1})"
   },
+  "panels/application/components/AdsView.ts | adScripts": {
+    "message": "Ad scripts"
+  },
+  "panels/application/components/AdsView.ts | adScriptsTitle": {
+    "message": "Ad scripts (total {PH1})"
+  },
   "panels/application/components/AdsView.ts | average": {
     "message": "(Average: {PH1})"
   },
@@ -3742,6 +3748,9 @@
   },
   "panels/application/components/AdsView.ts | unnamed": {
     "message": "<unnamed>"
+  },
+  "panels/application/components/AdsView.ts | url": {
+    "message": "URL"
   },
   "panels/application/components/AdsView.ts | viewportAdCount": {
     "message": "Viewport ad count"
@@ -7880,6 +7889,9 @@
   "panels/elements/elements-meta.ts | showHtmlComments": {
     "message": "Show HTML comments"
   },
+  "panels/elements/elements-meta.ts | showInactiveCSSRules": {
+    "message": "Show inactive CSS rules"
+  },
   "panels/elements/elements-meta.ts | showLayout": {
     "message": "Show Layout"
   },
@@ -8242,6 +8254,9 @@
   },
   "panels/elements/StylePropertiesSection.ts | insertStyleRuleBelow": {
     "message": "Insert style rule below"
+  },
+  "panels/elements/StylePropertiesSection.ts | notMatching": {
+    "message": "This rule doesn’t currently match the selected element"
   },
   "panels/elements/StylePropertiesSection.ts | sattributesStyle": {
     "message": "{PH1}[Attributes Style]"
@@ -17502,7 +17517,7 @@
     "message": "{PH1}, suggestion {PH2} of {PH3}"
   },
   "ui/legacy/ActionRegistration.ts | background_services": {
-    "message": "Background Services"
+    "message": "Background services"
   },
   "ui/legacy/ActionRegistration.ts | changes": {
     "message": "Changes"
@@ -17526,7 +17541,7 @@
     "message": "Help"
   },
   "ui/legacy/ActionRegistration.ts | javascript_profiler": {
-    "message": "JavaScript Profiler"
+    "message": "JavaScript profiler"
   },
   "ui/legacy/ActionRegistration.ts | layers": {
     "message": "Layers"
@@ -18225,7 +18240,7 @@
     "message": "Minimize drawer"
   },
   "ui/legacy/InspectorDrawerView.ts | moreTools": {
-    "message": "More Tools"
+    "message": "More tools"
   },
   "ui/legacy/InspectorDrawerView.ts | toggleDrawerOrientation": {
     "message": "Toggle drawer orientation"
@@ -18237,7 +18252,7 @@
     "message": "DevTools is now available in {PH1}"
   },
   "ui/legacy/InspectorView.ts | drawer": {
-    "message": "Tool drawer"
+    "message": "Drawer"
   },
   "ui/legacy/InspectorView.ts | drawerExpanded": {
     "message": "Drawer expanded"
@@ -18453,7 +18468,7 @@
     "message": "Another profiler is already active"
   },
   "ui/legacy/UIUtils.ts | asyncCall": {
-    "message": "Async Call"
+    "message": "Async call"
   },
   "ui/legacy/UIUtils.ts | cancel": {
     "message": "Cancel"

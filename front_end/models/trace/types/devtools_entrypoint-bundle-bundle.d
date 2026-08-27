@@ -1,0 +1,1 @@
+gen/front_end/models/trace/types/types.js: gen/front_end/models/trace/types/Configuration.js gen/front_end/models/trace/types/Extensions.js gen/front_end/models/trace/types/File.js gen/front_end/models/trace/types/Overlays.js gen/front_end/models/trace/types/Timing.js gen/front_end/models/trace/types/TraceEvents.js gen/front_end/models/trace/types/types.prebundle.js
