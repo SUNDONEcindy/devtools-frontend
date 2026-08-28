@@ -127,7 +127,6 @@ export declare class ElementsTreeWidget extends UI.Widget.Widget {
     focusOutline?: () => void;
     setMultilineEditing?: (multilineEditing: EditorHandles | null) => void;
     visibleWidth?: () => number;
-    private searchQuery;
     private readonly decorationsThrottler;
     inClipboard: boolean;
     editing: EditorHandles | null;
@@ -140,6 +139,8 @@ export declare class ElementsTreeWidget extends UI.Widget.Widget {
     set isExpandable(isExpandable: boolean);
     get selected(): boolean;
     set selected(selected: boolean);
+    get searchQuery(): string | null;
+    set searchQuery(query: string | null);
     get tagTypeContext(): TagTypeContext;
     get issues(): IssuesManager.Issue.Issue[];
     constructor(element?: HTMLElement, [domIssuesManager]?: UI.Widget.WidgetDependencies<typeof ElementsTreeWidget> | [undefined], view?: View);

@@ -934,7 +934,7 @@ export class ElementsTreeWidget extends UI.Widget.Widget {
     setMultilineEditing;
     visibleWidth;
     #view;
-    searchQuery;
+    #searchQuery = null;
     #expandedChildrenLimit;
     decorationsThrottler;
     inClipboard = false;
@@ -993,6 +993,16 @@ export class ElementsTreeWidget extends UI.Widget.Widget {
         this.#selected = selected;
         this.requestUpdate();
     }
+    get searchQuery() {
+        return this.#searchQuery;
+    }
+    set searchQuery(query) {
+        if (this.#searchQuery === query) {
+            return;
+        }
+        this.#searchQuery = query;
+        this.requestUpdate();
+    }
     get tagTypeContext() {
         if (this.isClosingTag) {
             return { tagType: "CLOSING_TAG" /* TagType.CLOSING */ };
@@ -1020,7 +1030,6 @@ export class ElementsTreeWidget extends UI.Widget.Widget {
         super(element);
         this.#domIssuesManager = domIssuesManager;
         this.#view = view;
-        this.searchQuery = null;
         this.#expandedChildrenLimit = InitialChildrenLimit;
         this.decorationsThrottler = new Common.Throttler.Throttler(100);
         this.inClipboard = false;
@@ -1183,6 +1192,12 @@ export class ElementsTreeWidget extends UI.Widget.Widget {
         this.#editorRef = output.editorRef;
         if (this.#updateRecord) {
             this.#updateRecord = null;
+        }
+        if (this.#searchQuery && !this.editing) {
+            this.#highlightSearchResults();
+        }
+        else if (!this.#searchQuery && this.#highlights.length) {
+            this.hideSearchHighlights();
         }
     }
     async #onCustomElementAdornerClick(event) {

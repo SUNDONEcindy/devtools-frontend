@@ -85,7 +85,7 @@ export const DEFAULT_VIEW = (input, output, target) => {
         // FIXME: this is basically a ref to existing imperative
         // implementation. Once this is declarative the ref should not be
         // needed.
-        const elementsTreeOutline = new ElementsTreeOutline(input.omitRootDOMNode, input.selectEnabled, input.hideGutter, input.maxTreeDepth, input.enableContextMenu, input.showComments, input.showAIButton, input.disableEdits, input.expandRoot);
+        const elementsTreeOutline = new ElementsTreeOutline(input.omitRootDOMNode, input.selectEnabled, input.hideGutter, input.maxTreeDepth, input.enableContextMenu, input.showComments, input.showAIButton, input.disableEdits, input.expandRoot, input.domTreeWidget);
         output.elementsTreeOutline = elementsTreeOutline;
         elementsTreeOutline.addEventListener(ElementsTreeOutline.Events.SelectedNodeChanged, input.onSelectedNodeChanged, this);
         elementsTreeOutline.addEventListener(ElementsTreeOutline.Events.ElementsTreeUpdated, input.onElementsTreeUpdated, this);
@@ -100,7 +100,7 @@ export const DEFAULT_VIEW = (input, output, target) => {
         elementsTreeOutline.elementInternal.addEventListener('contextmenu', (event) => {
             const treeElement = elementsTreeOutline.treeElementFromEventInternal(event);
             if (treeElement instanceof ElementsTreeElement) {
-                output.elementsTreeOutline?.showContextMenu(treeElement, event);
+                input.onContextMenu?.(treeElement.node(), event, treeElement.widget);
             }
         }, false);
         elementsTreeOutline.elementInternal.addEventListener('keydown', (event) => {
@@ -191,7 +191,9 @@ export const DEFAULT_VIEW = (input, output, target) => {
     output.elementsTreeOutline.maxTreeDepth = input.maxTreeDepth;
     output.elementsTreeOutline.enableContextMenu = input.enableContextMenu ?? true;
     output.elementsTreeOutline.showContextMenu = (treeElement, event) => {
-        void showContextMenu(treeElement, event);
+        if (event instanceof MouseEvent) {
+            input.onContextMenu?.(treeElement.node(), event, treeElement.widget);
+        }
     };
     let needsUpdate = false;
     const showComments = input.showComments ?? true;
@@ -259,6 +261,28 @@ export const DEFAULT_VIEW = (input, output, target) => {
         output.elementsTreeOutline.setHoverEffect(treeElement);
         treeElement?.reveal(true);
         output.isUpdatingHighlights = false;
+    }
+    const previousSearchMatchNode = output.searchMatchTreeElement?.node() ?? null;
+    if (previousSearchMatchNode !== input.searchMatchNode || output.searchMatchQuery !== input.searchMatchQuery) {
+        if (output.searchMatchTreeElement) {
+            output.searchMatchTreeElement.hideSearchHighlights();
+            output.searchMatchTreeElement = null;
+        }
+        output.searchMatchQuery = input.searchMatchQuery ?? undefined;
+        if (input.searchMatchNode) {
+            const treeElement = output.elementsTreeOutline.findTreeElement(input.searchMatchNode);
+            if (treeElement) {
+                output.searchMatchTreeElement = treeElement;
+                if (input.searchMatchQuery) {
+                    treeElement.highlightSearchResults(input.searchMatchQuery);
+                }
+                treeElement.reveal();
+                const matches = treeElement.listItemElement.getElementsByClassName(Highlighting.highlightedSearchResultClassName);
+                if (matches.length) {
+                    matches[0].scrollIntoViewIfNeeded(false);
+                }
+            }
+        }
     }
 };
 function isMaxDepthReached(node, rootDOMNode, maxTreeDepth, omitRootDOMNode) {
@@ -369,7 +393,7 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
     }
     const renderNode = (node, depth = 0) => {
         const isSelected = input.selectedNode === node;
-        const isHovered = input.currentHighlightedNode === node;
+        const isHovered = (input.currentHighlightedNode === node) || (input.hoveredNode === node);
         const isExpanded = Boolean((input.currentHighlightedNode && isAncestorOf(node, input.currentHighlightedNode)) ||
             (input.isNodeExpanded ?
                 input.isNodeExpanded(node) :
@@ -383,9 +407,6 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
         // TODO: Move in-place editing (startEditingAttribute, startEditingTextNode, InplaceEditor) out of ElementsTreeElement into ElementsTreeWidget and DOMTreeWidget.
         // TODO: Move multiline/HTML editing (toggleEditAsHTML, MultilineEditorController) from ElementsTreeOutline into DOMTreeWidget.
         // TODO: Move Drag and Drop reordering support (ondragstart, ondragover, ondrop, insertion markers) out of ElementsTreeOutline into a declarative drag-and-drop controller for <devtools-tree>.
-        // TODO: Move context menu building (DOMTreeContextMenu, showContextMenu) out of ElementsTreeElement / ElementsTreeOutline to operate directly on SDK.DOMModel.DOMNode and DOMTreeWidget.
-        // TODO: Move overlay hovering (highlightInOverlay, setHoverEffect) and inspect mode synchronization into DOMTreeWidget pointer event handlers.
-        // TODO: Move search match highlighting (highlightSearchResults, hideSearchHighlights) and navigation (highlightMatch, scrollIntoViewIfNeeded) into DOMTreeWidget search state.
         // TODO: Move marker decorators and descendant gutter decorations (MarkerDecoratorRegistration, updateDecorations) into declarative state passed to ElementsTreeWidget.
         // TODO: Move TopLayerContainer rendering for top layer elements into a declarative tree element item.
         // TODO: Move AdoptedStyleSheet rendering (AdoptedStyleSheetSetTreeElement, AdoptedStyleSheetTreeElement) into dedicated declarative widgets.
@@ -403,6 +424,11 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
             hovered: isHovered,
             'in-clipboard': Boolean(input.isNodeInClipboard?.(node)),
         });
+        const onMouseMove = (event) => {
+            event.stopPropagation();
+            const showInfo = !UI.KeyboardShortcut.KeyboardShortcut.eventHasEitherCtrlOrMeta(event);
+            input.onHoverNode?.(node, showInfo);
+        };
         /* clang-format off */
         return html `
       <li role="treeitem"
@@ -411,6 +437,7 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
           ?open=${isExpanded}
           @select=${onSelect}
           @expand=${onExpand}
+          @mousemove=${onMouseMove}
           jslog=${VisualLogging.treeItem().parent('elementsTreeOutline').track({
             keydown: 'ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Backspace|Delete|Enter|Space|Home|End',
             resize: true,
@@ -425,6 +452,7 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
             selected: isSelected,
             isDOMNodeSelected: isSelected,
             hovered: isHovered,
+            searchQuery: input.searchMatchNode === node ? (input.searchMatchQuery ?? null) : null,
             inClipboard: input.isNodeInClipboard?.(node) ?? false,
             computeLeftIndent: computeLeftIndent(depth, hasChildren),
             disableEdits: input.disableEdits ?? false,
@@ -446,7 +474,10 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
             ${UI.TreeOutline.ifExpanded(html `
               ${children.map(child => renderNode(child, depth + 1))}
               ${needsClosingTag ? html `
-                <li role="treeitem" jslog=${VisualLogging.treeItem().parent('elementsTreeOutline')}>
+                <li role="treeitem"
+                    class=${classMap({ hovered: isHovered })}
+                    jslog=${VisualLogging.treeItem().parent('elementsTreeOutline')}
+                    @mousemove=${onMouseMove}>
                   ${UI.Widget.widget(ElementsTreeWidget, {
             node,
             isClosingTag: true,
@@ -454,7 +485,7 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
             isExpandable: false,
             selected: false,
             isDOMNodeSelected: false,
-            hovered: false,
+            hovered: isHovered,
             computeLeftIndent: computeLeftIndent(depth, false),
             disableEdits: input.disableEdits ?? false,
             showAIButton: false,
@@ -482,6 +513,7 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
         @clipboard-copy=${(event) => input.onCopyOrCut?.(false, event)}
         @clipboard-cut=${(event) => input.onCopyOrCut?.(true, event)}
         @clipboard-paste=${(event) => input.onPaste?.(event)}
+        @mouseleave=${input.onLeave}
         .template=${html `
           <style>${elementsTreeOutlineStyles}</style>
           <style>${CodeHighlighter.codeHighlighterStyles}</style>
@@ -753,6 +785,58 @@ export class DOMTreeWidget extends UI.Widget.Widget {
         }
         return Boolean(this.#viewOutput.elementsTreeOutline?.findTreeElement(node)?.expanded);
     }
+    async expandRecursively(node, maxDepth = Number.MAX_VALUE) {
+        if (this.#view === DECLARATIVE_VIEW) {
+            await node.getSubtree(100, true);
+            const expand = async (n, depth) => {
+                if (depth > maxDepth) {
+                    return;
+                }
+                this.#expandedNodes.add(n);
+                let children = n.children();
+                if (!children && n.childNodeCount()) {
+                    children = await new Promise(resolve => {
+                        void n.getChildNodes(() => resolve(n.children() ?? []));
+                    });
+                }
+                const pseudoElements = Array.from(n.pseudoElements().values()).flat();
+                const allChildren = [...(children ?? []), ...pseudoElements];
+                if (allChildren.length) {
+                    await Promise.all(allChildren.map(child => expand(child, depth + 1)));
+                }
+            };
+            await expand(node, 0);
+            this.performUpdate();
+            return;
+        }
+        const treeElement = this.#viewOutput.elementsTreeOutline?.findTreeElement(node);
+        if (treeElement) {
+            await treeElement.expandRecursively();
+        }
+    }
+    collapseChildren(node) {
+        if (this.#view === DECLARATIVE_VIEW) {
+            const collapse = (n) => {
+                const pseudoElements = Array.from(n.pseudoElements().values()).flat();
+                const allChildren = [...(n.children() ?? []), ...pseudoElements];
+                for (const child of allChildren) {
+                    this.#expandedNodes.delete(child);
+                    collapse(child);
+                }
+            };
+            collapse(node);
+            this.performUpdate();
+            return;
+        }
+        const treeElement = this.#viewOutput.elementsTreeOutline?.findTreeElement(node);
+        treeElement?.collapseChildren();
+    }
+    showContextMenu(node, event, widget) {
+        if (!this.#enableContextMenu) {
+            return Promise.resolve(undefined);
+        }
+        return showContextMenu(this, node, event, widget);
+    }
     /**
      * FIXME: this is called to re-render everything from scratch, for
      * example, if global settings changed. Instead, the setting values
@@ -770,9 +854,50 @@ export class DOMTreeWidget extends UI.Widget.Widget {
     treeElementForNode(node) {
         return this.#viewOutput.elementsTreeOutline?.findTreeElement(node) || null;
     }
+    #hoveredDOMNode = null;
+    #searchMatchNode = null;
+    #searchMatchQuery = null;
+    hoveredDOMNode() {
+        if (this.#view === DECLARATIVE_VIEW) {
+            return this.#hoveredDOMNode;
+        }
+        const hoveredElement = this.#viewOutput.elementsTreeOutline?.hoveredTreeElement;
+        if (hoveredElement instanceof ElementsTreeElement) {
+            return hoveredElement.node();
+        }
+        return null;
+    }
+    searchMatchNode() {
+        return this.#searchMatchNode;
+    }
+    searchMatchQuery() {
+        return this.#searchMatchQuery;
+    }
+    setHoveredNode(node, showInfo = true) {
+        if (this.#hoveredDOMNode === node) {
+            return;
+        }
+        this.#hoveredDOMNode = node;
+        if (node) {
+            const treeElement = this.treeElementForNode(node);
+            const selectorList = treeElement?.isDisplayContents() ? '*' : undefined;
+            node.domModel().overlayModel().highlightInOverlay({ node, selectorList }, 'all', showInfo);
+        }
+        else {
+            SDK.OverlayModel.OverlayModel.hideDOMNodeHighlight(SDK.TargetManager.TargetManager.instance());
+        }
+        if (this.#view === DECLARATIVE_VIEW) {
+            this.performUpdate();
+        }
+        else {
+            const treeElement = node ? this.treeElementForNode(node) : null;
+            this.#viewOutput.elementsTreeOutline?.setHoverEffect(treeElement);
+        }
+    }
     performUpdate() {
         const firstRender = !this.#viewOutput.elementsTreeOutline;
         this.#view({
+            domTreeWidget: this,
             rootDOMNode: this.#rootDOMNode,
             omitRootDOMNode: this.omitRootDOMNode,
             selectEnabled: this.selectEnabled,
@@ -791,6 +916,9 @@ export class DOMTreeWidget extends UI.Widget.Widget {
             preventTabOrder: this.preventTabOrder,
             deindentSingleNode: this.deindentSingleNode,
             currentHighlightedNode: this.#currentHighlightedNode,
+            hoveredNode: this.#hoveredDOMNode,
+            searchMatchNode: this.#searchMatchNode,
+            searchMatchQuery: this.#searchMatchQuery,
             selectedNode: this.selectedDOMNode(),
             onElementsTreeUpdated: this.onElementsTreeUpdated.bind(this),
             onSelectedNodeChanged: event => {
@@ -803,19 +931,20 @@ export class DOMTreeWidget extends UI.Widget.Widget {
             onElementExpanded: () => {
                 this.#clearHighlightedNode();
             },
+            onHoverNode: (node, showInfo) => {
+                this.setHoveredNode(node, showInfo);
+            },
+            onLeave: () => {
+                this.setHoveredNode(null);
+            },
             onSelect: (node, selectedByUser) => {
                 this.selectDOMNode(node, selectedByUser);
             },
             onExpand: (node, expanded) => {
                 this.setNodeExpanded(node, expanded);
             },
-            onContextMenu: (node, event) => {
-                if (this.#viewOutput.elementsTreeOutline) {
-                    const treeElement = this.#viewOutput.elementsTreeOutline.findTreeElement(node);
-                    if (treeElement) {
-                        void showContextMenu(treeElement, event);
-                    }
-                }
+            onContextMenu: (node, event, widget) => {
+                void this.showContextMenu(node, event, widget);
             },
             onToggleHideElement: (node) => {
                 this.toggleHideElement(node);
@@ -932,26 +1061,21 @@ export class DOMTreeWidget extends UI.Widget.Widget {
         void element?.updateAdorners();
     }
     highlightMatch(node, query) {
-        const treeElement = this.#viewOutput.elementsTreeOutline?.findTreeElement(node);
-        if (!treeElement) {
-            return;
+        this.#searchMatchNode = node;
+        this.#searchMatchQuery = query ?? null;
+        if (this.selectedDOMNode() !== node) {
+            this.selectDOMNode(node, /* focus= */ false);
         }
-        if (query) {
-            treeElement.highlightSearchResults(query);
+        else {
+            this.performUpdate();
         }
-        treeElement.reveal();
-        const matches = treeElement.listItemElement.getElementsByClassName(Highlighting.highlightedSearchResultClassName);
-        if (matches.length) {
-            matches[0].scrollIntoViewIfNeeded(false);
-        }
-        treeElement.select(/* omitFocus */ true);
     }
     hideMatchHighlights(node) {
-        const treeElement = this.#viewOutput.elementsTreeOutline?.findTreeElement(node);
-        if (!treeElement) {
-            return;
+        if (this.#searchMatchNode === node) {
+            this.#searchMatchNode = null;
+            this.#searchMatchQuery = null;
+            this.performUpdate();
         }
-        treeElement.hideSearchHighlights();
     }
     toggleHideElement(node) {
         void node.toggleHideElement();
@@ -1260,8 +1384,12 @@ export class ElementsTreeOutline extends Common.ObjectWrapper.eventMixin(UI.Tree
     #maxRowsShown;
     #showAllButton;
     domTreeWidget = null;
-    constructor(omitRootDOMNode, selectEnabled, hideGutter, maxTreeDepth, enableContextMenu, showComments, showAIButton, disableEdits, expandRoot) {
+    get hoveredTreeElement() {
+        return this.previousHoveredElement ?? null;
+    }
+    constructor(omitRootDOMNode, selectEnabled, hideGutter, maxTreeDepth, enableContextMenu, showComments, showAIButton, disableEdits, expandRoot, domTreeWidget) {
         super();
+        this.domTreeWidget = domTreeWidget ?? null;
         this.treeElementByNode = new WeakMap();
         const shadowContainer = document.createElement('div');
         this.shadowRoot = UI.UIUtils.createShadowRootWithCoreStyles(shadowContainer, { cssFile: [elementsTreeOutlineStyles, CodeHighlighter.codeHighlighterStyles] });
@@ -1629,8 +1757,14 @@ export class ElementsTreeOutline extends Common.ObjectWrapper.eventMixin(UI.Tree
         if (element && this.previousHoveredElement === element) {
             return;
         }
+        const showInfo = !UI.KeyboardShortcut.KeyboardShortcut.eventHasEitherCtrlOrMeta(event);
+        if (this.domTreeWidget && element instanceof ElementsTreeElement) {
+            this.domTreeWidget.setHoveredNode(element.node(), showInfo);
+            return;
+        }
+        this.domTreeWidget?.setHoveredNode(null);
         this.setHoverEffect(element);
-        this.highlightTreeElement(element, !UI.KeyboardShortcut.KeyboardShortcut.eventHasEitherCtrlOrMeta(event));
+        this.highlightTreeElement(element, showInfo);
     }
     highlightTreeElement(element, showInfo) {
         if (element instanceof ElementsTreeElement) {
@@ -1643,6 +1777,7 @@ export class ElementsTreeOutline extends Common.ObjectWrapper.eventMixin(UI.Tree
         }
     }
     onmouseleave(_event) {
+        this.domTreeWidget?.setHoveredNode(null);
         this.setHoverEffect(null);
         SDK.OverlayModel.OverlayModel.hideDOMNodeHighlight(SDK.TargetManager.TargetManager.instance());
     }
