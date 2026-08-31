@@ -284,6 +284,25 @@ export const DEFAULT_VIEW = (input, output, target) => {
             }
         }
     }
+    if (input.nodeToEdit) {
+        const treeElement = output.elementsTreeOutline.findTreeElement(input.nodeToEdit.node);
+        if (treeElement) {
+            const edit = input.nodeToEdit;
+            input.onInitialEditCompleted?.();
+            if (edit.isEditAsHTML) {
+                treeElement.widget.toggleEditAsHTML(edit.editAsHTMLCallback);
+            }
+            else if (edit.isProcessingInstruction) {
+                treeElement.widget.startEditingProcessingInstructionValue();
+            }
+            else if (edit.isNewAttribute) {
+                treeElement.widget.addNewAttribute();
+            }
+            else if (edit.attributeName) {
+                treeElement.widget.triggerEditAttribute(edit.attributeName);
+            }
+        }
+    }
 };
 function isMaxDepthReached(node, rootDOMNode, maxTreeDepth, omitRootDOMNode) {
     if (maxTreeDepth === undefined || maxTreeDepth === Infinity) {
@@ -404,8 +423,6 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
         const tagName = node.nodeName().toLowerCase();
         const needsClosingTag = node.nodeType() === Node.ELEMENT_NODE && !ForbiddenClosingTagElements.has(tagName) &&
             !node.pseudoType() && (hasChildren || !ElementsTreeWidget.canShowInlineText(node));
-        // TODO: Move in-place editing (startEditingAttribute, startEditingTextNode, InplaceEditor) out of ElementsTreeElement into ElementsTreeWidget and DOMTreeWidget.
-        // TODO: Move multiline/HTML editing (toggleEditAsHTML, MultilineEditorController) from ElementsTreeOutline into DOMTreeWidget.
         // TODO: Move Drag and Drop reordering support (ondragstart, ondragover, ondrop, insertion markers) out of ElementsTreeOutline into a declarative drag-and-drop controller for <devtools-tree>.
         // TODO: Move marker decorators and descendant gutter decorations (MarkerDecoratorRegistration, updateDecorations) into declarative state passed to ElementsTreeWidget.
         // TODO: Move TopLayerContainer rendering for top layer elements into a declarative tree element item.
@@ -429,6 +446,9 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
             const showInfo = !UI.KeyboardShortcut.KeyboardShortcut.eventHasEitherCtrlOrMeta(event);
             input.onHoverNode?.(node, showInfo);
         };
+        const onContextMenu = (event) => {
+            input.onContextMenu?.(node, event);
+        };
         /* clang-format off */
         return html `
       <li role="treeitem"
@@ -438,6 +458,7 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
           @select=${onSelect}
           @expand=${onExpand}
           @mousemove=${onMouseMove}
+          @contextmenu=${onContextMenu}
           jslog=${VisualLogging.treeItem().parent('elementsTreeOutline').track({
             keydown: 'ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Backspace|Delete|Enter|Space|Home|End',
             resize: true,
@@ -457,15 +478,22 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
             computeLeftIndent: computeLeftIndent(depth, hasChildren),
             disableEdits: input.disableEdits ?? false,
             showAIButton: input.showAIButton ?? true,
+            initialEdit: input.nodeToEdit?.node === node ? input.nodeToEdit : null,
+            onInitialEditCompleted: input.onInitialEditCompleted,
+            setMultilineEditing: multilineEditing => input.domTreeWidget?.setMultilineEditing(multilineEditing),
+            visibleWidth: () => input.domTreeWidget?.visibleWidth ?? 0,
             selectDOMNode: (n, selectedByUser) => input.onSelect?.(n, selectedByUser),
+            selectNodeAfterEdit: (wasExpanded, error, newNode, moveDirection) => {
+                input.onSelectNodeAfterEdit?.(wasExpanded, error, newNode, moveDirection);
+            },
             toggleHideElement: (n) => {
                 input.onToggleHideElement?.(n);
                 return Promise.resolve();
             },
             isToggledToHidden: (n) => input.isToggledToHidden?.(n) ?? false,
-            showContextMenu: (event) => {
+            showContextMenu: (event, widget) => {
                 if (event instanceof MouseEvent) {
-                    input.onContextMenu?.(node, event);
+                    input.onContextMenu?.(node, event, widget);
                 }
             },
         })}
@@ -489,6 +517,11 @@ export const DECLARATIVE_VIEW = (input, _output, target) => {
             computeLeftIndent: computeLeftIndent(depth, false),
             disableEdits: input.disableEdits ?? false,
             showAIButton: false,
+            showContextMenu: (event, widget) => {
+                if (event instanceof MouseEvent) {
+                    input.onContextMenu?.(node, event, widget);
+                }
+            },
         })}
                 </li>
               ` : nothing}
@@ -563,6 +596,9 @@ export class DOMTreeWidget extends UI.Widget.Widget {
     }
     get maxRows() {
         return this.#maxRows;
+    }
+    get visibleWidth() {
+        return this.#visibleWidth ?? this.contentElement.offsetWidth;
     }
     set visibleWidth(width) {
         this.#visibleWidth = width;
@@ -857,6 +893,7 @@ export class DOMTreeWidget extends UI.Widget.Widget {
     #hoveredDOMNode = null;
     #searchMatchNode = null;
     #searchMatchQuery = null;
+    #nodeToEdit = null;
     hoveredDOMNode() {
         if (this.#view === DECLARATIVE_VIEW) {
             return this.#hoveredDOMNode;
@@ -969,6 +1006,13 @@ export class DOMTreeWidget extends UI.Widget.Widget {
             },
             onPaste: (event) => {
                 this.onPaste(event);
+            },
+            onSelectNodeAfterEdit: (wasExpanded, error, newNode, moveDirection) => {
+                this.selectNodeAfterEdit(wasExpanded, error, newNode, moveDirection);
+            },
+            nodeToEdit: this.#nodeToEdit,
+            onInitialEditCompleted: () => {
+                this.#nodeToEdit = null;
             },
         }, this.#viewOutput, this.contentElement);
         if (this.#viewOutput.elementsTreeOutline) {
@@ -1096,19 +1140,100 @@ export class DOMTreeWidget extends UI.Widget.Widget {
     isToggledToHidden(node) {
         return node.isToggledToHidden();
     }
-    toggleEditAsHTML(node) {
-        this.#viewOutput.elementsTreeOutline?.toggleEditAsHTML(node);
+    #multilineEditing = null;
+    setMultilineEditing(multilineEditing) {
+        this.#multilineEditing = multilineEditing;
+    }
+    multilineEditing() {
+        return this.#multilineEditing;
+    }
+    runPendingUpdates() {
+        this.#viewOutput.elementsTreeOutline?.runPendingUpdates();
+        this.performUpdate();
+    }
+    onResize() {
+        super.onResize();
+        if (this.#multilineEditing) {
+            this.#multilineEditing.resize();
+        }
+    }
+    willHide() {
+        super.willHide();
+        if (this.#multilineEditing) {
+            this.#multilineEditing.cancel();
+        }
+    }
+    toggleEditAsHTML(node, startEditing, callback) {
+        if (node.pseudoType() || node.isShadowRoot() || node.nodeType() === Node.DOCUMENT_NODE) {
+            return;
+        }
+        const parentNode = node.parentNode;
+        const index = node.index;
+        const wasExpanded = this.isNodeExpanded(node);
+        const editingFinished = (success) => {
+            if (callback) {
+                callback();
+            }
+            if (!success) {
+                return;
+            }
+            Badges.UserBadges.instance().recordAction(Badges.BadgeAction.DOM_ELEMENT_OR_ATTRIBUTE_EDITED);
+            this.runPendingUpdates();
+            if (index === undefined) {
+                return;
+            }
+            const children = parentNode?.children();
+            const newNode = children ? children[index] || parentNode : parentNode;
+            if (!newNode) {
+                return;
+            }
+            this.selectDOMNode(newNode, true);
+            if (wasExpanded) {
+                this.setNodeExpanded(newNode, true);
+            }
+        };
+        if (this.#multilineEditing) {
+            this.#multilineEditing.commit();
+            return;
+        }
+        if (startEditing === false) {
+            return;
+        }
+        this.#nodeToEdit = {
+            node,
+            isEditAsHTML: true,
+            editAsHTMLCallback: editingFinished,
+        };
+        this.performUpdate();
     }
     duplicateNode(node) {
         node.duplicate();
     }
-    selectNodeAfterEdit(wasExpanded, error, newNode) {
+    selectNodeAfterEdit(wasExpanded, error, newNode, moveDirection) {
         if (error || !newNode) {
             return;
         }
         this.selectDOMNode(newNode, /* selectedByUser= */ true);
         if (wasExpanded) {
             this.setNodeExpanded(newNode, true);
+        }
+        if (moveDirection) {
+            if (newNode.nodeType() === Node.PROCESSING_INSTRUCTION_NODE) {
+                this.#nodeToEdit = { node: newNode, isProcessingInstruction: true };
+            }
+            else if (moveDirection !== 'forward') {
+                this.#nodeToEdit = { node: newNode, isNewAttribute: true };
+            }
+            else {
+                const attributes = newNode.attributes();
+                if (attributes.length > 0) {
+                    this.#nodeToEdit = { node: newNode, attributeName: attributes[0].name };
+                }
+                else {
+                    this.#nodeToEdit = { node: newNode, isNewAttribute: true };
+                }
+            }
+            this.performUpdate();
         }
     }
     onKeyDown(event) {
@@ -1122,12 +1247,16 @@ export class DOMTreeWidget extends UI.Widget.Widget {
         if (UI.KeyboardShortcut.KeyboardShortcut.eventHasCtrlEquivalentKey(event) && node.parentNode) {
             const wasExpanded = this.isNodeExpanded(node);
             if (event.key === 'ArrowUp' && node.previousSibling) {
-                node.moveTo(node.parentNode, node.previousSibling, this.selectNodeAfterEdit.bind(this, wasExpanded));
+                node.moveTo(node.parentNode, node.previousSibling, (error, newNode) => {
+                    this.selectNodeAfterEdit(wasExpanded, error, newNode);
+                });
                 event.consume(true);
                 return true;
             }
             if (event.key === 'ArrowDown' && node.nextSibling) {
-                node.moveTo(node.parentNode, node.nextSibling.nextSibling, this.selectNodeAfterEdit.bind(this, wasExpanded));
+                node.moveTo(node.parentNode, node.nextSibling.nextSibling, (error, newNode) => {
+                    this.selectNodeAfterEdit(wasExpanded, error, newNode);
+                });
                 event.consume(true);
                 return true;
             }
@@ -1366,7 +1495,6 @@ export class ElementsTreeOutline extends Common.ObjectWrapper.eventMixin(UI.Tree
     updateRecords;
     treeElementsBeingUpdated;
     decoratorExtensions;
-    multilineEditing;
     visibleWidthInternal;
     isXMLMimeTypeInternal;
     suppressRevealAndSelect = false;
@@ -1441,16 +1569,13 @@ export class ElementsTreeOutline extends Common.ObjectWrapper.eventMixin(UI.Tree
         this.elementInternal.classList.toggle('elements-tree-nowrap', !wrap);
     }
     setMultilineEditing(multilineEditing) {
-        this.multilineEditing = multilineEditing;
+        this.domTreeWidget?.setMultilineEditing(multilineEditing);
     }
     visibleWidth() {
-        return this.visibleWidthInternal || 0;
+        return this.domTreeWidget?.visibleWidth ?? this.visibleWidthInternal ?? 0;
     }
     setVisibleWidth(width) {
         this.visibleWidthInternal = width;
-        if (this.multilineEditing) {
-            this.multilineEditing.resize();
-        }
     }
     setClipboardData(data) {
         this.domTreeWidget?.setClipboardData(data);
@@ -1476,9 +1601,7 @@ export class ElementsTreeOutline extends Common.ObjectWrapper.eventMixin(UI.Tree
         }
         this.visible = visible;
         if (!this.visible) {
-            if (this.multilineEditing) {
-                this.multilineEditing.cancel();
-            }
+            this.domTreeWidget?.multilineEditing()?.cancel();
             return;
         }
         this.runPendingUpdates();
@@ -1893,43 +2016,7 @@ export class ElementsTreeOutline extends Common.ObjectWrapper.eventMixin(UI.Tree
         this.updateModifiedNodes();
     }
     toggleEditAsHTML(node, startEditing, callback) {
-        const treeElement = this.treeElementByNode.get(node);
-        if (!treeElement?.hasEditableNode()) {
-            return;
-        }
-        if (node.pseudoType()) {
-            return;
-        }
-        const parentNode = node.parentNode;
-        const index = node.index;
-        const wasExpanded = treeElement.expanded;
-        treeElement.toggleEditAsHTML(editingFinished.bind(this), startEditing);
-        function editingFinished(success) {
-            if (callback) {
-                callback();
-            }
-            if (!success) {
-                return;
-            }
-            Badges.UserBadges.instance().recordAction(Badges.BadgeAction.DOM_ELEMENT_OR_ATTRIBUTE_EDITED);
-            // Select it and expand if necessary. We force tree update so that it processes dom events and is up to date.
-            this.runPendingUpdates();
-            if (!index) {
-                return;
-            }
-            const children = parentNode?.children();
-            const newNode = children ? children[index] || parentNode : parentNode;
-            if (!newNode) {
-                return;
-            }
-            this.selectDOMNode(newNode, true);
-            if (wasExpanded) {
-                const newTreeItem = this.findTreeElement(newNode);
-                if (newTreeItem) {
-                    newTreeItem.expand();
-                }
-            }
-        }
+        this.domTreeWidget?.toggleEditAsHTML(node, startEditing, callback);
     }
     selectNodeAfterEdit(wasExpanded, error, newNode) {
         if (error) {

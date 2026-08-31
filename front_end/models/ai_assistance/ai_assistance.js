@@ -2486,6 +2486,7 @@ var Page;
     PermissionsPolicyFeature2["Gamepad"] = "gamepad";
     PermissionsPolicyFeature2["Geolocation"] = "geolocation";
     PermissionsPolicyFeature2["Gyroscope"] = "gyroscope";
+    PermissionsPolicyFeature2["Haptics"] = "haptics";
     PermissionsPolicyFeature2["Hid"] = "hid";
     PermissionsPolicyFeature2["IdentityCredentialsGet"] = "identity-credentials-get";
     PermissionsPolicyFeature2["IdleDetection"] = "idle-detection";
@@ -11220,7 +11221,6 @@ var AccessibilityAgent = class extends AiAgent {
         return await executeJsTool.handler(
           args,
           {
-            conversationContext: this.context ?? null,
             changeManager: this.#changes,
             createExtensionScope: this.#createExtensionScope.bind(this),
             execJs: this.#execJs,
@@ -14078,7 +14078,6 @@ var StylingAgent = class extends AiAgent {
           return { error: "Error: Could not find the currently selected element." };
         }
         return await getStylesTool.handler(args, {
-          conversationContext: context,
           getTarget: () => this.targetManager.primaryPageTarget() ?? context.getItem().domModel().target(),
           getEstablishedOrigin: () => {
             const origin = context.getOrigin();
@@ -14098,7 +14097,6 @@ var StylingAgent = class extends AiAgent {
       handler: (args, options) => executeJsTool.handler(
         args,
         {
-          conversationContext: this.context ?? null,
           changeManager: this.#changes,
           createExtensionScope: this.#createExtensionScope.bind(this),
           execJs: this.#execJs,
@@ -14454,7 +14452,6 @@ ${skillObj.instructions}
       displayInfoFromArgs: tool.displayInfoFromArgs,
       handler: (args, options) => {
         const context = {
-          conversationContext: this.context ?? null,
           changeManager: this.#changes,
           createExtensionScope: this.#createExtensionScope.bind(this),
           execJs: this.#execJs,
