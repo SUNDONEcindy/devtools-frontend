@@ -102,6 +102,7 @@ export interface InitialEditState {
     attributeName?: string;
     isNewAttribute?: boolean;
     isProcessingInstruction?: boolean;
+    isTextNode?: boolean;
     isEditAsHTML?: boolean;
     editAsHTMLCallback?: (success: boolean) => void;
 }

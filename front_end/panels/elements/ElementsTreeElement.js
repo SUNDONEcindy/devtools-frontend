@@ -1219,6 +1219,12 @@ export class ElementsTreeWidget extends UI.Widget.Widget {
             else if (edit.isProcessingInstruction) {
                 this.startEditingProcessingInstructionValue();
             }
+            else if (edit.isTextNode) {
+                const textNode = this.contentElement.querySelector('.webkit-html-text-node');
+                if (textNode) {
+                    this.startEditingTextNode(textNode);
+                }
+            }
             else if (edit.isNewAttribute) {
                 this.addNewAttribute();
             }
@@ -2352,6 +2358,7 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
         this.widgetWrapper = document.createElement('div');
         this.widgetWrapper.style.display = 'contents';
         this.title = this.widgetWrapper;
+        this.listItemElement.draggable = true;
         this.widget = new ElementsTreeWidget();
         this.widget.isClosingTag = this.#isClosingTag;
         this.widget.node = this.nodeInternal;
@@ -2567,6 +2574,11 @@ export class ElementsTreeElement extends UI.TreeOutline.TreeElement {
     }
     onenter() {
         this.#syncOutlineProperties();
+        const outline = this.treeOutline;
+        if (outline?.domTreeWidget) {
+            outline.domTreeWidget.startEditing(this.nodeInternal);
+            return true;
+        }
         return this.widget.onenter();
     }
     selectOnMouseDown(event) {

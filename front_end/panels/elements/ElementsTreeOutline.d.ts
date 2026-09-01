@@ -57,6 +57,25 @@ interface ViewInput {
         node: SDK.DOMModel.DOMNode;
     } & InitialEditState) | null;
     onInitialEditCompleted?: () => void;
+    dragOverNode?: {
+        node: SDK.DOMModel.DOMNode;
+        isClosingTag: boolean;
+    } | null;
+    isValidDragSource?: (node: SDK.DOMModel.DOMNode) => boolean;
+    onDragStart?: (node: SDK.DOMModel.DOMNode, event: DragEvent, textContent?: string) => boolean;
+    onDragOver?: (node: SDK.DOMModel.DOMNode, isClosingTag: boolean, event: DragEvent) => boolean;
+    onDragLeave?: (event: DragEvent) => void;
+    onDrop?: (node: SDK.DOMModel.DOMNode, isClosingTag: boolean, event: DragEvent) => void;
+    onDragEnd?: (event: DragEvent) => void;
+    getTopLayerShortcuts?: (doc: SDK.DOMModel.DOMDocument) => SDK.DOMModel.DOMNodeShortcut[];
+    isTopLayerExpanded?: (doc: SDK.DOMModel.DOMDocument) => boolean;
+    onToggleTopLayerExpanded?: (doc: SDK.DOMModel.DOMDocument, expanded: boolean) => void;
+    onSelectTopLayerContainer?: (doc: SDK.DOMModel.DOMDocument) => void;
+    isTopLayerShortcutExpanded?: (shortcut: SDK.DOMModel.DOMNodeShortcut) => boolean;
+    onToggleTopLayerShortcutExpanded?: (shortcut: SDK.DOMModel.DOMNodeShortcut, expanded: boolean) => void;
+    selectedTopLayerShortcut?: SDK.DOMModel.DOMNodeShortcut | null;
+    onSelectTopLayerShortcut?: (shortcut: SDK.DOMModel.DOMNodeShortcut) => void;
+    onRevealTopLayerShortcut?: (shortcut: SDK.DOMModel.DOMNodeShortcut) => void;
 }
 interface ViewOutput {
     elementsTreeOutline?: ElementsTreeOutline;
@@ -164,7 +183,27 @@ export declare class DOMTreeWidget extends UI.Widget.Widget {
     willHide(): void;
     toggleEditAsHTML(node: SDK.DOMModel.DOMNode, startEditing?: boolean, callback?: (() => void)): void;
     duplicateNode(node: SDK.DOMModel.DOMNode): void;
+    nodeBeingDragged(): SDK.DOMModel.DOMNode | null;
+    dragOverNode(): {
+        node: SDK.DOMModel.DOMNode;
+        isClosingTag: boolean;
+    } | null;
+    isValidDragSource(node: SDK.DOMModel.DOMNode): boolean;
+    isValidDragTarget(targetNode: SDK.DOMModel.DOMNode): boolean;
+    onDragStart(node: SDK.DOMModel.DOMNode, event: DragEvent, textContent?: string): boolean;
+    onDragOver(node: SDK.DOMModel.DOMNode, isClosingTag: boolean, event: DragEvent): boolean;
+    onDragLeave(event: DragEvent): void;
+    onDrop(node: SDK.DOMModel.DOMNode, isClosingTag: boolean, event: DragEvent): void;
+    onDragEnd(event: DragEvent): void;
+    moveNode(draggedNode: SDK.DOMModel.DOMNode, targetNode: SDK.DOMModel.DOMNode, isClosingTag: boolean): void;
     selectNodeAfterEdit(wasExpanded: boolean, error: string | null, newNode: SDK.DOMModel.DOMNode | null, moveDirection?: string): void;
+    topLayerShortcuts(document: SDK.DOMModel.DOMDocument): SDK.DOMModel.DOMNodeShortcut[];
+    isTopLayerExpanded(document: SDK.DOMModel.DOMDocument): boolean;
+    setTopLayerExpanded(document: SDK.DOMModel.DOMDocument, expanded: boolean): void;
+    isTopLayerShortcutExpanded(shortcut: SDK.DOMModel.DOMNodeShortcut): boolean;
+    setTopLayerShortcutExpanded(shortcut: SDK.DOMModel.DOMNodeShortcut, expanded: boolean): void;
+    revealInTopLayer(node: SDK.DOMModel.DOMNode): void;
+    startEditing(node: SDK.DOMModel.DOMNode): void;
     onKeyDown(event: KeyboardEvent): boolean;
     clipboardData(): ClipboardData | null;
     setClipboardData(data: ClipboardData | null): void;
@@ -210,7 +249,6 @@ export declare class ElementsTreeOutline extends ElementsTreeOutline_base {
     private isXMLMimeTypeInternal?;
     suppressRevealAndSelect: boolean;
     private previousHoveredElement?;
-    private treeElementBeingDragged?;
     private dragOverTreeElement?;
     private updateModifiedNodesTimeout?;
     maxTreeDepth?: number;
@@ -261,9 +299,7 @@ export declare class ElementsTreeOutline extends ElementsTreeOutline_base {
     private ondragstart;
     private ondragover;
     private ondragleave;
-    private validDragSourceOrTarget;
     private ondrop;
-    private doMove;
     private ondragend;
     private clearDragOverTreeElementMarker;
     showContextMenu: (treeElement: ElementsTreeElement, event: Event) => void;
