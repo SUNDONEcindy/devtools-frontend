@@ -13453,7 +13453,7 @@ var ToolbarInputElement = class extends HTMLElement {
       return [];
     }
     const options = this.datalist.options;
-    return [...options].map(({ value }) => value).filter((value) => value.startsWith(prefix)).map((text) => ({ text }));
+    return [...options].map((({ value }) => value)).filter((value) => value.startsWith(prefix)).map((text) => ({ text }));
   }
   attributeChangedCallback(name, _oldValue, newValue) {
     if (name === "value") {

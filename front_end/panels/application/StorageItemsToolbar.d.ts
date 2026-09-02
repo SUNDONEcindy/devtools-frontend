@@ -1,6 +1,5 @@
 import '../../ui/legacy/legacy.js';
 import * as Common from '../../core/common/common.js';
-import * as Platform from '../../core/platform/platform.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import * as ApplicationComponents from './components/components.js';
 interface ViewInput {
@@ -18,7 +17,7 @@ interface ViewInput {
 }
 export declare const DEFAULT_VIEW: (input: ViewInput, _output: object, target: HTMLElement) => void;
 export type View = (input: ViewInput, output: object, target: HTMLElement) => void;
-declare const StorageItemsToolbar_base: Platform.Constructor.Constructor<Common.EventTarget.EventTarget<StorageItemsToolbar.EventTypes>, any[]> & typeof UI.Widget.VBox;
+declare const StorageItemsToolbar_base: Common.ObjectWrapper.EventMixin<StorageItemsToolbar.EventTypes, typeof UI.Widget.VBox>;
 export declare class StorageItemsToolbar extends StorageItemsToolbar_base {
     #private;
     filterRegex: RegExp | null;

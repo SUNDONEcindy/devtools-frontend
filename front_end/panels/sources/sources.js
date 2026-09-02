@@ -8406,12 +8406,14 @@ var UISourceCodeFrame = class _UISourceCodeFrame extends Common9.ObjectWrapper.e
     }, console.error);
   }
   unloadUISourceCode() {
+    this.textEditor.removeAttribute("data-file-path");
     Common9.EventTarget.removeEventListeners(this.#messageAndDecorationListeners);
     Common9.EventTarget.removeEventListeners(this.#uiSourceCodeEventListeners);
     this.#uiSourceCode.removeWorkingCopyGetter();
     Persistence5.Persistence.PersistenceImpl.instance().unsubscribeFromBindingEvent(this.#uiSourceCode, this.#boundOnBindingChanged);
   }
   initializeUISourceCode() {
+    this.textEditor.setAttribute("data-file-path", this.#uiSourceCode.url());
     this.#uiSourceCodeEventListeners = [
       this.#uiSourceCode.addEventListener(Workspace15.UISourceCode.Events.WorkingCopyChanged, this.onWorkingCopyChanged, this),
       this.#uiSourceCode.addEventListener(Workspace15.UISourceCode.Events.WorkingCopyCommitted, this.onWorkingCopyCommitted, this),
@@ -8551,6 +8553,7 @@ var UISourceCodeFrame = class _UISourceCodeFrame extends Common9.ObjectWrapper.e
     }
   }
   onTitleChanged() {
+    this.textEditor.setAttribute("data-file-path", this.#uiSourceCode.url());
     this.updateLanguageMode("").then(() => this.reloadPlugins(), console.error);
   }
   static sourceFramePlugins() {
@@ -12195,7 +12198,7 @@ var CallStackSidebarPane = class _CallStackSidebarPane extends UI18.View.SimpleV
     Host9.InspectorFrontendHost.InspectorFrontendHostInstance.copyText(text.join("\n"));
   }
 };
-var elementSymbol = Symbol("element");
+var elementSymbol = /* @__PURE__ */ Symbol("element");
 var defaultMaxAsyncStackChainDepth = 32;
 var ActionDelegate4 = class {
   handleAction(_context, actionId) {

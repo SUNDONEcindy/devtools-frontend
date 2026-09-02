@@ -52,7 +52,7 @@ var JSONEditor_css_default = `/*
 
 .warning-icon {
   margin-left: -18px;
-  margin-right: 4px;
+  margin-right: var(--sys-size-3);
 }
 
 .row {
@@ -133,7 +133,7 @@ ul {
 }
 
 .protocol-monitor-sidebar-toolbar {
-  border-top: 1px solid var(--sys-color-divider);
+  border-top: var(--sys-size-1) solid var(--sys-color-divider);
 }
 
 /*# sourceURL=${import.meta.resolve("./JSONEditor.css")} */`;
@@ -1222,11 +1222,11 @@ var protocolMonitor_css_default = `/*
  */
 @scope to (devtools-widget > *) {
   .protocol-monitor-toolbar {
-    border-bottom: 1px solid var(--sys-color-divider);
+    border-bottom: var(--sys-size-1) solid var(--sys-color-divider);
   }
 
   .protocol-monitor-bottom-toolbar {
-    border-top: 1px solid var(--sys-color-divider);
+    border-top: var(--sys-size-1) solid var(--sys-color-divider);
   }
 
   .target-selector {

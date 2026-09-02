@@ -1,5 +1,4 @@
 import * as Common from '../../../../core/common/common.js';
-import * as Platform from '../../../../core/platform/platform.js';
 import * as TextUtils from '../../../../core/text_utils/text_utils.js';
 import * as Formatter from '../../../../models/formatter/formatter.js';
 import * as CodeMirror from '../../../../third_party/codemirror.next/codemirror.next.js';
@@ -19,7 +18,7 @@ export interface EventTypes {
 }
 type FormatFn = (lineNo: number, state: CodeMirror.EditorState) => string;
 export declare const LINE_NUMBER_FORMATTER: CodeMirror.Facet<FormatFn, FormatFn>;
-declare const SourceFrameImpl_base: Platform.Constructor.Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof UI.View.SimpleView;
+declare const SourceFrameImpl_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.View.SimpleView>;
 export declare class SourceFrameImpl extends SourceFrameImpl_base implements UI.SearchableView.Searchable, UI.SearchableView.Replaceable, Transformer {
     #private;
     private readonly options;

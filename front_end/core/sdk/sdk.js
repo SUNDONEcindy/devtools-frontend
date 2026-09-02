@@ -17304,6 +17304,12 @@ var BaseVariableMatch = class {
     this.matching = matching;
     this.computedTextCallback = computedTextCallback;
   }
+  text;
+  node;
+  name;
+  fallback;
+  matching;
+  computedTextCallback;
   computedText() {
     return this.computedTextCallback(this, this.matching);
   }
@@ -17362,6 +17368,8 @@ var VariableMatch = class extends BaseVariableMatch {
     this.matchedStyles = matchedStyles;
     this.style = style;
   }
+  matchedStyles;
+  style;
   resolveVariable() {
     return this.matchedStyles.computeCSSVariable(this.style, this.name);
   }
@@ -17374,6 +17382,8 @@ var VariableMatcher = class extends VariableMatcherBase {
     this.matchedStyles = matchedStyles;
     this.style = style;
   }
+  matchedStyles;
+  style;
   matches(node, matching) {
     const match = new BaseVariableMatcher(() => null).matches(node, matching);
     return match ? new VariableMatch(
@@ -17394,6 +17404,10 @@ var VariableNameMatch = class {
     this.matchedStyles = matchedStyles;
     this.style = style;
   }
+  node;
+  text;
+  matchedStyles;
+  style;
   resolveVariable() {
     return this.matchedStyles.computeCSSVariable(this.style, this.text);
   }
@@ -17406,6 +17420,8 @@ var VariableNameMatcher = class extends VariableNameMatcherBase {
     this.matchedStyles = matchedStyles;
     this.style = style;
   }
+  matchedStyles;
+  style;
   accepts() {
     return true;
   }
@@ -17437,6 +17453,13 @@ var AttributeMatch = class extends BaseVariableMatch {
     this.matchedStyles = matchedStyles;
     this.style = style;
   }
+  type;
+  isCSSTokens;
+  isValidType;
+  rawValue;
+  substitutionText;
+  matchedStyles;
+  style;
   rawAttributeValue() {
     return this.rawValue;
   }
@@ -17497,6 +17520,9 @@ var AttributeMatcher = class extends AttributeMatcherBase {
     this.style = style;
     this.computedTextCallback = computedTextCallback;
   }
+  matchedStyles;
+  style;
+  computedTextCallback;
   matches(node, matching) {
     const callee = node.getChild("Callee");
     if (node.name !== "CallExpression" || !callee || matching.ast.text(callee) !== "attr") {
@@ -17560,6 +17586,8 @@ var BinOpMatch = class {
     this.text = text;
     this.node = node;
   }
+  text;
+  node;
 };
 var BinOpMatcherBase = matcherBase(BinOpMatch);
 var BinOpMatcher = class extends BinOpMatcherBase {
@@ -17579,6 +17607,8 @@ var TextMatch = class {
       this.computedText = () => "";
     }
   }
+  text;
+  node;
   computedText;
   render() {
     const span = document.createElement("span");
@@ -17607,6 +17637,8 @@ var AngleMatch = class {
     this.text = text;
     this.node = node;
   }
+  text;
+  node;
   computedText() {
     return this.text;
   }
@@ -17643,6 +17675,11 @@ var ColorMixMatch = class {
     this.color1 = color1;
     this.color2 = color2;
   }
+  text;
+  node;
+  space;
+  color1;
+  color2;
 };
 var ColorMixMatcherBase = matcherBase(ColorMixMatch);
 var ColorMixMatcher = class extends ColorMixMatcherBase {
@@ -17692,6 +17729,9 @@ var ContrastColorMatch = class {
     this.node = node;
     this.color = color;
   }
+  text;
+  node;
+  color;
 };
 var ContrastColorMatcherBase = matcherBase(ContrastColorMatch);
 var ContrastColorMatcher = class extends ContrastColorMatcherBase {
@@ -17719,6 +17759,9 @@ var URLMatch = class {
     this.text = text;
     this.node = node;
   }
+  url;
+  text;
+  node;
 };
 var URLMatcherBase = matcherBase(URLMatch);
 var URLMatcher = class extends URLMatcherBase {
@@ -17745,6 +17788,8 @@ var LinearGradientMatch = class {
     this.text = text;
     this.node = node;
   }
+  text;
+  node;
 };
 var LinearGradientMatcherBase = matcherBase(LinearGradientMatch);
 var LinearGradientMatcher = class extends LinearGradientMatcherBase {
@@ -17768,6 +17813,10 @@ var ColorMatch = class {
     this.relativeColor = relativeColor;
     this.computedText = currentColorCallback;
   }
+  text;
+  node;
+  currentColorCallback;
+  relativeColor;
   computedText;
 };
 var ColorMatcherBase = matcherBase(ColorMatch);
@@ -17776,6 +17825,7 @@ var ColorMatcher = class _ColorMatcher extends ColorMatcherBase {
     super();
     this.currentColorCallback = currentColorCallback;
   }
+  currentColorCallback;
   // clang-format on
   accepts(propertyName) {
     return cssMetadata().isColorAwareProperty(propertyName);
@@ -17852,6 +17902,8 @@ var RelativeColorChannelMatch = class {
     this.text = text;
     this.node = node;
   }
+  text;
+  node;
   getColorChannelValue(relativeColor) {
     const color = Common6.Color.parse(relativeColor.baseColor.text)?.as(relativeColor.colorSpace);
     if (color instanceof Common6.Color.ColorFunction) {
@@ -17913,6 +17965,11 @@ var LightDarkColorMatch = class {
     this.dark = dark;
     this.style = style;
   }
+  text;
+  node;
+  light;
+  dark;
+  style;
 };
 var LightDarkColorMatcherBase = matcherBase(LightDarkColorMatch);
 var LightDarkColorMatcher = class extends LightDarkColorMatcherBase {
@@ -17921,6 +17978,7 @@ var LightDarkColorMatcher = class extends LightDarkColorMatcherBase {
     super();
     this.style = style;
   }
+  style;
   accepts(propertyName) {
     return cssMetadata().isColorAwareProperty(propertyName);
   }
@@ -17942,6 +18000,10 @@ var AutoBaseMatch = class {
     this.auto = auto;
     this.base = base;
   }
+  text;
+  node;
+  auto;
+  base;
 };
 var AutoBaseMatcherBase = matcherBase(AutoBaseMatch);
 var AutoBaseMatcher = class extends AutoBaseMatcherBase {
@@ -17973,6 +18035,9 @@ var LinkableNameMatch = class {
     this.node = node;
     this.propertyName = propertyName;
   }
+  text;
+  node;
+  propertyName;
 };
 var LinkableNameMatcherBase = matcherBase(LinkableNameMatch);
 var LinkableNameMatcher = class _LinkableNameMatcher extends LinkableNameMatcherBase {
@@ -18071,6 +18136,8 @@ var BezierMatch = class {
     this.text = text;
     this.node = node;
   }
+  text;
+  node;
 };
 var BezierMatcherBase = matcherBase(BezierMatch);
 var BezierMatcher = class extends BezierMatcherBase {
@@ -18093,6 +18160,8 @@ var StringMatch = class {
     this.text = text;
     this.node = node;
   }
+  text;
+  node;
 };
 var StringMatcherBase = matcherBase(StringMatch);
 var StringMatcher = class extends StringMatcherBase {
@@ -18112,6 +18181,9 @@ var ShadowMatch = class {
     this.node = node;
     this.shadowType = shadowType;
   }
+  text;
+  node;
+  shadowType;
 };
 var ShadowMatcherBase = matcherBase(ShadowMatch);
 var ShadowMatcher = class extends ShadowMatcherBase {
@@ -18141,6 +18213,9 @@ var LengthMatch = class {
     this.node = node;
     this.unit = unit;
   }
+  text;
+  node;
+  unit;
 };
 var LengthMatcherBase = matcherBase(LengthMatch);
 var LengthMatcher = class _LengthMatcher extends LengthMatcherBase {
@@ -18234,6 +18309,10 @@ var BaseFunctionMatch = class {
     this.func = func;
     this.args = args;
   }
+  text;
+  node;
+  func;
+  args;
 };
 var MathFunctionMatch = class extends BaseFunctionMatch {
   isArithmeticFunctionCall() {
@@ -18325,6 +18404,9 @@ var FlexGridGridLanesMatch = class {
     this.node = node;
     this.layoutType = layoutType;
   }
+  text;
+  node;
+  layoutType;
 };
 var FlexGridGridLanesMatcherBase = matcherBase(FlexGridGridLanesMatch);
 var FlexGridGridLanesMatcher = class _FlexGridGridLanesMatcher extends FlexGridGridLanesMatcherBase {
@@ -18363,6 +18445,9 @@ var GridTemplateMatch = class {
     this.node = node;
     this.lines = lines;
   }
+  text;
+  node;
+  lines;
 };
 var GridTemplateMatcherBase = matcherBase(GridTemplateMatch);
 var GridTemplateMatcher = class extends GridTemplateMatcherBase {
@@ -18441,6 +18526,9 @@ var AnchorFunctionMatch = class {
     this.node = node;
     this.functionName = functionName;
   }
+  text;
+  node;
+  functionName;
 };
 var AnchorFunctionMatcherBase = matcherBase(AnchorFunctionMatch);
 var AnchorFunctionMatcher = class extends AnchorFunctionMatcherBase {
@@ -18487,6 +18575,9 @@ var PositionAnchorMatch = class {
     this.matching = matching;
     this.node = node;
   }
+  text;
+  matching;
+  node;
 };
 var PositionAnchorMatcherBase = matcherBase(PositionAnchorMatch);
 var PositionAnchorMatcher = class extends PositionAnchorMatcherBase {
@@ -18509,6 +18600,10 @@ var CSSWideKeywordMatch = class {
     this.property = property;
     this.matchedStyles = matchedStyles;
   }
+  text;
+  node;
+  property;
+  matchedStyles;
   resolveProperty() {
     return this.matchedStyles.resolveGlobalKeyword(this.property, this.text);
   }
@@ -18524,6 +18619,8 @@ var CSSWideKeywordMatcher = class extends CSSWideKeywordMatcherBase {
     this.property = property;
     this.matchedStyles = matchedStyles;
   }
+  property;
+  matchedStyles;
   matches(node, matching) {
     const parentNode = node.parent;
     if (node.name !== "ValueName" || parentNode?.name !== "Declaration") {
@@ -18546,6 +18643,10 @@ var PositionTryMatch = class {
     this.preamble = preamble;
     this.fallbacks = fallbacks;
   }
+  text;
+  node;
+  preamble;
+  fallbacks;
 };
 var PositionTryMatcherBase = matcherBase(PositionTryMatch);
 var PositionTryMatcher = class extends PositionTryMatcherBase {
@@ -18584,6 +18685,11 @@ var EnvFunctionMatch = class {
     this.value = value;
     this.varNameIsValid = varNameIsValid;
   }
+  text;
+  node;
+  varName;
+  value;
+  varNameIsValid;
   computedText() {
     return this.value;
   }
@@ -18595,6 +18701,7 @@ var EnvFunctionMatcher = class extends EnvFunctionMatcherBase {
     super();
     this.matchedStyles = matchedStyles;
   }
+  matchedStyles;
   matches(node, matching) {
     if (node.name !== "CallExpression" || matching.ast.text(node.getChild("Callee")) !== "env") {
       return null;
@@ -18819,6 +18926,8 @@ var ComputedTextChunk = class {
     this.match = match;
     this.offset = offset;
   }
+  match;
+  offset;
   #cachedComputedText = null;
   #topLevelValueCount = null;
   get end() {
@@ -21485,6 +21594,7 @@ var NodeCascade = class {
     this.#isInherited = isInherited;
     this.#node = node;
   }
+  isHighlightPseudoCascade;
   #matchedStyles;
   styles;
   #isInherited;
@@ -21594,6 +21704,9 @@ var SCCRecordEntry = class {
     this.discoveryTime = discoveryTime;
     this.rootDiscoveryTime = discoveryTime;
   }
+  nodeCascade;
+  name;
+  discoveryTime;
   rootDiscoveryTime;
   get isRootEntry() {
     return this.rootDiscoveryTime === this.discoveryTime;
@@ -22165,7 +22278,7 @@ var CSSStyleSheetHeader = class {
   }
   originalContentProvider() {
     if (!this.#originalContentProvider) {
-      const lazyContent = async () => {
+      const lazyContent = (async () => {
         const originalText = await this.#cssModel.originalStyleSheetText(this);
         if (originalText === null) {
           return { error: i18nString3(UIStrings3.couldNotFindTheOriginalStyle) };
@@ -22176,7 +22289,7 @@ var CSSStyleSheetHeader = class {
           false,
           "text/css"
         );
-      };
+      });
       this.#originalContentProvider = new TextUtils12.StaticContentProvider.StaticContentProvider(this.contentURL(), this.contentType(), lazyContent);
     }
     return this.#originalContentProvider;
@@ -28581,6 +28694,8 @@ var AdoptedStyleSheet = class {
     this.id = id;
     this.parent = parent;
   }
+  id;
+  parent;
   get cssModel() {
     return this.parent.domModel().cssModel();
   }
@@ -30958,7 +31073,7 @@ var Script = class _Script {
     return { lineNumber, columnNumber };
   }
 };
-var frameIdSymbol = Symbol("frameid");
+var frameIdSymbol = /* @__PURE__ */ Symbol("frameid");
 function frameIdForScript(script) {
   const executionContext = script.executionContext();
   if (executionContext) {
@@ -34529,6 +34644,8 @@ var RequestURLPattern = class _RequestURLPattern {
       throw new Error("RegExp groups are not allowed");
     }
   }
+  constructorString;
+  pattern;
   static isValidPattern(pattern) {
     try {
       const urlPattern = new URLPattern(pattern);
@@ -34826,6 +34943,9 @@ var AppliedNetworkConditions = class {
     this.appliedNetworkConditionsId = appliedNetworkConditionsId;
     this.urlPattern = urlPattern;
   }
+  conditions;
+  appliedNetworkConditionsId;
+  urlPattern;
 };
 var MultitargetNetworkManager = class _MultitargetNetworkManager extends Common26.ObjectWrapper.ObjectWrapper {
   #targetManager;
@@ -39947,11 +40067,13 @@ var RevealableEvent = class {
   constructor(event) {
     this.event = event;
   }
+  event;
 };
 var RevealableNetworkRequest = class _RevealableNetworkRequest {
   constructor(networkRequest) {
     this.networkRequest = networkRequest;
   }
+  networkRequest;
   // Only Trace.Types.Events.SyntheticNetworkRequest are passed in, but we can't depend on that type from SDK
   static create(targetManager, event) {
     const syntheticNetworkRequest = event;
@@ -44775,7 +44897,7 @@ var ServiceWorkerRegistration = class {
     this.update(payload);
   }
   update(payload) {
-    this.#fingerprint = Symbol("fingerprint");
+    this.#fingerprint = /* @__PURE__ */ Symbol("fingerprint");
     this.id = payload.registrationId;
     this.scopeURL = payload.scopeURL;
     const parsedURL = new Common41.ParsedURL.ParsedURL(payload.scopeURL);
@@ -44793,7 +44915,7 @@ var ServiceWorkerRegistration = class {
     return result;
   }
   updateVersion(payload) {
-    this.#fingerprint = Symbol("fingerprint");
+    this.#fingerprint = /* @__PURE__ */ Symbol("fingerprint");
     let version = this.versions.get(payload.versionId);
     if (!version) {
       version = new ServiceWorkerVersion(this, payload);

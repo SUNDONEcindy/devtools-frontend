@@ -340,6 +340,9 @@ var knownContextValues = /* @__PURE__ */ new Set([
   "added-size",
   "addedSize",
   "additive-symbols",
+  "adopted-style-sheet",
+  "adopted-style-sheet-contents",
+  "adopted-style-sheets",
   "adorner-settings",
   "ads",
   "af",
@@ -4872,7 +4875,7 @@ function registerParentProvider(name, provider) {
   }
   parentProviders.set(name, provider);
 }
-var PARENT = Symbol("veParent");
+var PARENT = /* @__PURE__ */ Symbol("veParent");
 registerParentProvider("mapped", (e) => e[PARENT]);
 function setMappedParent(element, parent) {
   element[PARENT] = parent;

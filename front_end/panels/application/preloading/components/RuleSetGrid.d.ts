@@ -23,7 +23,7 @@ export interface ViewInput {
 }
 export type ViewOutput = unknown;
 export declare const DEFAULT_VIEW: View;
-declare const RuleSetGrid_base: Platform.Constructor.Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof UI.Widget.VBox;
+declare const RuleSetGrid_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
 /** Grid component to show SpeculationRules rule sets. **/
 export declare class RuleSetGrid extends RuleSetGrid_base {
     #private;

@@ -21,7 +21,7 @@ export declare const enum Events {
 export interface EventTypes {
     [Events.STYLES_UPDATE_COMPLETED]: void;
 }
-declare const StandaloneStylesContainer_base: import("../../core/platform/Constructor.js").Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof UI.Widget.VBox;
+declare const StandaloneStylesContainer_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
 export declare class StandaloneStylesContainer extends StandaloneStylesContainer_base implements StylesContainer {
     #private;
     activeCSSAngle: InlineEditor.CSSAngle.CSSAngle | null;

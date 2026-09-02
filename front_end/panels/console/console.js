@@ -3660,7 +3660,7 @@ var ConsoleTableMessageView = class extends ConsoleViewMessage {
     if (!actualTable?.preview) {
       return this.buildMessage();
     }
-    const rawValueColumnSymbol = Symbol("rawValueColumn");
+    const rawValueColumnSymbol = /* @__PURE__ */ Symbol("rawValueColumn");
     const columnNames = [];
     const preview = actualTable.preview;
     const rows = [];

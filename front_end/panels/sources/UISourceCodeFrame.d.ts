@@ -4,7 +4,7 @@ import * as CodeMirror from '../../third_party/codemirror.next/codemirror.next.j
 import * as SourceFrame from '../../ui/legacy/components/source_frame/source_frame.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import type { Plugin } from './Plugin.js';
-declare const UISourceCodeFrame_base: import("../../core/platform/Constructor.js").Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof SourceFrame.SourceFrame.SourceFrameImpl;
+declare const UISourceCodeFrame_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof SourceFrame.SourceFrame.SourceFrameImpl>;
 export declare class UISourceCodeFrame extends UISourceCodeFrame_base {
     #private;
     private plugins;

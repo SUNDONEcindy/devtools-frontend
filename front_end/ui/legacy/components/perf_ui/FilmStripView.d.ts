@@ -1,7 +1,7 @@
 import * as Common from '../../../../core/common/common.js';
 import * as Trace from '../../../../models/trace/trace.js';
 import * as UI from '../../legacy.js';
-declare const FilmStripView_base: import("../../../../core/platform/Constructor.js").Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof UI.Widget.HBox;
+declare const FilmStripView_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.HBox>;
 export declare class FilmStripView extends FilmStripView_base {
     #private;
     private statusLabel;

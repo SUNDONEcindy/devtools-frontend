@@ -1,5 +1,4 @@
 import * as Common from '../../core/common/common.js';
-import * as Platform from '../../core/platform/platform.js';
 import * as Geometry from '../../models/geometry/geometry.js';
 import { type LitTemplate } from '../../ui/lit/lit.js';
 import { Icon } from '../kit/kit.js';
@@ -18,7 +17,7 @@ export interface TabInfo {
     enabled?: boolean;
     selected?: boolean;
 }
-declare const TabbedPane_base: Platform.Constructor.Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof VBox;
+declare const TabbedPane_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof VBox>;
 export declare class TabbedPane extends TabbedPane_base {
     #private;
     protected readonly headerContentsElement: HTMLElement;

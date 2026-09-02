@@ -1,9 +1,8 @@
 import * as Common from '../../core/common/common.js';
-import * as Platform from '../../core/platform/platform.js';
 import * as Geometry from '../../models/geometry/geometry.js';
 import { ToolbarButton } from './Toolbar.js';
 import { type AnyWidget, Widget, WidgetElement } from './Widget.js';
-declare const SplitWidget_base: Platform.Constructor.Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof Widget;
+declare const SplitWidget_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof Widget>;
 export declare class SplitWidget extends SplitWidget_base {
     #private;
     private setting;

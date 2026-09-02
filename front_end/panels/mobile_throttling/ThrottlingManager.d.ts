@@ -45,7 +45,7 @@ export interface SaveDataOverrideViewInput {
 }
 export type SaveDataOverrideViewFunction = (input: SaveDataOverrideViewInput, output: undefined, target: HTMLSelectElement) => void;
 export declare const DEFAULT_SAVE_DATA_VIEW: SaveDataOverrideViewFunction;
-declare const SaveDataOverrideSelect_base: import("../../core/platform/Constructor.js").Constructor<Common.EventTarget.EventTarget<ThrottlingManager.EventTypes>, any[]> & typeof UI.Widget.Widget<HTMLSelectElement>;
+declare const SaveDataOverrideSelect_base: Common.ObjectWrapper.EventMixin<ThrottlingManager.EventTypes, typeof UI.Widget.Widget<HTMLSelectElement>>;
 export declare class SaveDataOverrideSelect extends SaveDataOverrideSelect_base {
     #private;
     constructor(element: HTMLElement, view?: SaveDataOverrideViewFunction);

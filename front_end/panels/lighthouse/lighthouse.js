@@ -984,7 +984,7 @@ button.view-trace {
 .lighthouse-settings-pane {
   flex: none;
   background-color: var(--sys-color-cdt-base-container);
-  border-bottom: 1px solid var(--sys-color-divider);
+  border-bottom: var(--sys-size-1) solid var(--sys-color-divider);
 }
 
 .lighthouse-settings-pane devtools-toolbar {
@@ -1005,7 +1005,7 @@ select.lighthouse-report {
 
 .lighthouse-toolbar-container > devtools-toolbar {
   background-color: var(--sys-color-cdt-base-container);
-  border-bottom: 1px solid var(--sys-color-divider);
+  border-bottom: var(--sys-size-1) solid var(--sys-color-divider);
 }
 
 .lighthouse-toolbar-container > :first-child {
@@ -1020,7 +1020,7 @@ select.lighthouse-report {
   position: relative;
 
   :focus-visible {
-    outline: -webkit-focus-ring-color auto 1px;
+    outline: -webkit-focus-ring-color auto var(--sys-size-1);
   }
 
   .lh-tools__button {
@@ -1034,7 +1034,7 @@ select.lighthouse-report {
     }
 
     &.lh-active + .lh-tools__dropdown {
-      clip: rect(-8px, 204px, 270px, -10px);  /* stylelint-disable-line property-no-deprecated */
+      clip: rect(calc(-1 * var(--sys-size-5)), 204px, 270px, -10px);  /* stylelint-disable-line property-no-deprecated */
     }
   }
 
@@ -1042,7 +1042,7 @@ select.lighthouse-report {
     padding: var(--sys-size-5) 0;
     border-radius: var(--sys-shape-corner-small);
     box-shadow: var(--sys-elevation-level3);
-    top: 24px;
+    top: var(--sys-size-11);
 
     &:hover a:focus {
       background-color: transparent;
@@ -1671,23 +1671,23 @@ var lighthouseStartView_css_default = `/*
 
 .lighthouse-start-view {
   line-height: 18px;
-  padding: 24px;
+  padding: var(--sys-size-11);
   overflow: auto;
   height: 100%;
   /* for buttons */
   --legacy-accent-color: #0535c1;
   --legacy-accent-color-hover: #17b;
-  --font-size: 14px;
+  --font-size: var(--sys-typescale-body2-size);
   --report-font-family: roboto, helvetica, arial, sans-serif;
 }
 
 .lighthouse-start-view header {
   display: flex;
-  font-size: 18px;
+  font-size: var(--sys-typescale-headline3-size);
   flex-direction: row;
   align-items: center;
-  column-gap: 16px;
-  margin-bottom: 16px;
+  column-gap: var(--sys-size-8);
+  margin-bottom: var(--sys-size-8);
 }
 
 .lighthouse-start-view .lighthouse-title {
@@ -1712,14 +1712,14 @@ var lighthouseStartView_css_default = `/*
 }
 
 .lighthouse-form-section {
-  padding: 8px;
+  padding: var(--sys-size-5);
   flex: 1 1;
 }
 
 .lighthouse-form-categories-fieldset {
   border: none;
   margin: 0;
-  padding: 8px;
+  padding: var(--sys-size-5);
 }
 
 .lighthouse-form-section-label {
@@ -1729,15 +1729,15 @@ var lighthouseStartView_css_default = `/*
 
 .lighthouse-form-section-label i span {
   position: relative;
-  top: -2px;
+  top: calc(-1 * var(--sys-size-2));
 }
 
 .lighthouse-form-section-label span.largeicon-checkmark {
-  top: -4px;
+  top: calc(-1 * var(--sys-size-3));
 }
 
 .lighthouse-form-section-label .lighthouse-learn-more {
-  margin: 20px;
+  margin: var(--sys-size-9);
 }
 
 .lighthouse-radio {
@@ -1762,7 +1762,7 @@ var lighthouseStartView_css_default = `/*
 }
 
 .lighthouse-start-button-container button {
-  margin: 16px auto;
+  margin: var(--sys-size-8) auto;
   font-family: var(--report-font-family);
   font-weight: 500;
   font-size: var(--font-size);
@@ -1779,12 +1779,12 @@ var lighthouseStartView_css_default = `/*
   }
 
   &:not(:has(devtools-checkbox)) {
-    margin-bottom: 6px;
+    margin-bottom: var(--sys-size-4);
   }
 }
 
 .lighthouse-launcher-row .dimmed {
-  padding-left: 22px;
+  padding-left: var(--sys-size-10);
 }
 
 .lighthouse-help-text {

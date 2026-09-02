@@ -1,8 +1,7 @@
 import * as Common from '../../../../core/common/common.js';
-import * as Platform from '../../../../core/platform/platform.js';
 import * as UI from '../../legacy.js';
 import { AnimationTimingModel } from './AnimationTimingModel.js';
-declare const BezierEditor_base: Platform.Constructor.Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof UI.Widget.VBox;
+declare const BezierEditor_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
 export declare class BezierEditor extends BezierEditor_base {
     private model;
     private previewElement;

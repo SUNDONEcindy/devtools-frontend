@@ -1,6 +1,5 @@
 import '../../ui/legacy/legacy.js';
 import * as Common from '../../core/common/common.js';
-import * as Platform from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import * as TextUtils from '../../core/text_utils/text_utils.js';
 import * as Protocol from '../../generated/protocol.js';
@@ -20,7 +19,7 @@ import { WebCustomData } from './WebCustomData.js';
 export declare const REGISTERED_PROPERTY_SECTION_NAME = "@property";
 /** Title of the function section **/
 export declare const FUNCTION_SECTION_NAME = "@function";
-declare const StylesSidebarPane_base: Platform.Constructor.Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof ElementsSidebarPane;
+declare const StylesSidebarPane_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof ElementsSidebarPane>;
 export declare class StylesSidebarPane extends StylesSidebarPane_base implements StylesContainer {
     #private;
     private matchedStyles;

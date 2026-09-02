@@ -6066,7 +6066,7 @@ var UIStrings10 = {
 var str_10 = i18n19.i18n.registerUIStrings("panels/application/preloading/PreloadingView.ts", UIStrings10);
 var i18nString10 = i18n19.i18n.getLocalizedString.bind(void 0, str_10);
 var SPECULATION_EXPLANATION_URL = "https://developer.chrome.com/docs/devtools/application/debugging-speculation-rules";
-var AllRuleSetRootId = Symbol("AllRuleSetRootId");
+var AllRuleSetRootId = /* @__PURE__ */ Symbol("AllRuleSetRootId");
 var PreloadingUIUtils = class {
   static status(status) {
     switch (status) {
@@ -15634,7 +15634,7 @@ var ApplicationPanelSidebar = class extends UI31.Widget.VBox {
     this.removeExtensionStorage(extensionStorage);
   }
   removeExtensionStorage(extensionStorage) {
-    if (this.extensionStorageModels.find((m) => m.storageForIdAndArea(extensionStorage.extensionId, extensionStorage.storageArea))) {
+    if (this.extensionStorageModels.find(((m) => m.storageForIdAndArea(extensionStorage.extensionId, extensionStorage.storageArea)))) {
       return;
     }
     const treeElement = this.extensionStorageTreeElements.get(extensionStorage.key);

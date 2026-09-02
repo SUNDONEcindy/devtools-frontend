@@ -1,8 +1,7 @@
 import * as Common from '../../../../core/common/common.js';
-import * as Platform from '../../../../core/platform/platform.js';
 import { type LitTemplate } from '../../../lit/lit.js';
 import * as UI from '../../legacy.js';
-declare const FilteredListWidget_base: Platform.Constructor.Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof UI.Widget.VBox;
+declare const FilteredListWidget_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
 export declare class FilteredListWidget extends FilteredListWidget_base implements UI.ListControl.ListDelegate<number> {
     private promptHistory;
     private scoringTimer;

@@ -7829,7 +7829,7 @@ var OpCodes;
   OpCodes2[OpCodes2["PING_FRAME"] = 9] = "PING_FRAME";
   OpCodes2[OpCodes2["PONG_FRAME"] = 10] = "PONG_FRAME";
 })(OpCodes || (OpCodes = {}));
-var opCodeDescriptions = function() {
+var opCodeDescriptions = (function() {
   const map = [];
   map[
     0
@@ -7856,7 +7856,7 @@ var opCodeDescriptions = function() {
     /* OpCodes.PONG_FRAME */
   ] = i18nLazyString3(UIStrings18.pongMessage);
   return map;
-}();
+})();
 var ResourceFrameNode = class extends DataGridItem {
   frame;
   isTextFrame;
@@ -14385,14 +14385,17 @@ var NetworkPanel = class _NetworkPanel extends UI24.Panel.Panel {
   throttlingSelectForTest() {
     return this.throttlingSelect;
   }
-  onWindowChanged(event) {
-    const startTime = Math.max(this.calculator.minimumBoundary(), event.data.startTime / 1e3);
-    const endTime = Math.min(this.calculator.maximumBoundary(), event.data.endTime / 1e3);
+  updateNetworkLogWindow(startTimeMs, endTimeMs) {
+    const startTime = Math.max(this.calculator.minimumBoundary(), startTimeMs / 1e3);
+    const endTime = Math.min(this.calculator.maximumBoundary(), endTimeMs / 1e3);
     if (startTime === this.calculator.minimumBoundary() && endTime === this.calculator.maximumBoundary()) {
       this.networkLogView.setWindow(0, 0);
     } else {
       this.networkLogView.setWindow(startTime, endTime);
     }
+  }
+  onWindowChanged(event) {
+    this.updateNetworkLogWindow(event.data.startTime, event.data.endTime);
   }
   async searchToggleClick() {
     const action2 = UI24.ActionRegistry.ActionRegistry.instance().getAction("network.search");
@@ -14712,6 +14715,7 @@ var NetworkPanel = class _NetworkPanel extends UI24.Panel.Panel {
   onFilmFrameSelected(event) {
     const timestamp = event.data;
     this.overviewPane.setWindowTimes(Trace2.Types.Timing.Milli(0), Trace2.Types.Timing.Milli(timestamp));
+    this.updateNetworkLogWindow(0, timestamp);
   }
   onFilmFrameEnter(event) {
     const timestamp = event.data;

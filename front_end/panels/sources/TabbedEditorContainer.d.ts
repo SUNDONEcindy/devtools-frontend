@@ -5,7 +5,7 @@ import * as Workspace from '../../models/workspace/workspace.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import type { EditingLocationHistoryManager } from './EditingLocationHistoryManager.js';
 import { UISourceCodeFrame } from './UISourceCodeFrame.js';
-declare const TabbedEditorContainer_base: Platform.Constructor.Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof UI.Widget.VBox;
+declare const TabbedEditorContainer_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
 export declare class TabbedEditorContainer extends TabbedEditorContainer_base {
     #private;
     set historyManager(historyManager: EditingLocationHistoryManager);

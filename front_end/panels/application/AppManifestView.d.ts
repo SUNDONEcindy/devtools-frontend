@@ -161,7 +161,7 @@ interface ViewOutput {
 }
 type View = (input: ViewInput, output: ViewOutput, target: HTMLElement) => void;
 export declare const DEFAULT_VIEW: View;
-declare const AppManifestView_base: Platform.Constructor.Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof UI.Widget.VBox;
+declare const AppManifestView_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
 export declare class AppManifestView extends AppManifestView_base implements SDK.TargetManager.Observer {
     private registeredListeners;
     private target?;

@@ -12,7 +12,7 @@ export interface OverviewData {
         showMemory: boolean;
     };
 }
-declare const TimelineMiniMap_base: import("../../core/platform/Constructor.js").Constructor<Common.EventTarget.EventTarget<PerfUI.TimelineOverviewPane.EventTypes>, any[]> & typeof UI.Widget.VBox;
+declare const TimelineMiniMap_base: Common.ObjectWrapper.EventMixin<PerfUI.TimelineOverviewPane.EventTypes, typeof UI.Widget.VBox>;
 /**
  * This component wraps the generic PerfUI Overview component and configures it
  * specifically for the Performance Panel, including injecting the CSS we use

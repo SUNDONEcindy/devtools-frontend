@@ -1,9 +1,8 @@
 import '../../legacy.js';
 import * as Common from '../../../../core/common/common.js';
-import * as Platform from '../../../../core/platform/platform.js';
 import * as UI from '../../legacy.js';
 import type { ContrastInfo } from './ContrastInfo.js';
-declare const Spectrum_base: Platform.Constructor.Constructor<Common.EventTarget.EventTarget<EventTypes>, any[]> & typeof UI.Widget.VBox;
+declare const Spectrum_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
 export declare class Spectrum extends Spectrum_base {
     #private;
     private gamut;

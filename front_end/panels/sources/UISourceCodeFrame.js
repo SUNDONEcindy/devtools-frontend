@@ -125,12 +125,14 @@ export class UISourceCodeFrame extends Common.ObjectWrapper
         }, console.error);
     }
     unloadUISourceCode() {
+        this.textEditor.removeAttribute('data-file-path');
         Common.EventTarget.removeEventListeners(this.#messageAndDecorationListeners);
         Common.EventTarget.removeEventListeners(this.#uiSourceCodeEventListeners);
         this.#uiSourceCode.removeWorkingCopyGetter();
         Persistence.Persistence.PersistenceImpl.instance().unsubscribeFromBindingEvent(this.#uiSourceCode, this.#boundOnBindingChanged);
     }
     initializeUISourceCode() {
+        this.textEditor.setAttribute('data-file-path', this.#uiSourceCode.url());
         this.#uiSourceCodeEventListeners = [
             this.#uiSourceCode.addEventListener(Workspace.UISourceCode.Events.WorkingCopyChanged, this.onWorkingCopyChanged, this),
             this.#uiSourceCode.addEventListener(Workspace.UISourceCode.Events.WorkingCopyCommitted, this.onWorkingCopyCommitted, this),
@@ -283,6 +285,7 @@ export class UISourceCodeFrame extends Common.ObjectWrapper
         }
     }
     onTitleChanged() {
+        this.textEditor.setAttribute('data-file-path', this.#uiSourceCode.url());
         this.updateLanguageMode('').then(() => this.reloadPlugins(), console.error);
     }
     static sourceFramePlugins() {

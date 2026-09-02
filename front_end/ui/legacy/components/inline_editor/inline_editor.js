@@ -2192,12 +2192,12 @@ var maxRange = 20;
 var defaultUnit = "px";
 var sliderThumbRadius = 6;
 var canvasSize = 88;
-var CSS_LENGTH_REGEX = function() {
+var CSS_LENGTH_REGEX = (function() {
   const number = "([+-]?(?:[0-9]*[.])?[0-9]+(?:[eE][+-]?[0-9]+)?)";
   const unit = "(ch|cm|em|ex|in|mm|pc|pt|px|rem|vh|vmax|vmin|vw)";
   const zero = "[+-]?(?:0*[.])?0+(?:[eE][+-]?[0-9]+)?";
   return new RegExp(number + unit + "|" + zero, "gi").source;
-}();
+})();
 var CSSLength = class _CSSLength {
   amount;
   unit;

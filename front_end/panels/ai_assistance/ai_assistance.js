@@ -155,6 +155,7 @@ var AccessibilityAgentMarkdownRenderer = class extends MarkdownRendererWithCodeB
     super();
     this.mainDocumentURL = mainDocumentURL;
   }
+  mainDocumentURL;
   #isSameOrigin(node) {
     const nodeDocumentURL = node.ownerDocument?.documentURL ?? "";
     return AiAssistanceModel2.AiUtils.isSameOrigin(this.mainDocumentURL, nodeDocumentURL);
@@ -263,6 +264,7 @@ var AIv2MarkdownRenderer = class extends MarkdownView3.MarkdownView.MarkdownInsi
     super();
     this.options = options;
   }
+  options;
   #isSameOrigin(node) {
     if (!this.options.mainDocumentURL) {
       return true;
@@ -6600,7 +6602,7 @@ var chatInput_css_default = `/*
     var(--sys-size-4);
 
   &::placeholder {
-    opacity: 60%;
+    color: var(--sys-color-on-surface-subtle);
   }
 
   &:focus-visible {
@@ -9347,6 +9349,8 @@ var PerformanceAgentMarkdownRenderer = class extends MarkdownRendererWithCodeBlo
     this.mainFrameId = mainFrameId;
     this.lookupEvent = lookupEvent;
   }
+  mainFrameId;
+  lookupEvent;
   templateForToken(token) {
     if (token.type === "link" && token.href.startsWith("#")) {
       if (token.href.startsWith("#node-")) {
@@ -9835,6 +9839,7 @@ var AiAssistancePanel = class _AiAssistancePanel extends UI9.Panel.Panel {
       this.#toggleSearchElementAction = UI9.ActionRegistry.ActionRegistry.instance().getAction("elements.toggle-element-search");
     }
   }
+  view;
   static panelName = "freestyler";
   // NodeJS debugging does not have Elements panel, thus this action might not exist.
   #toggleSearchElementAction;
