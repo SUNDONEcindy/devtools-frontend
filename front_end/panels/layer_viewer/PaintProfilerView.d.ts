@@ -19,8 +19,8 @@ interface ViewOutput {
 }
 declare const DEFAULT_VIEW: (input: ViewInput, output: ViewOutput, target: HTMLElement) => void;
 type View = typeof DEFAULT_VIEW;
-declare const PaintProfilerView_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.Widget>;
-export declare class PaintProfilerView extends PaintProfilerView_base {
+declare const PaintProfilerViewBase: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.Widget>;
+export declare class PaintProfilerView extends PaintProfilerViewBase {
     #private;
     private canvasContainer?;
     private readonly innerBarWidth;

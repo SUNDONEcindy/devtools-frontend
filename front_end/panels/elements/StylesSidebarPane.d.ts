@@ -19,8 +19,8 @@ import { WebCustomData } from './WebCustomData.js';
 export declare const REGISTERED_PROPERTY_SECTION_NAME = "@property";
 /** Title of the function section **/
 export declare const FUNCTION_SECTION_NAME = "@function";
-declare const StylesSidebarPane_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof ElementsSidebarPane>;
-export declare class StylesSidebarPane extends StylesSidebarPane_base implements StylesContainer {
+declare const StylesSidebarPaneBase: Common.ObjectWrapper.EventMixin<EventTypes, typeof ElementsSidebarPane>;
+export declare class StylesSidebarPane extends StylesSidebarPaneBase implements StylesContainer {
     #private;
     private matchedStyles;
     private currentToolbarPane;

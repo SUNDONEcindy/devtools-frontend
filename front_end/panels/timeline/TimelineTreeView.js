@@ -157,7 +157,8 @@ const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
 /**
  * For an overview, read: https://chromium.googlesource.com/devtools/devtools-frontend/+/refs/heads/main/front_end/panels/timeline/README.md#timeline-tree-views
  */
-export class TimelineTreeView extends Common.ObjectWrapper.eventMixin(UI.Widget.VBox) {
+const TimelineTreeViewBase = Common.ObjectWrapper.eventMixin(UI.Widget.VBox);
+export class TimelineTreeView extends TimelineTreeViewBase {
     /** This is sorted by ts. */
     #selectedEvents;
     searchResults;
@@ -1224,7 +1225,8 @@ export class BottomUpTimelineTreeView extends AggregatedTimelineTreeView {
         });
     }
 }
-export class TimelineStackView extends Common.ObjectWrapper.eventMixin(UI.Widget.VBox) {
+const TimelineStackViewBase = Common.ObjectWrapper.eventMixin(UI.Widget.VBox);
+export class TimelineStackView extends TimelineStackViewBase {
     treeView;
     dataGrid;
     constructor(treeView) {

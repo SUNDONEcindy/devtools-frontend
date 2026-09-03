@@ -9,8 +9,8 @@ import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import { type EventTypes, NetworkGroupNode, type NetworkLogViewInterface, type NetworkNode, NetworkRequestNode } from './NetworkDataGridNode.js';
 import { NetworkLogViewColumns } from './NetworkLogViewColumns.js';
-declare const NetworkLogView_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
-export declare class NetworkLogView extends NetworkLogView_base implements SDK.TargetManager.SDKModelObserver<SDK.NetworkManager.NetworkManager>, NetworkLogViewInterface {
+declare const NetworkLogViewBase: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
+export declare class NetworkLogView extends NetworkLogViewBase implements SDK.TargetManager.SDKModelObserver<SDK.NetworkManager.NetworkManager>, NetworkLogViewInterface {
     #private;
     private readonly networkInvertFilterSetting;
     private readonly networkHideDataURLSetting;

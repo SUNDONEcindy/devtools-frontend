@@ -4543,6 +4543,8 @@ var requestInitiatorViewTree_css_default = `/*
 
 .request-initiator-view-section-title:focus-visible {
   background-color: var(--sys-color-state-focus-highlight);
+  outline: var(--sys-size-2) solid var(--sys-color-state-focus-ring);
+  outline-offset: calc(-1 * var(--sys-size-2));
 }
 
 @media (forced-colors: active) {
@@ -4864,6 +4866,8 @@ li.object-properties-section  {
 
 .tree-outline.hide-selection-when-blurred .selected:focus-visible {
   background: none;
+  outline: var(--sys-size-2) solid var(--sys-color-state-focus-ring);
+  outline-offset: calc(-1 * var(--sys-size-2));
 }
 
 .tree-outline.hide-selection-when-blurred .selected:focus-visible ::slotted(*),
@@ -9047,6 +9051,10 @@ td.time-column {
   z-index: 1;
 }
 
+.empty-widget-container devtools-button {
+  margin-top: var(--sys-size-7);
+}
+
 @media (forced-colors: active) {
   .initiator-column .devtools-link {
     color: linktext;
@@ -11832,7 +11840,8 @@ var FetchStyle;
   FetchStyle2[FetchStyle2["BROWSER"] = 0] = "BROWSER";
   FetchStyle2[FetchStyle2["NODE_JS"] = 1] = "NODE_JS";
 })(FetchStyle || (FetchStyle = {}));
-var NetworkLogView = class _NetworkLogView extends Common19.ObjectWrapper.eventMixin(UI23.Widget.VBox) {
+var NetworkLogViewBase = Common19.ObjectWrapper.eventMixin(UI23.Widget.VBox);
+var NetworkLogView = class _NetworkLogView extends NetworkLogViewBase {
   networkInvertFilterSetting;
   networkHideDataURLSetting;
   networkHideChromeExtensions;
@@ -12317,7 +12326,7 @@ var NetworkLogView = class _NetworkLogView extends Common19.ObjectWrapper.eventM
         jslogContext: actionName,
         variant: "tonal"
       });
-      this.recordingHint.contentElement.appendChild(button);
+      this.recordingHint.element.appendChild(button);
     }
     this.recordingHint.show(this.element);
     this.setHidden(true);

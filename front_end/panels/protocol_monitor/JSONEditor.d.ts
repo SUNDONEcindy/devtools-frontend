@@ -85,8 +85,8 @@ export declare const enum Events {
 export interface EventTypes {
     [Events.SUBMIT_EDITOR]: Command;
 }
-declare const JSONEditor_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
-export declare class JSONEditor extends JSONEditor_base {
+declare const JSONEditorBase: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
+export declare class JSONEditor extends JSONEditorBase {
     #private;
     displayTargetSelector: boolean;
     displayCommandInput: boolean;

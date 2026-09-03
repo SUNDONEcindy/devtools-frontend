@@ -2,8 +2,8 @@ import * as Common from '../../core/common/common.js';
 import * as Geometry from '../../models/geometry/geometry.js';
 import { ToolbarButton } from './Toolbar.js';
 import { type AnyWidget, Widget, WidgetElement } from './Widget.js';
-declare const SplitWidget_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof Widget>;
-export declare class SplitWidget extends SplitWidget_base {
+declare const SplitWidgetBase: Common.ObjectWrapper.EventMixin<EventTypes, typeof Widget>;
+export declare class SplitWidget extends SplitWidgetBase {
     #private;
     private setting;
     constructor(isVertical: boolean, secondIsSidebar: boolean, settingName?: string, defaultSidebarWidth?: number, defaultSidebarHeight?: number, constraintsInDip?: boolean, element?: SplitWidgetElement);

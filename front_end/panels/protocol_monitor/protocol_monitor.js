@@ -209,7 +209,8 @@ var Events;
 (function(Events2) {
   Events2["SUBMIT_EDITOR"] = "submiteditor";
 })(Events || (Events = {}));
-var JSONEditor = class extends Common.ObjectWrapper.eventMixin(UI.Widget.VBox) {
+var JSONEditorBase = Common.ObjectWrapper.eventMixin(UI.Widget.VBox);
+var JSONEditor = class extends JSONEditorBase {
   #metadataByCommand = /* @__PURE__ */ new Map();
   #typesByName = /* @__PURE__ */ new Map();
   #enumsByName = /* @__PURE__ */ new Map();

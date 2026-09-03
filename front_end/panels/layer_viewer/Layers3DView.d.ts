@@ -16,8 +16,8 @@ export interface ViewOutput {
     canvasElement?: HTMLCanvasElement;
 }
 export declare const DEFAULT_VIEW: (input: ViewInput, output: ViewOutput, target: HTMLElement) => void;
-declare const Layers3DView_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
-export declare class Layers3DView extends Layers3DView_base implements LayerView {
+declare const Layers3DViewBase: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
+export declare class Layers3DView extends Layers3DViewBase implements LayerView {
     #private;
     private readonly layerViewHost;
     private transformController;

@@ -22,8 +22,8 @@ export interface ViewOutput {
 }
 export type View = (input: ViewInput, output: ViewOutput, target: HTMLElement) => void;
 export declare const DEFAULT_VIEW: View;
-declare const SourcesView_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
-export declare class SourcesView extends SourcesView_base implements UI.SearchableView.Searchable, UI.SearchableView.Replaceable {
+declare const SourcesViewBase: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
+export declare class SourcesView extends SourcesViewBase implements UI.SearchableView.Searchable, UI.SearchableView.Replaceable {
     #private;
     editorContainer?: TabbedEditorContainer;
     private readonly historyManager;

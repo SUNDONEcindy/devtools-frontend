@@ -324,7 +324,8 @@ const SCREENSHOT_CAPTURE_PRESETS = [
 let timelinePanelInstance;
 // Total time to wait for source maps to load before giving up so trace processing can proceed.
 const SOURCE_MAP_LOAD_TIMEOUT_MS = 5000;
-export class TimelinePanel extends Common.ObjectWrapper.eventMixin(UI.Panel.Panel) {
+const TimelinePanelBase = Common.ObjectWrapper.eventMixin(UI.Panel.Panel);
+export class TimelinePanel extends TimelinePanelBase {
     dropTarget;
     recordingOptionUIControls;
     state;

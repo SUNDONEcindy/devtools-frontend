@@ -27,8 +27,8 @@ export interface EventTypes {
  * metric data. Returns null if no RTT data is available or no preset matches.
  */
 export declare function getRecommendedNetworkConditions(roundTripTimeMetricData?: CrUXManager.MetricResponse): SDK.NetworkManager.Conditions | null;
-declare const NetworkThrottlingSelect_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.Widget>;
-export declare class NetworkThrottlingSelect extends NetworkThrottlingSelect_base {
+declare const NetworkThrottlingSelectBase: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.Widget>;
+export declare class NetworkThrottlingSelect extends NetworkThrottlingSelectBase {
     #private;
     static createForGlobalConditions(element: HTMLElement, title: string): NetworkThrottlingSelect;
     constructor(element?: HTMLElement, options?: {

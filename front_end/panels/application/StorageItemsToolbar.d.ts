@@ -17,8 +17,8 @@ interface ViewInput {
 }
 export declare const DEFAULT_VIEW: (input: ViewInput, _output: object, target: HTMLElement) => void;
 export type View = (input: ViewInput, output: object, target: HTMLElement) => void;
-declare const StorageItemsToolbar_base: Common.ObjectWrapper.EventMixin<StorageItemsToolbar.EventTypes, typeof UI.Widget.VBox>;
-export declare class StorageItemsToolbar extends StorageItemsToolbar_base {
+declare const StorageItemsToolbarBase: Common.ObjectWrapper.EventMixin<StorageItemsToolbar.EventTypes, typeof UI.Widget.VBox>;
+export declare class StorageItemsToolbar extends StorageItemsToolbarBase {
     #private;
     filterRegex: RegExp | null;
     constructor(element?: HTMLElement, view?: View);

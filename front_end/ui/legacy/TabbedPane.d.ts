@@ -17,8 +17,8 @@ export interface TabInfo {
     enabled?: boolean;
     selected?: boolean;
 }
-declare const TabbedPane_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof VBox>;
-export declare class TabbedPane extends TabbedPane_base {
+declare const TabbedPaneBase: Common.ObjectWrapper.EventMixin<EventTypes, typeof VBox>;
+export declare class TabbedPane extends TabbedPaneBase {
     #private;
     protected readonly headerContentsElement: HTMLElement;
     tabSlider: HTMLDivElement;

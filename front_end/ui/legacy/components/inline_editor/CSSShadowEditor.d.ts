@@ -21,8 +21,8 @@ export declare class CSSLength {
     static zero(): CSSLength;
     asCSSText(): string;
 }
-declare const CSSShadowEditor_base: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
-export declare class CSSShadowEditor extends CSSShadowEditor_base {
+declare const CSSShadowEditorBase: Common.ObjectWrapper.EventMixin<EventTypes, typeof UI.Widget.VBox>;
+export declare class CSSShadowEditor extends CSSShadowEditorBase {
     private readonly typeField;
     private readonly outsetButton;
     private readonly insetButton;
