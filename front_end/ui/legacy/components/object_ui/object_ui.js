@@ -49,8 +49,10 @@ function sanitizeStyle(currentStyle, styleToAdd) {
 // ../../front_end/ui/legacy/components/object_ui/CustomPreviewComponent.ts
 var CustomPreviewComponent_exports = {};
 __export(CustomPreviewComponent_exports, {
+  CUSTOM_PREVIEW_COMPONENT_DEFAULT_VIEW: () => CUSTOM_PREVIEW_COMPONENT_DEFAULT_VIEW,
   CustomPreviewComponent: () => CustomPreviewComponent,
-  CustomPreviewSection: () => CustomPreviewSection
+  CustomPreviewSection: () => CustomPreviewSection,
+  DEFAULT_VIEW: () => DEFAULT_VIEW
 });
 import * as Common3 from "../../../../core/common/common.js";
 import * as i18n5 from "../../../../core/i18n/i18n.js";
@@ -63,6 +65,10 @@ var customPreviewComponent_css_default = `/*
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+
+:host {
+  display: inline-flex;
+}
 
 .custom-expandable-section {
   display: inline-flex;
@@ -88,18 +94,15 @@ var customPreviewComponent_css_default = `/*
 // ../../front_end/ui/legacy/components/object_ui/ObjectPropertiesSection.ts
 var ObjectPropertiesSection_exports = {};
 __export(ObjectPropertiesSection_exports, {
-  ArrayGroupTreeNode: () => ArrayGroupTreeNode,
   ArrayGroupingTreeElement: () => ArrayGroupingTreeElement,
   EXPANDABLE_MAX_DEPTH: () => EXPANDABLE_MAX_DEPTH,
   EXPANDABLE_TEXT_DEFAULT_VIEW: () => EXPANDABLE_TEXT_DEFAULT_VIEW,
   ExpandableTextPropertyValue: () => ExpandableTextPropertyValue,
-  InitialVisibleChildrenLimit: () => InitialVisibleChildrenLimit,
   OBJECT_PROPERTIES_SECTION_DEFAULT_VIEW: () => OBJECT_PROPERTIES_SECTION_DEFAULT_VIEW,
   OBJECT_PROPERTY_DEFAULT_VIEW: () => OBJECT_PROPERTY_DEFAULT_VIEW,
   OBJECT_TREE_DEFAULT_VIEW: () => OBJECT_TREE_DEFAULT_VIEW,
   ObjectPropertiesMode: () => ObjectPropertiesMode,
   ObjectPropertiesSectionWidget: () => ObjectPropertiesSectionWidget,
-  ObjectPropertiesSectionsTreeOutline: () => ObjectPropertiesSectionsTreeOutline,
   ObjectPropertyTreeElement: () => ObjectPropertyTreeElement,
   ObjectPropertyWidget: () => ObjectPropertyWidget,
   ObjectTree: () => ObjectTree,
@@ -111,7 +114,6 @@ __export(ObjectPropertiesSection_exports, {
   defaultObjectPresentation: () => defaultObjectPresentation,
   formatObjectAsFunction: () => formatObjectAsFunction,
   getMemoryIcon: () => getMemoryIcon,
-  isWasmObject: () => isWasmObject,
   objectPropertiesSectionStyles: () => objectPropertiesSection_css_default,
   objectValueStyles: () => objectValue_css_default,
   populateObjectTreeContextMenu: () => populateObjectTreeContextMenu,
@@ -4508,14 +4510,6 @@ var ObjectPropertiesSectionWidget = class extends UI2.Widget.Widget {
 };
 var ARRAY_LOAD_THRESHOLD = 100;
 var maxRenderableStringLength = 1e4;
-var ObjectPropertiesSectionsTreeOutline = class extends UI2.TreeOutline.TreeOutlineInShadow {
-  constructor() {
-    super();
-    this.registerRequiredCSS(objectValue_css_default, objectPropertiesSection_css_default);
-    this.contentElement.classList.add("source-code");
-    this.contentElement.classList.add("object-properties-section");
-  }
-};
 var ObjectPropertiesMode = /* @__PURE__ */ ((ObjectPropertiesMode2) => {
   ObjectPropertiesMode2[ObjectPropertiesMode2["ALL"] = 0] = "ALL";
   ObjectPropertiesMode2[ObjectPropertiesMode2["OWN_AND_INTERNAL_AND_INHERITED"] = 1] = "OWN_AND_INTERNAL_AND_INHERITED";
@@ -4748,10 +4742,10 @@ async function formatObjectAsFunction(func, linkify, includePreview) {
 }
 function renderPropertyValue(value, wasThrown, showPreview, linkifier, isSyntheticProperty = false, variableName, includeNullOrUndefined, useCustomPreview = false, valueRef) {
   if (useCustomPreview && value.customPreview()) {
-    const result = new CustomPreviewComponent(value).element;
-    result.classList.add("object-properties-section-custom-section");
-    valueRef?.(result);
-    return html2`${result}`;
+    return html2`<devtools-widget class="object-properties-section-custom-section" ${UI2.Widget.widget(
+      CustomPreviewComponent,
+      { object: value }
+    )} ${valueRef ? Directives2.ref(valueRef) : nothing2}></devtools-widget>`;
   }
   const type = value.type;
   const subtype = value.subtype;
@@ -5680,7 +5674,6 @@ var ExpandableTextPropertyValue = class _ExpandableTextPropertyValue extends UI2
 };
 
 // ../../front_end/ui/legacy/components/object_ui/CustomPreviewComponent.ts
-var { widget: widget2 } = UI3.Widget;
 var UIStrings3 = {
   /**
    * @description Context menu item to show a custom formatted object as a standard JavaScript object.
@@ -5689,17 +5682,45 @@ var UIStrings3 = {
 };
 var str_3 = i18n5.i18n.registerUIStrings("ui/legacy/components/object_ui/CustomPreviewComponent.ts", UIStrings3);
 var i18nString3 = i18n5.i18n.getLocalizedString.bind(void 0, str_3);
-var CustomPreviewSection = class _CustomPreviewSection {
-  sectionElement;
-  object;
-  expanded = false;
+var CustomPreviewSection = class extends UI3.Widget.Widget {
+  #object;
+  #expanded = false;
   cachedContent;
   headerJsonML;
-  constructor(object) {
-    this.sectionElement = document.createElement("span");
-    this.sectionElement.classList.add("custom-expandable-section");
-    this.object = object;
-    const customPreview = object.customPreview();
+  view;
+  constructor(element, view = DEFAULT_VIEW) {
+    super(element);
+    this.view = view;
+  }
+  get object() {
+    return this.#object;
+  }
+  set object(object) {
+    if (this.#object === object) {
+      return;
+    }
+    this.#object = object;
+    this.headerJsonML = void 0;
+    this.cachedContent = void 0;
+    this.#expanded = false;
+    this.parseHeader();
+    this.performUpdate();
+  }
+  get expanded() {
+    return this.#expanded;
+  }
+  set expanded(expanded) {
+    if (this.#expanded === expanded) {
+      return;
+    }
+    this.#expanded = expanded;
+    if (this.#expanded && !this.cachedContent) {
+      void this.loadBody();
+    }
+    this.performUpdate();
+  }
+  parseHeader() {
+    const customPreview = this.#object?.customPreview();
     if (!customPreview) {
       return;
     }
@@ -5707,62 +5728,61 @@ var CustomPreviewSection = class _CustomPreviewSection {
       this.headerJsonML = JSON.parse(customPreview.header);
     } catch (e) {
       Common3.Console.Console.instance().error("Broken formatter: header is invalid json " + e);
-      return;
     }
-    this.render();
   }
-  render() {
-    const customPreview = this.object.customPreview();
-    if (!customPreview || !this.headerJsonML) {
+  performUpdate() {
+    this.view(
+      {
+        object: this.#object,
+        headerJsonML: this.headerJsonML,
+        expanded: this.#expanded,
+        cachedContent: this.cachedContent,
+        toggleExpanded: this.toggleExpanded
+      },
+      void 0,
+      this.contentElement
+    );
+  }
+  toggleExpanded = () => {
+    this.expanded = !this.expanded;
+  };
+  async loadBody() {
+    const customPreview = this.#object?.customPreview();
+    if (!this.#object || !customPreview?.bodyGetterId) {
       return;
     }
-    const headerTemplate = this.renderJSONMLTag(this.headerJsonML);
-    if (customPreview.bodyGetterId) {
-      let bodyContent;
-      if (this.cachedContent instanceof ObjectTree) {
-        bodyContent = html3`<devtools-widget class="custom-expandable-section-default-body" ${widget2(ObjectPropertiesSectionWidget, {
-          objectTree: this.cachedContent,
-          showOverflow: false
-        })}></devtools-widget>`;
-      } else if (this.cachedContent !== void 0) {
-        bodyContent = this.renderJSONMLTag(this.cachedContent);
-      }
-      render3(
-        html3`
-        <span class=${Directives3.classMap({
-          "custom-expandable-section-header": true,
-          expanded: this.expanded
-        })} @click=${(event) => this.onClick(event)}>
-          <devtools-icon name=${this.expanded ? "triangle-down" : "triangle-right"} class="custom-expand-icon"></devtools-icon>
-          ${headerTemplate}
-        </span>
-        ${bodyContent ? html3`<span class="custom-expandable-section-body" ?hidden=${!this.expanded}>${bodyContent}</span>` : nothing3}
-      `,
-        this.sectionElement
-      );
+    const bodyJsonML = await this.#object.callFunctionJSON((bodyGetter) => bodyGetter(), [{ objectId: customPreview.bodyGetterId }]);
+    if (bodyJsonML === null) {
+      const objectTree = new ObjectTree(this.#object, {
+        readOnly: true,
+        propertiesMode: 1 /* OWN_AND_INTERNAL_AND_INHERITED */
+      });
+      objectTree.expanded = true;
+      this.cachedContent = objectTree;
     } else {
-      render3(html3`${headerTemplate}`, this.sectionElement);
+      this.cachedContent = bodyJsonML;
     }
+    this.performUpdate();
   }
-  element() {
-    return this.sectionElement;
-  }
-  renderJSONMLTag(jsonML) {
+};
+var ALLOWED_TAGS = ["span", "div", "ol", "li", "table", "tr", "td"];
+var remoteObjectCache = /* @__PURE__ */ new WeakMap();
+var DEFAULT_VIEW = (input, _output, target) => {
+  const renderJSONMLTag = (object2, jsonML) => {
     if (!Array.isArray(jsonML)) {
       return html3`${String(jsonML)}`;
     }
     if (jsonML[0] !== "object") {
-      return this.renderElement(jsonML);
+      return renderElement(object2, jsonML);
     }
     if (jsonML.length !== 2) {
       Common3.Console.Console.instance().error("Broken formatter: object reference must contain exactly two elements");
       return html3`<span></span>`;
     }
-    return this.layoutObjectTag(jsonML);
-  }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  renderElement(object) {
-    const it = object[Symbol.iterator]();
+    return layoutObjectTag(object2, jsonML);
+  };
+  const renderElement = (object2, jsonML) => {
+    const it = jsonML[Symbol.iterator]();
     const tagName = it.next().value;
     if (!ALLOWED_TAGS.includes(tagName)) {
       Common3.Console.Console.instance().error("Broken formatter: element " + tagName + " is not allowed!");
@@ -5787,7 +5807,7 @@ var CustomPreviewSection = class _CustomPreviewSection {
     }
     const children = [];
     while (!next.done) {
-      children.push(this.renderJSONMLTag(next.value));
+      children.push(renderJSONMLTag(object2, next.value));
       next = it.next();
     }
     const style = Directives3.styleMap(stylePropertyMap);
@@ -5809,14 +5829,20 @@ var CustomPreviewSection = class _CustomPreviewSection {
       default:
         return html3`<span>${children}</span>`;
     }
-  }
-  layoutObjectTag(objectTag) {
+  };
+  const layoutObjectTag = (object2, objectTag) => {
     const it = objectTag[Symbol.iterator]();
     it.next();
     const attributes = it.next().value;
-    const remoteObject = this.object.runtimeModel().createRemoteObject(attributes);
+    let remoteObject = typeof attributes === "object" && attributes !== null ? remoteObjectCache.get(attributes) : void 0;
+    if (!remoteObject) {
+      remoteObject = object2.runtimeModel().createRemoteObject(attributes);
+      if (typeof attributes === "object" && attributes !== null) {
+        remoteObjectCache.set(attributes, remoteObject);
+      }
+    }
     if (remoteObject.customPreview()) {
-      return html3`${new _CustomPreviewSection(remoteObject).element()}`;
+      return html3`${UI3.Widget.widget(CustomPreviewSection, { object: remoteObject })}`;
     }
     return defaultObjectPresentation(
       remoteObject,
@@ -5825,79 +5851,125 @@ var CustomPreviewSection = class _CustomPreviewSection {
       void 0,
       { "custom-expandable-section-standard-section": remoteObject.hasChildren }
     );
-  }
-  onClick(event) {
+  };
+  const onClick = (event) => {
     event.consume(true);
-    if (this.cachedContent !== void 0) {
-      this.toggleExpand();
-    } else {
-      void this.loadBody();
-    }
+    input.toggleExpanded();
+  };
+  const object = input.object;
+  const customPreview = object?.customPreview();
+  if (!object || !customPreview || !input.headerJsonML) {
+    render3(nothing3, target);
+    return;
   }
-  toggleExpand() {
-    this.expanded = !this.expanded;
-    this.render();
-  }
-  async loadBody() {
-    const customPreview = this.object.customPreview();
-    if (!customPreview) {
-      return;
+  const headerTemplate = renderJSONMLTag(object, input.headerJsonML);
+  if (customPreview.bodyGetterId) {
+    let bodyContent;
+    if (input.cachedContent instanceof ObjectTree) {
+      bodyContent = html3`<devtools-widget class="custom-expandable-section-default-body" ${UI3.Widget.widget(ObjectPropertiesSectionWidget, {
+        objectTree: input.cachedContent,
+        showOverflow: false
+      })}></devtools-widget>`;
+    } else if (input.cachedContent) {
+      bodyContent = renderJSONMLTag(object, input.cachedContent);
     }
-    if (customPreview.bodyGetterId) {
-      const bodyJsonML = await this.object.callFunctionJSON((bodyGetter) => bodyGetter(), [{ objectId: customPreview.bodyGetterId }]);
-      if (bodyJsonML === null) {
-        const objectTree = new ObjectTree(this.object, {
-          readOnly: true,
-          propertiesMode: 1 /* OWN_AND_INTERNAL_AND_INHERITED */
-        });
-        objectTree.expanded = true;
-        this.cachedContent = objectTree;
-      } else {
-        this.cachedContent = bodyJsonML;
-      }
-      this.expanded = true;
-      this.render();
-    }
+    render3(
+      html3`
+      <span class=${Directives3.classMap({
+        "custom-expandable-section-header": true,
+        expanded: input.expanded
+      })} @click=${onClick}>
+        <devtools-icon name=${input.expanded ? "triangle-down" : "triangle-right"} class="custom-expand-icon"></devtools-icon>
+        ${headerTemplate}
+      </span>
+      ${bodyContent ? html3`<span class="custom-expandable-section-body" ?hidden=${!input.expanded}>${bodyContent}</span>` : nothing3}
+    `,
+      target,
+      { container: { classes: ["custom-expandable-section"] } }
+    );
+  } else {
+    render3(html3`${headerTemplate}`, target, { container: { classes: ["custom-expandable-section"] } });
   }
 };
-var ALLOWED_TAGS = ["span", "div", "ol", "li", "table", "tr", "td"];
-var CustomPreviewComponent = class {
-  object;
-  customPreviewSection;
-  element;
-  constructor(object) {
-    this.object = object;
-    this.customPreviewSection = new CustomPreviewSection(object);
-    this.element = document.createElement("span");
-    this.element.classList.add("source-code");
-    const shadowRoot = UI3.UIUtils.createShadowRootWithCoreStyles(this.element, { cssFile: customPreviewComponent_css_default });
-    this.element.addEventListener("contextmenu", this.contextMenuEventFired.bind(this), false);
-    shadowRoot.appendChild(this.customPreviewSection.element());
+var CUSTOM_PREVIEW_COMPONENT_DEFAULT_VIEW = (input, _output, target) => {
+  if (!input.object) {
+    render3(nothing3, target);
+    return;
   }
-  expandIfPossible() {
-    const customPreview = this.object.customPreview();
-    if (customPreview && customPreview.bodyGetterId && this.customPreviewSection) {
-      void this.customPreviewSection.loadBody();
+  render3(
+    html3`<style>${customPreviewComponent_css_default}</style>${input.disassembled ? defaultObjectPresentation(input.object) : UI3.Widget.widget(CustomPreviewSection, { object: input.object, expanded: input.expanded })}`,
+    target,
+    {
+      container: {
+        classes: ["source-code"],
+        listeners: { contextmenu: input.onContextMenu }
+      }
     }
+  );
+};
+var CustomPreviewComponent = class extends UI3.Widget.Widget {
+  #object;
+  #expanded = false;
+  #disassembled = false;
+  #view;
+  constructor(element, view = CUSTOM_PREVIEW_COMPONENT_DEFAULT_VIEW) {
+    super(element, { useShadowDom: "pure" });
+    this.#view = view;
   }
-  contextMenuEventFired(event) {
+  get object() {
+    return this.#object;
+  }
+  set object(object) {
+    if (this.#object === object) {
+      return;
+    }
+    this.#object = object;
+    this.#disassembled = false;
+    this.performUpdate();
+  }
+  get expanded() {
+    return this.#expanded;
+  }
+  set expanded(expanded) {
+    if (this.#expanded === expanded) {
+      return;
+    }
+    this.#expanded = expanded;
+    this.performUpdate();
+  }
+  wasShown() {
+    super.wasShown();
+    this.requestUpdate();
+  }
+  performUpdate() {
+    this.#view(
+      {
+        object: this.#object,
+        expanded: this.#expanded,
+        disassembled: this.#disassembled,
+        onContextMenu: this.#onContextMenu
+      },
+      void 0,
+      this.contentElement
+    );
+  }
+  #onContextMenu = (event) => {
     const contextMenu = new UI3.ContextMenu.ContextMenu(event);
-    if (this.customPreviewSection) {
+    if (!this.#disassembled) {
       contextMenu.revealSection().appendItem(
         i18nString3(UIStrings3.showAsJavascriptObject),
-        this.disassemble.bind(this),
+        this.#disassemble.bind(this),
         { jslogContext: "show-as-javascript-object" }
       );
     }
-    contextMenu.appendApplicableItems(this.object);
-    void contextMenu.show();
-  }
-  disassemble() {
-    if (this.element.shadowRoot) {
-      this.element.shadowRoot.textContent = "";
-      this.customPreviewSection = null;
-      render3(defaultObjectPresentation(this.object), this.element.shadowRoot);
+    if (this.#object) {
+      contextMenu.appendApplicableItems(this.#object);
     }
+    void contextMenu.show();
+  };
+  #disassemble() {
+    this.#disassembled = true;
+    this.requestUpdate();
   }
 };
 
@@ -6003,10 +6075,14 @@ var ObjectPopoverHelper = class _ObjectPopoverHelper {
         SDK4.OverlayModel.OverlayModel.highlightObjectAsDOMNode(result);
         resultHighlightedAsDOM = true;
       }
+      popover.setMaxContentSize(new Geometry.Size(300, 250));
+      popover.setSizeBehavior(UI4.GlassPane.SizeBehavior.SET_EXACT_SIZE);
       if (result.customPreview()) {
-        const customPreviewComponent = new CustomPreviewComponent(result);
-        customPreviewComponent.expandIfPossible();
-        popoverContentElement = customPreviewComponent.element;
+        const customPreviewComponent = new CustomPreviewComponent();
+        customPreviewComponent.object = result;
+        customPreviewComponent.expanded = true;
+        customPreviewComponent.element.dataset.stableNameForTest = "object-popover-content";
+        customPreviewComponent.show(popover.contentElement);
       } else {
         popoverContentElement = document.createElement("div");
         popoverContentElement.classList.add("object-popover-content");
@@ -6029,11 +6105,9 @@ var ObjectPopoverHelper = class _ObjectPopoverHelper {
         section.linkifier = linkifier;
         section.showOverflow = true;
         section.show(popoverContentElement, null, true);
+        popoverContentElement.dataset.stableNameForTest = "object-popover-content";
+        popover.contentElement.appendChild(popoverContentElement);
       }
-      popoverContentElement.dataset.stableNameForTest = "object-popover-content";
-      popover.setMaxContentSize(new Geometry.Size(300, 250));
-      popover.setSizeBehavior(UI4.GlassPane.SizeBehavior.SET_EXACT_SIZE);
-      popover.contentElement.appendChild(popoverContentElement);
       return new _ObjectPopoverHelper(linkifier, resultHighlightedAsDOM);
     }
     popoverContentElement = document.createElement("span");

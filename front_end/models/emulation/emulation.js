@@ -26,7 +26,6 @@ import * as i18n3 from "../../core/i18n/i18n.js";
 import * as Platform from "../../core/platform/platform.js";
 import * as Root2 from "../../core/root/root.js";
 import * as SDK2 from "../../core/sdk/sdk.js";
-import * as TextUtils from "../../core/text_utils/text_utils.js";
 
 // ../../front_end/generated/protocol.ts
 var Accessibility;
@@ -2831,7 +2830,6 @@ var Runtime;
 
 // ../../front_end/models/emulation/DeviceModeModel.ts
 import * as Geometry from "../geometry/geometry.js";
-import * as Workspace from "../workspace/workspace.js";
 
 // ../../front_end/models/emulation/EmulatedDevices.ts
 var EmulatedDevices_exports = {};
@@ -4891,13 +4889,11 @@ var DeviceModeModel = class _DeviceModeModel extends Common2.ObjectWrapper.Objec
   #targetManager;
   #settings;
   #multitargetNetworkManager;
-  #fileManager;
-  constructor(targetManager, settings, multitargetNetworkManager, fileManager) {
+  constructor(targetManager, settings, multitargetNetworkManager) {
     super();
     this.#targetManager = targetManager;
     this.#settings = settings;
     this.#multitargetNetworkManager = multitargetNetworkManager;
-    this.#fileManager = fileManager;
     this.#screenRect = new Rect(0, 0, 1, 1);
     this.#visiblePageRect = new Rect(0, 0, 1, 1);
     this.#availableSize = new Geometry.Size(1, 1);
@@ -4959,9 +4955,7 @@ var DeviceModeModel = class _DeviceModeModel extends Common2.ObjectWrapper.Objec
           // eslint-disable-next-line @devtools/no-instance-of-migrated-singletons
           Common2.Settings.Settings.instance(),
           // eslint-disable-next-line @devtools/no-instance-of-migrated-singletons
-          SDK2.NetworkManager.MultitargetNetworkManager.instance(),
-          // eslint-disable-next-line @devtools/no-instance-of-migrated-singletons
-          Workspace.FileManager.FileManager.instance()
+          SDK2.NetworkManager.MultitargetNetworkManager.instance()
         )
       );
     }
@@ -5601,55 +5595,20 @@ var DeviceModeModel = class _DeviceModeModel extends Common2.ObjectWrapper.Objec
   }
   async saveScreenshot(canvas) {
     const url = this.inspectedURL();
-    let baseName = "";
+    let fileName = "";
     if (url) {
-      const parsedURL = Common2.ParsedURL.ParsedURL.fromString(url);
-      if (parsedURL) {
-        const host = parsedURL.host;
-        const path = parsedURL.path.replace(/^\/+/, "").replace(/\/+$/, "");
-        baseName = host;
-        if (path) {
-          baseName += "-" + path.replaceAll("/", "-");
-        }
-        baseName = baseName.replace(/[^a-z0-9._-]/gi, "_");
-      }
+      const withoutFragment = Platform.StringUtilities.removeURLFragment(url);
+      fileName = Platform.StringUtilities.trimURL(withoutFragment);
     }
-    if (!baseName) {
-      baseName = "screenshot";
-    }
-    let suffix = "";
     const device = this.device();
     if (device && this.type() === "Device" /* Device */) {
-      suffix += `(${device.title})`;
+      fileName += `(${device.title})`;
     }
-    suffix += ".png";
-    const maxBaseNameLength = Math.max(0, 63 - suffix.length);
-    baseName = Platform.StringUtilities.truncateToCodeUnitLength(baseName, maxBaseNameLength);
-    let fileName = baseName + suffix;
-    if (fileName.length > 63) {
-      fileName = Platform.StringUtilities.truncateToCodeUnitLength(fileName, 59) + ".png";
-    }
+    const link = document.createElement("a");
+    link.download = fileName + ".png";
     const blob = await canvas.convertToBlob({ type: "image/png" });
-    const dataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-    const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
-    const contentData = new TextUtils.ContentData.ContentData(
-      base64,
-      /* isBase64=*/
-      true,
-      "image/png"
-    );
-    await this.#fileManager.save(
-      fileName,
-      contentData,
-      /* forceSaveAs=*/
-      true
-    );
-    this.#fileManager.close(fileName);
+    link.href = URL.createObjectURL(blob);
+    link.click();
   }
   applyTouch(touchEnabled, mobile) {
     this.#touchEnabled = touchEnabled;

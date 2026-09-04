@@ -2,11 +2,10 @@ import * as Common from '../../core/common/common.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import * as Protocol from '../../generated/protocol.js';
 import * as Geometry from '../geometry/geometry.js';
-import * as Workspace from '../workspace/workspace.js';
 import { type EmulatedDevice, type Mode } from './EmulatedDevices.js';
 export declare class DeviceModeModel extends Common.ObjectWrapper.ObjectWrapper<EventTypes> implements SDK.TargetManager.SDKModelObserver<SDK.EmulationModel.EmulationModel> {
     #private;
-    constructor(targetManager: SDK.TargetManager.TargetManager, settings: Common.Settings.Settings, multitargetNetworkManager: SDK.NetworkManager.MultitargetNetworkManager, fileManager: Workspace.FileManager.FileManager);
+    constructor(targetManager: SDK.TargetManager.TargetManager, settings: Common.Settings.Settings, multitargetNetworkManager: SDK.NetworkManager.MultitargetNetworkManager);
     static instance(opts?: {
         forceNew: boolean;
     }): DeviceModeModel;

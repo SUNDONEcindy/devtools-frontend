@@ -24090,8 +24090,6 @@ var TreeViewTreeElement = class _TreeViewTreeElement extends TreeElement {
   static CLONED_ATTRIBUTES = SDK2.DOMModel.ARIA_ATTRIBUTES.union(/* @__PURE__ */ new Set(["jslog", "draggable"]));
   #clonedAttributes = /* @__PURE__ */ new Set();
   #clonedClasses = /* @__PURE__ */ new Set();
-  #userExpanded = false;
-  #isProcessingAttribute = false;
   #previousOpenAttributeValue;
   #refreshScheduled = false;
   static #elementToTreeElement = /* @__PURE__ */ new WeakMap();
@@ -24102,37 +24100,16 @@ var TreeViewTreeElement = class _TreeViewTreeElement extends TreeElement {
     _TreeViewTreeElement.#elementToTreeElement.set(configElement, this);
     this.refresh();
   }
-  onexpand() {
-    if (!this.#isProcessingAttribute) {
-      this.#userExpanded = true;
-    }
-  }
-  oncollapse() {
-    if (!this.#isProcessingAttribute) {
-      this.#userExpanded = false;
-    }
-  }
   updateExpansionFromAttribute() {
-    this.#isProcessingAttribute = true;
-    try {
-      const openAttr = this.configElement.getAttribute("open");
-      if (openAttr === this.#previousOpenAttributeValue) {
-        return;
-      }
-      this.#previousOpenAttributeValue = openAttr;
-      if (openAttr === null) {
-        if (this.#userExpanded) {
-          this.expand();
-        } else {
-          this.collapse();
-        }
-      } else if (openAttr === "false") {
-        this.collapse();
-      } else {
-        this.expand();
-      }
-    } finally {
-      this.#isProcessingAttribute = false;
+    const openAttr = this.configElement.getAttribute("open");
+    if (openAttr === this.#previousOpenAttributeValue) {
+      return;
+    }
+    this.#previousOpenAttributeValue = openAttr;
+    if (openAttr !== null && openAttr !== "false") {
+      this.expand();
+    } else {
+      this.collapse();
     }
   }
   refreshSoon() {

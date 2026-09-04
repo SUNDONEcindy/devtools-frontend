@@ -37322,6 +37322,52 @@ var NetworkRequest = class _NetworkRequest extends Common30.ObjectWrapper.Object
   backendRequestId() {
     return this.#backendRequestId;
   }
+  /**
+   * Returns the security origin of the target resource URL (`request.url()`) for this network request.
+   *
+   * For example, if an inspected document at `https://example.com/index.html` initiates a fetch
+   * to `https://api.github.com/users`, `requestURLSecurityOrigin()` returns the origin for
+   * `https://api.github.com`.
+   *
+   * For imported HAR files, the origin is mapped to an isolated virtual domain
+   * (`imported-har://${authority}`) to ensure recorded network traffic never collides with
+   * live web origins.
+   *
+   * @see {@link initiatorSecurityOrigin} to obtain the origin of the document that initiated the request.
+   */
+  requestURLSecurityOrigin() {
+    return this.#resolveSecurityOrigin(this.#url);
+  }
+  /**
+   * Returns the security origin of the document or context (`request.documentURL`) that initiated
+   * this network request.
+   *
+   * For example, if an inspected document at `https://example.com/index.html` initiates a fetch
+   * to `https://api.github.com/users`, `initiatorSecurityOrigin()` returns the origin for
+   * `https://example.com`.
+   *
+   * If `documentURL` is empty, invalid, or an opaque context (such as a `data:` URL or sandboxed
+   * iframe), this returns a unique opaque `SecurityOrigin`.
+   *
+   * For imported HAR files, the origin is mapped to an isolated virtual domain
+   * (`imported-har://${authority}`) matching the imported initiating document.
+   *
+   * @see {@link requestURLSecurityOrigin} to obtain the origin of the target resource URL being requested.
+   */
+  initiatorSecurityOrigin() {
+    return this.#resolveSecurityOrigin(this.#documentURL);
+  }
+  #resolveSecurityOrigin(url) {
+    if (this.#isImportedHar) {
+      const parsed = Common30.ParsedURL.ParsedURL.fromString(url);
+      if (!parsed || !parsed.host) {
+        return SecurityOrigin.createUniqueOpaque();
+      }
+      const authority = parsed.host + (parsed.port ? ":" + parsed.port : "");
+      return SecurityOrigin.create(`imported-har://${authority}`);
+    }
+    return SecurityOrigin.create(url);
+  }
   url() {
     return this.#url;
   }
@@ -37394,9 +37440,6 @@ var NetworkRequest = class _NetworkRequest extends Common30.ObjectWrapper.Object
   }
   securityDetails() {
     return this.#securityDetails;
-  }
-  securityOrigin() {
-    return this.#parsedURL.securityOrigin();
   }
   setSecurityDetails(securityDetails) {
     this.#securityDetails = securityDetails;

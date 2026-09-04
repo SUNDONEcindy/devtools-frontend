@@ -14291,7 +14291,6 @@ __export(AiConversation_exports, {
   NOT_FOUND_IMAGE_DATA: () => NOT_FOUND_IMAGE_DATA,
   generateContextDetailsMarkdown: () => generateContextDetailsMarkdown
 });
-import * as Common21 from "../../core/common/common.js";
 import * as Host37 from "../../core/host/host.js";
 import * as Platform6 from "../../core/platform/platform.js";
 import * as Root15 from "../../core/root/root.js";
@@ -14691,7 +14690,7 @@ var NOT_FOUND_IMAGE_DATA = "";
 var CONTEXT_TITLE = "Analyzing data";
 var MAX_TITLE_LENGTH = 80;
 var ALLOWED_PAGE_NAVIGATIONS = [
-  Platform6.DevToolsPath.urlString`about://`,
+  Platform6.DevToolsPath.urlString`about:blank`,
   Platform6.DevToolsPath.urlString`chrome://terms`
 ];
 function generateContextDetailsMarkdown(details) {
@@ -15012,10 +15011,13 @@ ${item.text.trim()}`);
   }
   async *run(initialQuery, options = {}) {
     this.#navigationOccurredDuringRun = false;
-    const originAtRunStart = getPrimaryPageOrigin(this.#targetManager);
+    const originAtRunStart = getPrimaryPageSecurityOrigin(this.#targetManager);
     const listener = () => {
-      const newOrigin = getPrimaryPageOrigin(this.#targetManager);
-      if (originAtRunStart !== newOrigin && newOrigin && !ALLOWED_PAGE_NAVIGATIONS.includes(newOrigin)) {
+      const newInspectedURL = this.#targetManager.primaryPageTarget()?.inspectedURL();
+      const newOrigin = newInspectedURL ? SDK26.SecurityOrigin.SecurityOrigin.create(newInspectedURL) : void 0;
+      const isSameOrigin = Boolean(originAtRunStart && newOrigin && originAtRunStart.isSameOriginWith(newOrigin));
+      const isAllowedNavigation = Boolean(newInspectedURL && ALLOWED_PAGE_NAVIGATIONS.some((allowed) => newInspectedURL.startsWith(allowed)));
+      if (!isSameOrigin && !isAllowedNavigation) {
         this.#navigationOccurredDuringRun = true;
       }
     };
@@ -15109,6 +15111,10 @@ Original user query: ${initialQuery}`;
   get type() {
     return this.#type;
   }
+  /**
+   * Returns the permitted origin for agent tool execution, or blocks execution
+   * if an unapproved cross-origin navigation occurred during the current run.
+   */
   allowedOrigin = () => {
     if (this.#navigationOccurredDuringRun) {
       return { blocked: true };
@@ -15116,17 +15122,17 @@ Original user query: ${initialQuery}`;
     if (this.#origin) {
       return { origin: this.origin };
     }
-    this.#origin = getPrimaryPageOrigin(this.#targetManager);
+    this.#origin = getPrimaryPageSecurityOrigin(this.#targetManager);
     return { origin: this.origin };
   };
 };
 function isAiAssistanceServerSideLoggingAllowed() {
   return !Root15.Runtime.hostConfig.aidaAvailability?.disallowLogging;
 }
-function getPrimaryPageOrigin(targetManager) {
+function getPrimaryPageSecurityOrigin(targetManager) {
   const target = targetManager.primaryPageTarget();
   const inspectedURL = target?.inspectedURL();
-  return inspectedURL ? new Common21.ParsedURL.ParsedURL(inspectedURL).securityOrigin() : void 0;
+  return inspectedURL ? SDK26.SecurityOrigin.SecurityOrigin.create(inspectedURL) : void 0;
 }
 
 // ../../front_end/models/ai_assistance/AiSetting.ts
@@ -15135,14 +15141,14 @@ __export(AiSetting_exports, {
   AiSetting: () => AiSetting,
   Events: () => Events2
 });
-import * as Common22 from "../../core/common/common.js";
+import * as Common21 from "../../core/common/common.js";
 import * as Host38 from "../../core/host/host.js";
 import * as Root16 from "../../core/root/root.js";
 var Events2 = /* @__PURE__ */ ((Events4) => {
   Events4["CHANGED"] = "Changed";
   return Events4;
 })(Events2 || {});
-var AiSetting = class extends Common22.ObjectWrapper.ObjectWrapper {
+var AiSetting = class extends Common21.ObjectWrapper.ObjectWrapper {
   #setting;
   #descriptor;
   #hostConfigTracker;
@@ -15215,15 +15221,15 @@ var AiSetting = class extends Common22.ObjectWrapper.ObjectWrapper {
   }
   get unavailable() {
     const availability = this.#descriptor.isAvailable(Root16.Runtime.hostConfig);
-    return availability.status === Common22.Settings.SettingAvailability.UNAVAILABLE;
+    return availability.status === Common21.Settings.SettingAvailability.UNAVAILABLE;
   }
   get disabled() {
     const availability = this.#descriptor.isAvailable(Root16.Runtime.hostConfig);
-    return availability.status === Common22.Settings.SettingAvailability.DISABLED;
+    return availability.status === Common21.Settings.SettingAvailability.DISABLED;
   }
   get disabledReasons() {
     const availability = this.#descriptor.isAvailable(Root16.Runtime.hostConfig);
-    if (availability.status === Common22.Settings.SettingAvailability.DISABLED) {
+    if (availability.status === Common21.Settings.SettingAvailability.DISABLED) {
       return availability.reason;
     }
     return [];
@@ -15264,7 +15270,7 @@ __export(BuiltInAi_exports, {
   Events: () => Events3,
   LanguageModelAvailability: () => LanguageModelAvailability
 });
-import * as Common23 from "../../core/common/common.js";
+import * as Common22 from "../../core/common/common.js";
 import * as Host39 from "../../core/host/host.js";
 import * as Root17 from "../../core/root/root.js";
 var LanguageModelAvailability = /* @__PURE__ */ ((LanguageModelAvailability2) => {
@@ -15275,7 +15281,7 @@ var LanguageModelAvailability = /* @__PURE__ */ ((LanguageModelAvailability2) =>
   LanguageModelAvailability2["DISABLED"] = "disabled";
   return LanguageModelAvailability2;
 })(LanguageModelAvailability || {});
-var BuiltInAi = class _BuiltInAi extends Common23.ObjectWrapper.ObjectWrapper {
+var BuiltInAi = class _BuiltInAi extends Common22.ObjectWrapper.ObjectWrapper {
   #availability = null;
   #hasGpu;
   #consoleInsightsSession;
