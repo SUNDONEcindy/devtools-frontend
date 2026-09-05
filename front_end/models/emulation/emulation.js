@@ -4889,6 +4889,7 @@ var DeviceModeModel = class _DeviceModeModel extends Common2.ObjectWrapper.Objec
   #targetManager;
   #settings;
   #multitargetNetworkManager;
+  #lastScreenshotBlobUrl = null;
   constructor(targetManager, settings, multitargetNetworkManager) {
     super();
     this.#targetManager = targetManager;
@@ -4983,6 +4984,7 @@ var DeviceModeModel = class _DeviceModeModel extends Common2.ObjectWrapper.Objec
   }
   dispose() {
     this.#targetManager.unobserveModels(SDK2.EmulationModel.EmulationModel, this);
+    this.#revokeLastScreenshotBlobUrl();
   }
   static widthValidator(value) {
     let valid = false;
@@ -5075,6 +5077,8 @@ var DeviceModeModel = class _DeviceModeModel extends Common2.ObjectWrapper.Objec
     }
     if (type !== "None" /* None */) {
       Host.userMetrics.actionTaken(Host.UserMetrics.Action.DeviceModeEnabled);
+    } else {
+      this.#revokeLastScreenshotBlobUrl();
     }
     this.calculateAndEmulate(resetPageScaleFactor);
   }
@@ -5192,7 +5196,7 @@ var DeviceModeModel = class _DeviceModeModel extends Common2.ObjectWrapper.Objec
       const resourceTreeModel = emulationModel.target().model(SDK2.ResourceTreeModel.ResourceTreeModel);
       if (resourceTreeModel) {
         resourceTreeModel.addEventListener(SDK2.ResourceTreeModel.Events.FrameResized, this.onFrameChange, this);
-        resourceTreeModel.addEventListener(SDK2.ResourceTreeModel.Events.FrameNavigated, this.onFrameChange, this);
+        resourceTreeModel.addEventListener(SDK2.ResourceTreeModel.Events.FrameNavigated, this.onFrameNavigated, this);
       }
     } else {
       void emulationModel.emulateTouch(this.#touchEnabled, this.#touchMobile);
@@ -5205,8 +5209,14 @@ var DeviceModeModel = class _DeviceModeModel extends Common2.ObjectWrapper.Objec
         this.onScreenOrientationLockChanged,
         this
       );
+      const resourceTreeModel = emulationModel.target().model(SDK2.ResourceTreeModel.ResourceTreeModel);
+      if (resourceTreeModel) {
+        resourceTreeModel.removeEventListener(SDK2.ResourceTreeModel.Events.FrameResized, this.onFrameChange, this);
+        resourceTreeModel.removeEventListener(SDK2.ResourceTreeModel.Events.FrameNavigated, this.onFrameNavigated, this);
+      }
       this.#emulationModel = null;
       this.#screenOrientationLocked = false;
+      this.#revokeLastScreenshotBlobUrl();
       this.dispatchEventToListeners("Updated" /* UPDATED */);
     }
   }
@@ -5219,6 +5229,12 @@ var DeviceModeModel = class _DeviceModeModel extends Common2.ObjectWrapper.Objec
       return;
     }
     this.showDeviceOverlaysIfApplicable(overlayModel);
+  }
+  onFrameNavigated(event) {
+    if (event.data.isMainFrame()) {
+      this.#revokeLastScreenshotBlobUrl();
+    }
+    this.onFrameChange();
   }
   onScreenOrientationLockChanged(event) {
     this.#screenOrientationLocked = event.data.locked;
@@ -5604,11 +5620,20 @@ var DeviceModeModel = class _DeviceModeModel extends Common2.ObjectWrapper.Objec
     if (device && this.type() === "Device" /* Device */) {
       fileName += `(${device.title})`;
     }
+    this.#revokeLastScreenshotBlobUrl();
     const link = document.createElement("a");
     link.download = fileName + ".png";
     const blob = await canvas.convertToBlob({ type: "image/png" });
-    link.href = URL.createObjectURL(blob);
+    const blobUrl = URL.createObjectURL(blob);
+    this.#lastScreenshotBlobUrl = blobUrl;
+    link.href = blobUrl;
     link.click();
+  }
+  #revokeLastScreenshotBlobUrl() {
+    if (this.#lastScreenshotBlobUrl) {
+      URL.revokeObjectURL(this.#lastScreenshotBlobUrl);
+      this.#lastScreenshotBlobUrl = null;
+    }
   }
   applyTouch(touchEnabled, mobile) {
     this.#touchEnabled = touchEnabled;

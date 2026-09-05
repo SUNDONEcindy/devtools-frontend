@@ -65,6 +65,7 @@ export declare class DeviceModeModel extends Common.ObjectWrapper.ObjectWrapper<
     modelRemoved(emulationModel: SDK.EmulationModel.EmulationModel): void;
     inspectedURL(): string | null;
     private onFrameChange;
+    private onFrameNavigated;
     private onScreenOrientationLockChanged;
     private applyOrientationLock;
     isScreenOrientationLocked(): boolean;
@@ -89,7 +90,7 @@ export declare class DeviceModeModel extends Common.ObjectWrapper.ObjectWrapper<
     captureAreaScreenshot(clip?: Protocol.Page.Viewport): Promise<void>;
     private saveScreenshotBase64;
     private paintImage;
-    private saveScreenshot;
+    saveScreenshot(canvas: OffscreenCanvas): Promise<void>;
     private applyTouch;
     private showDeviceOverlaysIfApplicable;
     private currentDisplayCutout;

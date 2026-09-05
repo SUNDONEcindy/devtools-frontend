@@ -109,6 +109,7 @@ export class DeviceModeModel extends Common.ObjectWrapper.ObjectWrapper {
     #targetManager;
     #settings;
     #multitargetNetworkManager;
+    #lastScreenshotBlobUrl = null;
     constructor(targetManager, settings, multitargetNetworkManager) {
         super();
         this.#targetManager = targetManager;
@@ -197,6 +198,7 @@ export class DeviceModeModel extends Common.ObjectWrapper.ObjectWrapper {
     }
     dispose() {
         this.#targetManager.unobserveModels(SDK.EmulationModel.EmulationModel, this);
+        this.#revokeLastScreenshotBlobUrl();
     }
     static widthValidator(value) {
         let valid = false;
@@ -304,6 +306,9 @@ export class DeviceModeModel extends Common.ObjectWrapper.ObjectWrapper {
         }
         if (type !== Type.None) {
             Host.userMetrics.actionTaken(Host.UserMetrics.Action.DeviceModeEnabled);
+        }
+        else {
+            this.#revokeLastScreenshotBlobUrl();
         }
         this.calculateAndEmulate(resetPageScaleFactor);
     }
@@ -418,7 +423,7 @@ export class DeviceModeModel extends Common.ObjectWrapper.ObjectWrapper {
             const resourceTreeModel = emulationModel.target().model(SDK.ResourceTreeModel.ResourceTreeModel);
             if (resourceTreeModel) {
                 resourceTreeModel.addEventListener(SDK.ResourceTreeModel.Events.FrameResized, this.onFrameChange, this);
-                resourceTreeModel.addEventListener(SDK.ResourceTreeModel.Events.FrameNavigated, this.onFrameChange, this);
+                resourceTreeModel.addEventListener(SDK.ResourceTreeModel.Events.FrameNavigated, this.onFrameNavigated, this);
             }
         }
         else {
@@ -428,8 +433,14 @@ export class DeviceModeModel extends Common.ObjectWrapper.ObjectWrapper {
     modelRemoved(emulationModel) {
         if (this.#emulationModel === emulationModel) {
             emulationModel.removeEventListener("ScreenOrientationLockChanged" /* SDK.EmulationModel.EmulationModelEvents.SCREEN_ORIENTATION_LOCK_CHANGED */, this.onScreenOrientationLockChanged, this);
+            const resourceTreeModel = emulationModel.target().model(SDK.ResourceTreeModel.ResourceTreeModel);
+            if (resourceTreeModel) {
+                resourceTreeModel.removeEventListener(SDK.ResourceTreeModel.Events.FrameResized, this.onFrameChange, this);
+                resourceTreeModel.removeEventListener(SDK.ResourceTreeModel.Events.FrameNavigated, this.onFrameNavigated, this);
+            }
             this.#emulationModel = null;
             this.#screenOrientationLocked = false;
+            this.#revokeLastScreenshotBlobUrl();
             this.dispatchEventToListeners("Updated" /* Events.UPDATED */);
         }
     }
@@ -442,6 +453,12 @@ export class DeviceModeModel extends Common.ObjectWrapper.ObjectWrapper {
             return;
         }
         this.showDeviceOverlaysIfApplicable(overlayModel);
+    }
+    onFrameNavigated(event) {
+        if (event.data.isMainFrame()) {
+            this.#revokeLastScreenshotBlobUrl();
+        }
+        this.onFrameChange();
     }
     onScreenOrientationLockChanged(event) {
         this.#screenOrientationLocked = event.data.locked;
@@ -804,12 +821,21 @@ export class DeviceModeModel extends Common.ObjectWrapper.ObjectWrapper {
         if (device && this.type() === Type.Device) {
             fileName += `(${device.title})`;
         }
+        this.#revokeLastScreenshotBlobUrl();
         /* eslint-disable-next-line @devtools/no-imperative-dom-api */
         const link = document.createElement('a');
         link.download = fileName + '.png';
         const blob = await canvas.convertToBlob({ type: 'image/png' });
-        link.href = URL.createObjectURL(blob);
+        const blobUrl = URL.createObjectURL(blob);
+        this.#lastScreenshotBlobUrl = blobUrl;
+        link.href = blobUrl;
         link.click();
+    }
+    #revokeLastScreenshotBlobUrl() {
+        if (this.#lastScreenshotBlobUrl) {
+            URL.revokeObjectURL(this.#lastScreenshotBlobUrl);
+            this.#lastScreenshotBlobUrl = null;
+        }
     }
     applyTouch(touchEnabled, mobile) {
         this.#touchEnabled = touchEnabled;
