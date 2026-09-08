@@ -6,6 +6,10 @@
     "emitDeclarationOnly": true,
     "outDir": ".",
     "rootDir": "../../../../../../../../../../../scripts/build/typescript/tests/fixtures/no_emit/front_end/foundation_module",
+    "rootDirs": [
+      "../../../../../../../../../../../",
+      "../../../../../../../../"
+    ],
     "skipLibCheck": true
   },
   "files": [

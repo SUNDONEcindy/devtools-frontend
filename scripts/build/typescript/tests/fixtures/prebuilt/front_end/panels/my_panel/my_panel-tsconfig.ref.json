@@ -6,6 +6,10 @@
     "emitDeclarationOnly": true,
     "outDir": ".",
     "rootDir": "../../../../../../../../../../../../scripts/build/typescript/tests/fixtures/prebuilt/front_end/panels/my_panel",
+    "rootDirs": [
+      "../../../../../../../../../../../../",
+      "../../../../../../../../../"
+    ],
     "skipLibCheck": true
   },
   "files": [

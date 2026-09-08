@@ -6,6 +6,10 @@
     "emitDeclarationOnly": true,
     "outDir": ".",
     "rootDir": "../../../../../../../../../../../scripts/build/typescript/tests/fixtures/simple_dep/front_end/module",
+    "rootDirs": [
+      "../../../../../../../../../../../",
+      "../../../../../../../../"
+    ],
     "skipLibCheck": true
   },
   "files": [

@@ -6,6 +6,10 @@
     "emitDeclarationOnly": true,
     "outDir": ".",
     "rootDir": "../../../../../../../../../../../../scripts/build/typescript/tests/fixtures/prebuilt/front_end/third_party/prebuilt_lib",
+    "rootDirs": [
+      "../../../../../../../../../../../../",
+      "../../../../../../../../../"
+    ],
     "skipLibCheck": true
   },
   "files": [
