@@ -2770,7 +2770,7 @@ __export(PositionAreaEditor_exports, {
   stringifyPositionArea: () => stringifyPositionArea
 });
 import * as Common5 from "../../../../core/common/common.js";
-import { Directives as Directives5, html as html7, nothing as nothing2, render as render7 } from "../../../lit/lit.js";
+import * as Lit7 from "../../../lit/lit.js";
 import * as UI6 from "../../legacy.js";
 
 // gen/front_end/ui/legacy/components/inline_editor/positionAreaEditor.css.js
@@ -2853,11 +2853,82 @@ var positionAreaEditor_css_default = `/*
       z-index: 1;
     }
   }
+
+  .position-area-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sys-size-5);
+    flex-shrink: 0;
+  }
+
+  .axis-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sys-size-1);
+  }
+
+  .axis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .axis-title {
+    font-size: var(--sys-typescale-body4-size);
+    font-weight: 500;
+    color: var(--sys-color-on-surface-subtle);
+  }
+
+  .chip-radio-group {
+    display: inline-flex;
+    gap: var(--sys-size-3);
+    border: none;
+    padding: 0;
+    margin: 0;
+
+    & > input[type='radio'] {
+      position: absolute;
+      opacity: 0%;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    & > label {
+      box-sizing: border-box;
+      display: inline-block;
+      padding: 3px var(--sys-size-4);
+      border-radius: var(--sys-shape-corner-extra-small);
+      outline: var(--sys-size-1) solid var(--sys-color-neutral-outline);
+      outline-offset: calc(-1 * var(--sys-size-1));
+      background: transparent;
+      color: var(--sys-color-on-surface);
+      font-size: var(--sys-typescale-body5-size);
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+
+      &:hover {
+        background-color: var(--sys-color-state-hover-on-subtle);
+      }
+    }
+
+    & > input[type='radio']:checked + label {
+      background-color: var(--sys-color-tonal-container);
+      color: var(--sys-color-on-tonal-container);
+      outline: none;
+    }
+
+    & > input[type='radio']:focus-visible + label {
+      outline: var(--sys-size-2) solid var(--sys-color-state-focus-ring);
+    }
+  }
 }
 
 /*# sourceURL=${import.meta.resolve("./positionAreaEditor.css")} */`;
 
 // ../../front_end/ui/legacy/components/inline_editor/PositionAreaEditor.ts
+var { Directives: Directives5, html: html7, nothing: nothing2, render: render7 } = Lit7;
 var { repeat } = Directives5;
 var Mode = /* @__PURE__ */ ((Mode2) => {
   Mode2["PHYSICAL"] = "physical";
@@ -3105,6 +3176,34 @@ var DEFAULT_VIEW = (input, output, target) => {
     input.onSelectEnd();
   }
   const propertyValue = stringifyPositionArea(input.area);
+  const blockAxis = input.area.primaryAxis === "block" /* BLOCK */ ? input.area.first : input.area.second;
+  const inlineAxis = input.area.primaryAxis === "inline" /* INLINE */ ? input.area.first : input.area.second;
+  function renderModeRadioGroup(axis, currentMode) {
+    const modes = [
+      { mode: "physical" /* PHYSICAL */, label: "Physical" },
+      { mode: "coordinate" /* COORDINATE */, label: "Coordinate" },
+      { mode: "logical" /* LOGICAL */, label: "Logical" },
+      { mode: "auto" /* AUTO */, label: "Auto" }
+    ];
+    return html7`
+      <fieldset class="chip-radio-group" aria-label="${axis} axis mode">
+        ${modes.map(({ mode, label }) => {
+      const id = `${axis}-mode-${mode}`;
+      return html7`
+            <input
+              type="radio"
+              id=${id}
+              name="${axis}-mode"
+              value=${mode}
+              .checked=${currentMode === mode}
+              @change=${() => input.onModeChange(axis, mode)}
+            >
+            <label for=${id}>${label}</label>
+          `;
+    })}
+      </fieldset>
+    `;
+  }
   render7(
     html7`
     <style>${positionAreaEditor_css_default}</style>
@@ -3124,6 +3223,32 @@ var DEFAULT_VIEW = (input, output, target) => {
          <div data-x=${x2} data-y=${y2}>
          </div>
         `)}
+    </div>
+    <div class=position-area-controls>
+      <div class=axis-section>
+        <div class=axis-header>
+          <span class=axis-title>Block</span>
+          <devtools-checkbox
+            .checked=${blockAxis.self}
+            ?disabled=${isGeneric(blockAxis)}
+            @change=${(e) => input.onSelfChange("block" /* BLOCK */, e.target.checked)}>
+            self
+          </devtools-checkbox>
+        </div>
+        ${renderModeRadioGroup("block" /* BLOCK */, blockAxis.mode)}
+      </div>
+      <div class=axis-section>
+        <div class=axis-header>
+          <span class=axis-title>Inline</span>
+          <devtools-checkbox
+            .checked=${inlineAxis.self}
+            ?disabled=${isGeneric(inlineAxis)}
+            @change=${(e) => input.onSelfChange("inline" /* INLINE */, e.target.checked)}>
+            self
+          </devtools-checkbox>
+        </div>
+        ${renderModeRadioGroup("inline" /* INLINE */, inlineAxis.mode)}
+      </div>
     </div>
     `,
     target
@@ -3176,6 +3301,9 @@ var PositionAreaEditor = class extends PositionAreaEditorBase {
     }
     return this.#area.primaryAxis === "block" /* BLOCK */ ? this.#area.first : this.#area.second;
   }
+  #axis(axis) {
+    return axis === "inline" /* INLINE */ ? this.#inlineAxis() : this.#blockAxis();
+  }
   #notifyChange() {
     if (!this.#area) {
       return;
@@ -3213,13 +3341,68 @@ var PositionAreaEditor = class extends PositionAreaEditorBase {
     this.#select(x, y);
     this.#inProgressSelection = void 0;
   }
+  #setAxisMode(axis, mode) {
+    if (!this.#area) {
+      return;
+    }
+    const otherAxis = axis === "inline" /* INLINE */ ? "block" /* BLOCK */ : "inline" /* INLINE */;
+    const current = this.#axis(axis);
+    if (mode === current.mode) {
+      return;
+    }
+    const other = this.#axis(otherAxis);
+    current.mode = mode;
+    if (isGeneric(current) || mode === "physical" /* PHYSICAL */) {
+      current.self = false;
+    }
+    if (!isGeneric(other)) {
+      if (mode === "physical" /* PHYSICAL */ || mode === "coordinate" /* COORDINATE */) {
+        if (other.mode !== "physical" /* PHYSICAL */ && other.mode !== "coordinate" /* COORDINATE */) {
+          other.mode = other.self ? "coordinate" /* COORDINATE */ : "physical" /* PHYSICAL */;
+        }
+      } else {
+        other.mode = mode;
+        if (!isGeneric(current)) {
+          other.self = current.self;
+        }
+      }
+    }
+    this.requestUpdate();
+    this.#notifyChange();
+  }
+  #setAxisSelf(axis, self) {
+    if (!this.#area) {
+      return;
+    }
+    const current = this.#axis(axis);
+    const other = this.#axis(axis === "inline" /* INLINE */ ? "block" /* BLOCK */ : "inline" /* INLINE */);
+    if (isGeneric(current)) {
+      if (!isGeneric(other)) {
+        this.#setAxisSelf(axis === "inline" /* INLINE */ ? "block" /* BLOCK */ : "inline" /* INLINE */, self);
+      }
+      this.requestUpdate();
+      this.#notifyChange();
+      return;
+    }
+    current.self = self;
+    if (current.mode === "physical" /* PHYSICAL */ && self) {
+      current.mode = "coordinate" /* COORDINATE */;
+    }
+    if (!isGeneric(other) && other.mode !== "physical" /* PHYSICAL */ && other.mode !== "coordinate" /* COORDINATE */) {
+      other.self = self;
+    }
+    this.requestUpdate();
+    this.#notifyChange();
+  }
   performUpdate() {
     this.#view(
       {
         area: this.#area,
         onSelectStart: this.#startSelection.bind(this),
         onSelect: this.#select.bind(this),
-        onSelectEnd: this.#finishSelection.bind(this)
+        onSelectEnd: this.#finishSelection.bind(this),
+        onModeChange: this.#setAxisMode.bind(this),
+        onSelfChange: this.#setAxisSelf.bind(this)
       },
       void 0,
       this.contentElement

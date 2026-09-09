@@ -17384,6 +17384,9 @@
   "ui/comments/comments-meta.ts | toggleCommentMode": {
     "message": "Add comments to send to your AI coding agent"
   },
+  "ui/comments/CommentsStatusBarPill.ts | commentsCount": {
+    "message": "Comments ({PH1})"
+  },
   "ui/components/dialogs/Dialog.ts | close": {
     "message": "Close"
   },

@@ -1776,6 +1776,7 @@ var knownContextValues = /* @__PURE__ */ new Set([
   "flex-wrap",
   "flex-wrap-nowrap",
   "flex-wrap-wrap",
+  "flex-wrap-wrap-reverse",
   "flexbox-overlays",
   "float",
   "float-32-bit",

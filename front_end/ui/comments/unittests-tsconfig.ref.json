@@ -39,6 +39,9 @@
       "path": "../legacy/bundle-tsconfig.ref.json"
     },
     {
+      "path": "../visual_logging/bundle-tsconfig.ref.json"
+    },
+    {
       "path": "../components/text_editor/bundle-tsconfig.ref.json"
     }
   ]

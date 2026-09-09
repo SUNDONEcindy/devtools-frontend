@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import * as Common from '../../../../core/common/common.js';
-import { Directives, html, nothing, render } from '../../../../ui/lit/lit.js';
+import * as Lit from '../../../../ui/lit/lit.js';
 import * as UI from '../../legacy.js';
 import positionAreaEditorStyles from './positionAreaEditor.css.js';
+const { Directives, html, nothing, render } = Lit;
 const { repeat } = Directives;
 /**
  * Valid combinations of (Mode, Self) across axes according to the CSS Anchor Positioning specification
@@ -275,6 +276,34 @@ export const DEFAULT_VIEW = (input, output, target) => {
         input.onSelectEnd();
     }
     const propertyValue = stringifyPositionArea(input.area);
+    const blockAxis = input.area.primaryAxis === "block" /* Axis.BLOCK */ ? input.area.first : input.area.second;
+    const inlineAxis = input.area.primaryAxis === "inline" /* Axis.INLINE */ ? input.area.first : input.area.second;
+    function renderModeRadioGroup(axis, currentMode) {
+        const modes = [
+            { mode: "physical" /* Mode.PHYSICAL */, label: 'Physical' },
+            { mode: "coordinate" /* Mode.COORDINATE */, label: 'Coordinate' },
+            { mode: "logical" /* Mode.LOGICAL */, label: 'Logical' },
+            { mode: "auto" /* Mode.AUTO */, label: 'Auto' },
+        ];
+        return html `
+      <fieldset class="chip-radio-group" aria-label="${axis} axis mode">
+        ${modes.map(({ mode, label }) => {
+            const id = `${axis}-mode-${mode}`;
+            return html `
+            <input
+              type="radio"
+              id=${id}
+              name="${axis}-mode"
+              value=${mode}
+              .checked=${currentMode === mode}
+              @change=${() => input.onModeChange(axis, mode)}
+            >
+            <label for=${id}>${label}</label>
+          `;
+        })}
+      </fieldset>
+    `;
+    }
     render(html `
     <style>${positionAreaEditorStyles}</style>
     <div class=property>
@@ -291,6 +320,32 @@ export const DEFAULT_VIEW = (input, output, target) => {
          <div data-x=${x} data-y=${y}>
          </div>
         `)}
+    </div>
+    <div class=position-area-controls>
+      <div class=axis-section>
+        <div class=axis-header>
+          <span class=axis-title>Block</span>
+          <devtools-checkbox
+            .checked=${blockAxis.self}
+            ?disabled=${isGeneric(blockAxis)}
+            @change=${(e) => input.onSelfChange("block" /* Axis.BLOCK */, e.target.checked)}>
+            self
+          </devtools-checkbox>
+        </div>
+        ${renderModeRadioGroup("block" /* Axis.BLOCK */, blockAxis.mode)}
+      </div>
+      <div class=axis-section>
+        <div class=axis-header>
+          <span class=axis-title>Inline</span>
+          <devtools-checkbox
+            .checked=${inlineAxis.self}
+            ?disabled=${isGeneric(inlineAxis)}
+            @change=${(e) => input.onSelfChange("inline" /* Axis.INLINE */, e.target.checked)}>
+            self
+          </devtools-checkbox>
+        </div>
+        ${renderModeRadioGroup("inline" /* Axis.INLINE */, inlineAxis.mode)}
+      </div>
     </div>
     `, target);
 };
@@ -339,6 +394,9 @@ export class PositionAreaEditor extends PositionAreaEditorBase {
         }
         return this.#area.primaryAxis === "block" /* Axis.BLOCK */ ? this.#area.first : this.#area.second;
     }
+    #axis(axis) {
+        return axis === "inline" /* Axis.INLINE */ ? this.#inlineAxis() : this.#blockAxis();
+    }
     #notifyChange() {
         if (!this.#area) {
             return;
@@ -377,12 +435,70 @@ export class PositionAreaEditor extends PositionAreaEditorBase {
         this.#select(x, y);
         this.#inProgressSelection = undefined;
     }
+    #setAxisMode(axis, mode) {
+        if (!this.#area) {
+            return;
+        }
+        const otherAxis = axis === "inline" /* Axis.INLINE */ ? "block" /* Axis.BLOCK */ : "inline" /* Axis.INLINE */;
+        const current = this.#axis(axis);
+        if (mode === current.mode) {
+            return;
+        }
+        const other = this.#axis(otherAxis);
+        current.mode = mode;
+        if (isGeneric(current) || mode === "physical" /* Mode.PHYSICAL */) {
+            // center and span-all and physical axes don't support self
+            current.self = false;
+        }
+        if (!isGeneric(other)) {
+            if (mode === "physical" /* Mode.PHYSICAL */ || mode === "coordinate" /* Mode.COORDINATE */) {
+                // physical axes may be combined with coordinate
+                if (other.mode !== "physical" /* Mode.PHYSICAL */ && other.mode !== "coordinate" /* Mode.COORDINATE */) {
+                    other.mode = other.self ? "coordinate" /* Mode.COORDINATE */ : "physical" /* Mode.PHYSICAL */;
+                }
+            }
+            else {
+                other.mode = mode;
+                if (!isGeneric(current)) {
+                    other.self = current.self;
+                }
+            }
+        }
+        this.requestUpdate();
+        this.#notifyChange();
+    }
+    #setAxisSelf(axis, self) {
+        if (!this.#area) {
+            return;
+        }
+        const current = this.#axis(axis);
+        const other = this.#axis(axis === "inline" /* Axis.INLINE */ ? "block" /* Axis.BLOCK */ : "inline" /* Axis.INLINE */);
+        if (isGeneric(current)) {
+            if (!isGeneric(other)) {
+                this.#setAxisSelf(axis === "inline" /* Axis.INLINE */ ? "block" /* Axis.BLOCK */ : "inline" /* Axis.INLINE */, self);
+            }
+            this.requestUpdate();
+            this.#notifyChange();
+            return;
+        }
+        current.self = self;
+        if (current.mode === "physical" /* Mode.PHYSICAL */ && self) {
+            current.mode = "coordinate" /* Mode.COORDINATE */;
+        }
+        if (!isGeneric(other) && other.mode !== "physical" /* Mode.PHYSICAL */ && other.mode !== "coordinate" /* Mode.COORDINATE */) {
+            other.self = self;
+        }
+        this.requestUpdate();
+        this.#notifyChange();
+    }
     performUpdate() {
         this.#view({
             area: this.#area,
             onSelectStart: this.#startSelection.bind(this),
             onSelect: this.#select.bind(this),
             onSelectEnd: this.#finishSelection.bind(this),
+            onModeChange: this.#setAxisMode.bind(this),
+            onSelfChange: this.#setAxisSelf.bind(this),
         }, undefined, this.contentElement);
     }
 }

@@ -674,9 +674,7 @@ export const DEFAULT_VIEW = (input, output, target) => {
     render(html `
     <div ${ref(el => { output.contentElement = el; })}>
       ${input.node ? html `<span class="highlight ${input.editorState ? 'hidden' : ''}">${renderTitle(input.node, input.isClosingTag, input.expanded, input.isExpandable, input.isXMLMimeType, input.updateRecord, input.onHighlightSearchResults, input.onExpand, input.issues)}</span>` : nothing}
-      ${input.isHovered || input.isSelected ? html `
-        <div class="selection fill ${input.editorState ? 'hidden' : ''}" style=${`margin-left: ${-input.indent}px`}></div>
-      ` : nothing}
+      <div class="selection fill ${input.editorState ? 'hidden' : ''}" style=${`margin-left: ${-input.indent}px`}></div>
       <div class=${classMap(gutterContainerClasses)}
            style="left: ${-input.indent}px"
            @click=${input.onGutterClick}>

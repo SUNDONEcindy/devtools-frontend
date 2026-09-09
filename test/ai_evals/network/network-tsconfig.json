@@ -19,15 +19,15 @@
       "ESNext.Collection",
       "ESNext.Array"
     ],
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "outDir": ".",
     "preserveConstEnums": true,
-    "rootDir": "../../../../../../front_end/ui/comments",
+    "rootDir": "../../../../../../test/ai_evals/network",
     "rootDirs": [
       "../../../../../../",
       "../../../"
@@ -35,47 +35,29 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "esnext",
+    "target": "ES2023",
     "typeRoots": [
       "../../../../../../node_modules/@types",
       "../../../../../../node_modules"
     ],
     "types": [
-      "mocha"
+      "mocha",
+      "node",
+      "undici-types"
     ],
     "useUnknownInCatchVariables": false
   },
   "files": [
-    "../../../../../../front_end/ui/comments/CommentAnchorResolver.test.ts",
-    "../../../../../../front_end/ui/comments/CommentOverlayManager.test.ts",
-    "../../../../../../front_end/ui/comments/CommentsOverlayWidget.test.ts",
-    "../../../../../../front_end/ui/comments/CommentsStatusBarPill.test.ts",
+    "../../../../../../test/ai_evals/network/failing-request.test.ts",
     "../../../../../../front_end/legacy/legacy-defs.d.ts",
     "../../../../../../front_end/global_typings/global_defs.d.ts",
     "../../../../../../node_modules/@types/filesystem/index.d.ts",
-    "../../../../../../node_modules/@types/filewriter/index.d.ts"
+    "../../../../../../node_modules/@types/filewriter/index.d.ts",
+    "../../../../../../test/e2e/types.d.ts"
   ],
   "references": [
     {
-      "path": "bundle-tsconfig.ref.json"
-    },
-    {
-      "path": "../../models/comment_manager/bundle-tsconfig.ref.json"
-    },
-    {
-      "path": "../../testing/testing-tsconfig.ref.json"
-    },
-    {
-      "path": "../../third_party/codemirror.next/bundle-tsconfig.ref.json"
-    },
-    {
-      "path": "../legacy/bundle-tsconfig.ref.json"
-    },
-    {
-      "path": "../visual_logging/bundle-tsconfig.ref.json"
-    },
-    {
-      "path": "../components/text_editor/bundle-tsconfig.ref.json"
+      "path": "../helpers/helpers-tsconfig.ref.json"
     }
   ]
 }
