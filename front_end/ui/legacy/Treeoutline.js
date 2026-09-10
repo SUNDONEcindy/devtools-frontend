@@ -578,6 +578,7 @@ export class TreeElement {
         }
         for (let current = child.firstChild(); this.treeOutline && current; current = current.traverseNextTreeElement(false, child, true)) {
             this.treeOutline.bindTreeElement(current);
+            current.ensureSelection();
         }
         child.onattach();
         child.ensureSelection();
@@ -1355,7 +1356,7 @@ export class TreeSearch extends Common.ObjectWrapper.ObjectWrapper {
     })(Events = TreeSearch.Events || (TreeSearch.Events = {}));
 })(TreeSearch || (TreeSearch = {}));
 class TreeViewTreeElement extends TreeElement {
-    static CLONED_ATTRIBUTES = SDK.DOMModel.ARIA_ATTRIBUTES.union(new Set(['jslog', 'draggable']));
+    static CLONED_ATTRIBUTES = SDK.DOMModel.ARIA_ATTRIBUTES.union(new Set(['jslog', 'draggable', 'style']));
     #clonedAttributes = new Set();
     #clonedClasses = new Set();
     #previousOpenAttributeValue;

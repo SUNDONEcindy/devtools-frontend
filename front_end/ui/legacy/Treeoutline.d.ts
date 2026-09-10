@@ -147,7 +147,7 @@ export declare class TreeElement {
     get hidden(): boolean;
     set hidden(x: boolean);
     invalidateChildren(): void;
-    private ensureSelection;
+    protected ensureSelection(): void;
     private treeElementToggled;
     private handleMouseDown;
     private handleDoubleClick;

@@ -13796,11 +13796,15 @@ var ToolbarFilter = class extends ToolbarInput {
         toggledIconName: regexIconName,
         toggleType: Buttons5.Button.ToggleType.PRIMARY,
         toggled: false,
+        checked: false,
         title: i18nString12(UIStrings12.useRegularExpression),
         jslogContext: regexIconName
       };
+      regexButton.style.setProperty("--dot-toggle-top", "calc(100% - var(--sys-size-3) - var(--sys-size-1))");
+      regexButton.style.setProperty("--dot-toggle-left", "calc(100% - var(--sys-size-3) - var(--sys-size-1))");
       setLabel(regexButton, i18nString12(UIStrings12.useRegularExpression));
       regexButton.addEventListener("click", () => {
+        regexButton.checked = regexButton.toggled;
         onRegexToggle?.();
       });
       this.insertTrailingElement(regexButton);
@@ -23446,6 +23450,7 @@ var TreeElement = class {
     }
     for (let current = child.firstChild(); this.treeOutline && current; current = current.traverseNextTreeElement(false, child, true)) {
       this.treeOutline.bindTreeElement(current);
+      current.ensureSelection();
     }
     child.onattach();
     child.ensureSelection();
@@ -24214,7 +24219,7 @@ var TreeSearch = class _TreeSearch extends Common19.ObjectWrapper.ObjectWrapper 
   })(Events12 = TreeSearch2.Events || (TreeSearch2.Events = {}));
 })(TreeSearch || (TreeSearch = {}));
 var TreeViewTreeElement = class _TreeViewTreeElement extends TreeElement {
-  static CLONED_ATTRIBUTES = SDK2.DOMModel.ARIA_ATTRIBUTES.union(/* @__PURE__ */ new Set(["jslog", "draggable"]));
+  static CLONED_ATTRIBUTES = SDK2.DOMModel.ARIA_ATTRIBUTES.union(/* @__PURE__ */ new Set(["jslog", "draggable", "style"]));
   #clonedAttributes = /* @__PURE__ */ new Set();
   #clonedClasses = /* @__PURE__ */ new Set();
   #previousOpenAttributeValue;

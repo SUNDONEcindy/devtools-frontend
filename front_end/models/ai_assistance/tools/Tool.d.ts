@@ -94,14 +94,26 @@ export interface TargetCapability {
     getTarget(): SDK.Target.Target | null;
 }
 /**
- * Capability for tools that need to enforce origin locking for security.
+ * Capability for tools that enforce conversation origin boundaries.
  */
 export interface OriginLockCapability {
     /**
-     * Returns the origin that the current conversation is locked to, if any.
+     * Returns the security origin locked for the current conversation.
+     *
+     * TODO: When V1 agents (StylingAgent, AccessibilityAgent) are removed,
+     * simplify getEstablishedOrigin() to return SDK.SecurityOrigin.SecurityOrigin
+     * non-optionally.
+     *
+     * @returns The established {@link SDK.SecurityOrigin.SecurityOrigin}, or `undefined`
+     * if the conversation is not yet locked to an origin (e.g. before the first query).
      */
-    getEstablishedOrigin(): string | undefined;
+    getEstablishedOrigin(): SDK.SecurityOrigin.SecurityOrigin | undefined;
 }
+/**
+ * Checks whether a target origin matches the established conversation origin lock.
+ * Fails closed (returns false) if established origin is missing/opaque or target is cross-origin.
+ */
+export declare function isOriginAllowedByLock(establishedOrigin: SDK.SecurityOrigin.SecurityOrigin | undefined, targetOrigin: SDK.SecurityOrigin.SecurityOrigin | null | undefined): boolean;
 /**
  * Capability for tools that need to inspect an active Lighthouse report from context.
  */
