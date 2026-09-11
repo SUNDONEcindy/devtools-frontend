@@ -1183,7 +1183,6 @@ var BadgeNotification = class extends UI4.Widget.Widget {
 // ../../front_end/panels/common/CPUThrottlingOption.ts
 var CPUThrottlingOption_exports = {};
 __export(CPUThrottlingOption_exports, {
-  CPUPerformanceTier: () => CPUPerformanceTier,
   CPUThrottlingRates: () => CPUThrottlingRates,
   CalibratedLowTierMobileThrottlingOption: () => CalibratedLowTierMobileThrottlingOption,
   CalibratedMidTierMobileThrottlingOption: () => CalibratedMidTierMobileThrottlingOption,
@@ -1200,7 +1199,6 @@ import * as Common4 from "../../core/common/common.js";
 import * as i18n9 from "../../core/i18n/i18n.js";
 import * as SDK from "../../core/sdk/sdk.js";
 var CalibrationError = SDK.CPUThrottlingManager.CalibrationError;
-var CPUPerformanceTier = SDK.CPUThrottlingManager.CPUPerformanceTier;
 var UIStrings4 = {
   /**
    * @description Text label for a menu item indicating that no throttling is applied.

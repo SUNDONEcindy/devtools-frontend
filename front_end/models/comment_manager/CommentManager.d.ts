@@ -32,13 +32,18 @@ export interface Comment {
     text: string;
     timestamp: number;
 }
+export interface ChangeRecord {
+    id: string;
+    description: string;
+    timestamp: number;
+}
 export interface CommentThread {
     id: string;
     anchor: CommentAnchorSignature;
     comments: Comment[];
     status: 'ACTIVE' | 'RESOLVED';
     transmitted?: boolean;
-    changes?: Array<Record<string, unknown>>;
+    changes?: ChangeRecord[];
     index: number;
 }
 export declare const enum Events {
@@ -56,7 +61,7 @@ export declare class CommentManager extends Common.ObjectWrapper.ObjectWrapper<E
     #private;
     setCommentMode(active: boolean): void;
     isCommentMode(): boolean;
-    createCommentThread(anchor: CommentAnchorSignature, text: string, author?: 'DEVELOPER' | 'AGENT', changes?: Array<Record<string, unknown>>): CommentThread;
+    createCommentThread(anchor: CommentAnchorSignature, text?: string, author?: 'DEVELOPER' | 'AGENT', changes?: ChangeRecord[]): CommentThread;
     getCommentThread(id: string): CommentThread | undefined;
     getCommentThreads(): CommentThread[];
     takeComments(): CommentThread[];

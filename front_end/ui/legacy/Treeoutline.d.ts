@@ -79,6 +79,7 @@ export declare class TreeOutlineInShadow extends TreeOutline {
     }>): void;
     setHideOverflow(hideOverflow: boolean): void;
     setDense(dense: boolean): void;
+    setDisclosureClass(disclosureClass: string): void;
     onStartedEditingTitle(treeElement: TreeElement): void;
 }
 export declare const treeElementBylistItemNode: WeakMap<Node, TreeElement>;
@@ -304,8 +305,12 @@ export declare class TreeViewElement extends HTMLElementWithLightDOMTemplate {
     attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void;
 }
 export declare namespace TreeViewElement {
-    class SelectEvent extends CustomEvent<void> {
-        constructor();
+    class SelectEvent extends CustomEvent<{
+        selectedByUser?: boolean;
+    }> {
+        constructor(detail?: {
+            selectedByUser?: boolean;
+        });
     }
     class ExpandEvent extends CustomEvent<{
         expanded: boolean;

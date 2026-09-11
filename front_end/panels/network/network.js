@@ -2611,6 +2611,7 @@ var Network;
     TerminationEventDetailsDeletionReason2["InvalidSessionParams"] = "InvalidSessionParams";
     TerminationEventDetailsDeletionReason2["RefreshFatalError"] = "RefreshFatalError";
     TerminationEventDetailsDeletionReason2["DevTools"] = "DevTools";
+    TerminationEventDetailsDeletionReason2["Replaced"] = "Replaced";
   })(TerminationEventDetailsDeletionReason = Network2.TerminationEventDetailsDeletionReason || (Network2.TerminationEventDetailsDeletionReason = {}));
   let ChallengeEventDetailsChallengeResult;
   ((ChallengeEventDetailsChallengeResult2) => {
@@ -14196,7 +14197,8 @@ var NetworkLogViewColumns = class _NetworkLogViewColumns {
       return null;
     }
     const isRequestHeader = headerId.startsWith("request-header-");
-    const sortingFunction = isRequestHeader ? NetworkRequestNode.RequestHeaderStringComparator.bind(null, headerId) : NetworkRequestNode.ResponseHeaderStringComparator.bind(null, headerId);
+    const headerName = headerId.replace(/^(?:request|response)-header-/, "");
+    const sortingFunction = isRequestHeader ? NetworkRequestNode.RequestHeaderStringComparator.bind(null, headerName) : NetworkRequestNode.ResponseHeaderStringComparator.bind(null, headerName);
     const columnConfigBase = Object.assign({}, DEFAULT_COLUMN_CONFIG, {
       id: headerId,
       title: headerTitle,
