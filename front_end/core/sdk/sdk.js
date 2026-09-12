@@ -16576,6 +16576,8 @@ __export(CSSPropertyParserMatchers_exports, {
   MathFunctionMatcher: () => MathFunctionMatcher,
   PositionAnchorMatch: () => PositionAnchorMatch,
   PositionAnchorMatcher: () => PositionAnchorMatcher,
+  PositionAreaMatch: () => PositionAreaMatch,
+  PositionAreaMatcher: () => PositionAreaMatcher,
   PositionTryMatch: () => PositionTryMatch,
   PositionTryMatcher: () => PositionTryMatcher,
   RAW_STRING_TYPE: () => RAW_STRING_TYPE,
@@ -18020,6 +18022,35 @@ var EnvFunctionMatcher = class extends EnvFunctionMatcherBase {
     const varName = matching.getComputedTextRange(...ASTUtils.range(valueNodes)).trim();
     const value = this.matchedStyles.environmentVariable(varName);
     return new EnvFunctionMatch(matching.ast.text(node), node, varName, value ?? fallbackValue ?? null, Boolean(value));
+  }
+};
+var PositionAreaMatch = class {
+  constructor(text, node) {
+    this.text = text;
+    this.node = node;
+  }
+  text;
+  node;
+};
+var PositionAreaMatcherBase = matcherBase(PositionAreaMatch);
+var PositionAreaMatcher = class extends PositionAreaMatcherBase {
+  // clang-format on
+  accepts(propertyName) {
+    return propertyName === "position-area" || propertyName === "inset-area";
+  }
+  matches(node, matching) {
+    if (node.name !== "Declaration") {
+      return null;
+    }
+    const valueNodes = ASTUtils.siblings(ASTUtils.declValue(node));
+    if (valueNodes.length === 0) {
+      return null;
+    }
+    const valueText = matching.getComputedTextRange(valueNodes[0], valueNodes[valueNodes.length - 1]);
+    if (CSSMetadata.isCSSWideKeyword(valueText)) {
+      return null;
+    }
+    return new PositionAreaMatch(valueText, node);
   }
 };
 
@@ -20897,6 +20928,7 @@ var CSSMatchedStyles = class _CSSMatchedStyles {
       new AnchorFunctionMatcher(),
       new PositionAnchorMatcher(),
       new FlexGridGridLanesMatcher(),
+      new PositionAreaMatcher(),
       new PositionTryMatcher(),
       new LengthMatcher(),
       new MathFunctionMatcher(),

@@ -452,9 +452,9 @@ __export(LayoutShiftsTrackAppender_exports, {
 });
 import * as Common from "../../core/common/common.js";
 import * as i18n9 from "../../core/i18n/i18n.js";
-import * as Geometry from "../../models/geometry/geometry.js";
 import * as Trace5 from "../../models/trace/trace.js";
 import * as ComponentHelpers from "../../ui/components/helpers/helpers.js";
+import * as Geometry from "../../ui/geometry/geometry.js";
 import * as PerfUI5 from "../../ui/legacy/components/perf_ui/perf_ui.js";
 import * as ThemeSupport7 from "../../ui/legacy/theme_support/theme_support.js";
 import * as Utils from "./utils/utils.js";
@@ -16109,8 +16109,8 @@ __export(TimelinePaintProfilerView_exports, {
   TimelinePaintProfilerView: () => TimelinePaintProfilerView
 });
 import * as SDK10 from "../../core/sdk/sdk.js";
-import * as Geometry2 from "../../models/geometry/geometry.js";
 import * as Trace27 from "../../models/trace/trace.js";
+import * as Geometry2 from "../../ui/geometry/geometry.js";
 import * as UI13 from "../../ui/legacy/legacy.js";
 import * as Lit from "../../ui/lit/lit.js";
 import * as LayerViewer2 from "../layer_viewer/layer_viewer.js";
